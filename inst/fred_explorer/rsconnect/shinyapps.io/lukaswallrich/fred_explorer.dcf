@@ -1,0 +1,10 @@
+name: fred_explorer
+title:
+username: lukaswallrich
+account: lukaswallrich
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 11172418
+bundleId: 8237288
+url: https://lukaswallrich.shinyapps.io/fred_explorer/
+version: 1

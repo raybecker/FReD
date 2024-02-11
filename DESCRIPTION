@@ -1,0 +1,36 @@
+Package: FReD
+Title: Interfaces to the FORRT Replication Database
+Version: 0.0.0.9000
+Authors@R: 
+    person("Lukas", "Röseler", , "lukas.roeseler@uni-muenster.de", role = c("aut"),
+           comment = c(ORCID = "0000-0002-6446-1901")),
+    person("Lukas", "Wallrich", , "l.wallrich@bbk.ac.uk", role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0003-2121-5177"))
+Description: FORRT's Replication Database collects replication studies across the social
+    and behavioural sciences. This package offers two Shiny apps to explore the database,
+    enable meta-research and facilitate the search for replication studies.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.1
+Imports: 
+    bslib,
+    dplyr,
+    DT,
+    forcats,
+    ggplot2,
+    gridExtra,
+    httr,
+    metafor,
+    openxlsx,
+    plotly,
+    plyr,
+    psychometric,
+    pwr,
+    rcrossref,
+    readxl,
+    reshape,
+    shiny,
+    shinycssloaders,
+    stringr,
+    zcurve
