@@ -37,3 +37,39 @@ run_annotator <- function(offer_install = interactive()) {
 
   shiny::runApp(appDir, display.mode = "normal")
 }
+
+#' Get the date of last modification
+#'
+#' This function returns the date of last modification to be displayed in an app. It represents
+#' either the date when a specific element of the app was last modified, or the date of the most
+#' recent modification to the package DESCRIPTION file (which represents broader updates).
+#'
+#' @param app_folder The name of the app folder within the package (i.e. within the inst folder)
+
+get_last_modified <- function(app_folder = "fred_explorer") {
+  # Get the path to the app folder within the package
+  appDirPath <- system.file(app_folder, package = "FReD")
+  appDirPath <- normalizePath(appDirPath)
+
+  # List all files in the directory recursively and get their last modified times
+  files <- list.files(appDirPath, recursive = TRUE, full.names = TRUE)
+  if (length(files) == 0) {
+    warning("No files found in the directory")
+    most_recent_file_time <- 0
+  } else {
+    file_times <- lapply(files, function(f) file.info(f)$mtime)
+    file_times_combined <- do.call(c, file_times)
+    most_recent_file_time <- max(file_times_combined)
+  }
+
+  # Get the last modified time of the DESCRIPTION file
+  descPath <- system.file("DESCRIPTION", package = "FReD")
+  descPath <- normalizePath(descPath)
+  desc_time <- file.info(descPath)$mtime
+
+  # Find the most recent modification time between files and DESCRIPTION
+  most_recent_time <- max(c(most_recent_file_time, desc_time))
+
+  format(most_recent_time, "%d %B, %Y")
+}
+

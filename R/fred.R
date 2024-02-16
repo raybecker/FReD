@@ -1,3 +1,7 @@
+# Package GLOBALS
+# Variables should be coded here, rather than within functions
+
+
 .check_req_packages <- function(x, note = "") {
   res <- unlist(suppressWarnings(lapply(x, requireNamespace, quietly = TRUE)))
   if (!all(res)) {
@@ -27,3 +31,51 @@
     stop("Cannot proceed without these packages.", call. = FALSE)
   }
 }
+
+#' Create FReD dataset citation
+#'
+#' Pulls current contributor list and dynamicalky creates a *markdown-formatted* citation for the FReD dataset.
+#'
+#' @param data_file Path to the FReD dataset, defaults to the current FReD dataset on OSF
+#' @param cache Should the citation be returned from cache, if already requested during this session? Defaults to TRUE.
+#' @return A markdown-formatted citation for the FReD dataset, including the current dataset version.
+
+create_citation <- function(data_file = get_param("FRED_DATA_FILE"), cache = TRUE) {
+  if (cache && exists("citation", .cache, inherits = FALSE)) {
+    return(.cache$citation)
+  }
+  contributors <- openxlsx::read.xlsx(data_file, sheet = "Contributors FReD")
+  contributors <- contributors[contributors$Added.to.FReD.website.as.contributor, ]
+  contributors$first <- substr(contributors$First.name, 1, 1)
+  contributors$middle <- ifelse(!is.na(contributors$Middle.name), paste(" ", substr(contributors$Middle.name, 1, 1), ".", sep = ""), "")
+  contributors$apa <- paste0(contributors$Surname, ", ",
+                             contributors$first, ".",
+                             contributors$middle)
+  c_names <- paste(contributors$apa, collapse = ", ")
+
+  version <- get_dataset_changelog() %>% stringr::str_extract('(?<=\\*\\*Version:\\*\\* )\\d+\\.\\d+\\.\\d+')
+  cit <- glue::glue("{c_names} (2024). _FReD: FORRT Replication Database, version {version}._ [https://dx.doi.org/10.17605/OSF.IO/9r62x] _*shared first authorship_")
+
+  .cache$citation <- cit
+
+  cit
+  }
+
+#' Get the dataset changelog from OSF
+#'
+#' Downloads and reads the changelog file from OSF, and returns it as a character string.
+#'
+#' @param changelog_file The URL of the changelog file on OSF
+#' @param cache Should the changelog be returned from cache, if already requested during this session? Defaults to TRUE.
+
+get_dataset_changelog <- function(changelog_file = "https://osf.io/fj3xc/download", cache = TRUE) {
+  if (cache && exists("changelog", .cache, inherits = FALSE)) {
+    return(.cache$changelog)
+  }
+  temp <- tempfile(fileext = ".md")
+  download.file(changelog_file, temp)
+  changelog <- readLines(temp, warn = FALSE) %>% paste(collapse = "\n")
+  .cache$changelog <- changelog
+  changelog
+}
+
