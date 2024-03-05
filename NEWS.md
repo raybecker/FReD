@@ -1,3 +1,5 @@
+This version history contains noteworthy changes. For a full history of changes, see the [commit history](https://github.com/forrtproject/FReD/commits/main/)
+
 # FReD 0.1.0
 
 ## New features

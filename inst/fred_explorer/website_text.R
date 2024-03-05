@@ -1,38 +1,30 @@
 
-# Format contributor names [old ReD version, used until 05.02.2024 dmy]
-# contributors <- openxlsx::read.xlsx(red_link, sheet = "Contributors")
-# contributors$first <- substr(contributors$contributor_firstname, 1, 1)
-# contributors$apa <- paste(contributors$contributor_lastname, ", ", contributors$first, ".", sep = "")
-# contributors$name <- paste(contributors$contributor_lastname, ", ", contributors$first, ".", sep = "")
-# c_names <- paste(contributors$apa, collapse = ", ")
 
-# Format contributor names [FReD version, used as of 06.02.2024 dmy]
-contributors <- openxlsx::read.xlsx(data_file, sheet = "Contributors FReD")
-contributors <- contributors[contributors$Added.to.FReD.website.as.contributor, ]
-contributors$first <- substr(contributors$First.name, 1, 1)
-contributors$middle <- ifelse(!is.na(contributors$Middle.name), paste(" ", substr(contributors$Middle.name, 1, 1), ".", sep = ""), "")
-contributors$apa <- paste(contributors$Surname, ", "
-                          , contributors$first, "."
-                          , contributors$middle
-                          , sep = "")
-contributors$name <- paste(contributors$contributor_lastname, ", ", contributors$first, ".", sep = "")
-c_names <- paste(contributors$apa, collapse = ", ")
+about_page <- glue::glue("
+
+## FORRT Replication Database Explorer {packageVersion('FReD')}
+
+**Last Update:** {get_last_modified('fred_explorer')}
+
+**Data citation:** {create_citation()}
+
+**Data and Materials:** [https://osf.io/9r62x/](https://osf.io/9r62x/)
+
+**Contribute:** Please send an e-mail to lukas.roeseler(at)uni-muenster.de
+
+**License:** _Data:_ CC-By Attribution 4.0 International, _Code:_ MIT License
+
+**Acknowledgements:** We thank all researchers who have invested resources in conducting replication research, researchers who have submitted their replication studies, and researchers who used the Replication Recipe Post-Completion template to register their results. FORRT Replication Database is supported through the University of Bamberg's Interne Forschungsförderung, by the University of Münster, by the Nederlandse Organisatie voor Wetenschappelijk's (NWO) Open Science Fund, and by the Leuphana University Lüneburg.
+
+**Important note:** This is work in progress. Please beware that there might be bugs or errors in the dataset. If you spot any, please let us know (by email, or on [GitHub](https://github.com/forrtproject/FReD/issues))
+
+_Thanks to our funders:_
+<img src='ub.png' height='100' /> <img src='um.png' height='50' /> <img src='nwo.png' height='100' />
+
+")
 
 
-# Contributions
-about <- HTML(paste("<h4><b>FORRT Replication Database ", version, "</b></h3>"
-                    , "<br/><b>Last Update:</b> ", date
 
-                    ### Core team
-                    , "<br/><b>Citation: </b>"
-                    , c_names
-                    , " (2024). <i>FReD: FORRT Replication Database, ", version, "</i>. <a href=https://dx.doi.org/10.17605/OSF.IO/9r62x>https://dx.doi.org/10.17605/OSF.IO/9r62x</a> *shared first authorship"
-                    , "<br/><b>Data and Materials:</b> <a href=https://osf.io/9r62x/>https://osf.io/9r62x/</a>"
-                    , "<br/><b>Contribute:</b> Please send an e-mail to lukas.roeseler(at)uni-muenster.de"
-                    , "<br/><b>License:</b> CC-By Attribution 4.0 International"
-                    , "<br/><b>Acknowledgements:</b> We thank all researchers who have invested resources in conducting replication research, researchers who have submitted their replication studies, and researchers who used the Replication Recipe Post-Completion template to register their results. FORRT Replication Database is supported through the University of Bamberg's Interne Forschungsförderung, by the University of Münster, by the Nederlandse Organisatie voor Wetenschappelijk's (NWO) Open Science Fund, and by the Leuphana University Lüneburg."
-                    , "<br/><b>Important note:</b> This is work in progress. Please beware that there might be bugs or errors in the dataset."
-                    , sep = ""))
 
 info <- HTML(paste("<h3>Welcome to the FORRT Replication Database!"
                    , "<h4><br/><br/><b>What is ReD?</b><br/> <i>Science appears to be the human enterprise that is most systematic in its attempt to eliminate error in the search for knowledge </i>(Hoyningen-Huene, 2013, p. 89).
