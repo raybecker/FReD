@@ -148,18 +148,21 @@ ui <- fluidPage(
     ),
     tabPanel(
       "References",
+      column(6,
       references_headline, references_list,
       references_redpublications, references_list_redpublications,
       packages_headline, packages_list
+    )
     ),
     tabPanel(
       "FAQ",
-      faqs
+      column(6, includeMarkdown("www/FAQ.md"))
     ),
     tabPanel(
       "About",
+      column(6,
       markdown(about_page),
-      markdown(paste("#"), get_dataset_changelog()),
+      markdown(paste0("#", get_dataset_changelog())),
       h2("Package changelog"),
       includeMarkdown(system.file("NEWS.md", package = "FReD")),
       img(src = "fred.png", height = 80),
@@ -175,6 +178,7 @@ ui <- fluidPage(
         .navbar-default .navbar-nav > .active > a:hover {color:black;background-color:#fc2d2d;}
         .navbar-default .navbar-nav > li > a:hover {color:black;background-color:#A6A6A6;text-decoration}
                                "))
+    )
     )
   )
 )

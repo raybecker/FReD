@@ -59,7 +59,7 @@ run_annotator()
 -   Should z-curve just be based on p-values derived from r? If not, is
     the z-transformation correct? I get closer p-values by working from
     the r-to-z transformation (now default implementation in
-    `augment_for_zcurve`
+    `augment_for_zcurve)`
 -   (What is the difference between correlates and moderators?)
 
 ### Review
@@ -71,12 +71,16 @@ run_annotator()
     set power = 0 where N \<4 - should it be NA?
 
 -   consistent =
-    is.na(red$significant_original) | is.na(red$significant_replication)
-    \~ "OS n.s." - really??
+    `is.na(red$significant_original) | is.na(red$significant_replication)     ~ "OS n.s."` -
+    really??
 
 -   Change `result` so that success is defined as both significant and
     in right direction - that feel like thoughtless rather than serious
     outcome definition?
+
+**ToDo**
+
+-   Rename all variables to x_o & x_r
 
 ### Further automation
 

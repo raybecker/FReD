@@ -8,7 +8,7 @@ add_replication_power(
   fred_data,
   es_original = "es_original",
   N_replication = "n_replication",
-  power_column = "power_replication"
+  power_column = "power_r"
 )
 }
 \arguments{

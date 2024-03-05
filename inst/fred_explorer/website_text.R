@@ -27,9 +27,9 @@ _Thanks to our funders:_
 
 
 info <- HTML(paste("<h3>Welcome to the FORRT Replication Database!"
-                   , "<h4><br/><br/><b>What is ReD?</b><br/> <i>Science appears to be the human enterprise that is most systematic in its attempt to eliminate error in the search for knowledge </i>(Hoyningen-Huene, 2013, p. 89).
+                   , "<h4><br/><br/><b>What is FReD?</b><br/> <i>Science appears to be the human enterprise that is most systematic in its attempt to eliminate error in the search for knowledge </i>(Hoyningen-Huene, 2013, p. 89).
                    </br></br>Still, if - or how well - most of our findings replicate, is unknown. The FORRT Replication Database is a crowdsourced effort to include unpublished and published replication results to estimate and track the replicability along various fields and provide researchers with a way to assess replicability of crucial studies in a quick and transparent way. Check out the <a href=https://osf.io/f3w26>Call for Results</a> if you would like to contribute."
-                   , "<br/><br/><b>What are your benefits of joining us?</b><br/> You are very welcome to contribute data from your replication studies! In return, (apart from being rewarded by the good feeling of helping research on replicability to improve) we will list you as a co-author of the ReD (CRediT: Resources). Please use the <a href=https://www.soscisurvey.de/replicate>submission portal</a> to submit replication results.
+                   , "<br/><br/><b>What are your benefits of joining us?</b><br/> You are very welcome to contribute data from your replication studies! In return, (apart from being rewarded by the good feeling of helping research on replicability to improve) we will list you as a co-author of the FReD (CRediT: Resources). Please use the <a href=https://www.soscisurvey.de/replicate>submission portal</a> to submit replication results.
                         <br/><br/>Unpublished datasets as well as data from classroom experiments are also highly appreciated. Get in touch if you have any questions about the submission portal."
                    , "<br/><br/><b>How to use this website</b><br/> Here in our ShinyApp, you can explore replicability for all or filtered entries. Click on the other tabs and filter your results on the left side.
                         <br/><br/>In the <a href=https://osf.io/9r62x/>OSF project</a>, you can find further information and files on our project. There, you also can send us a contribution request to the project.
@@ -39,7 +39,7 @@ info <- HTML(paste("<h3>Welcome to the FORRT Replication Database!"
 
 dataset_explanation <- shiny::HTML(paste("<h4><b>ReD Dataset</b>"
                                          , "<h5><br/>This is the entire FORRT Replication Database Datset. It currently contains "
-                                         , nrow(red)
+                                         , nrow(df)
                                          , " findings "
                                          , "<br/><br/>"
                                          , sep = ""))
@@ -52,12 +52,12 @@ variables_headline <- HTML(paste("<h4><b>Variables</b><h5>"
 
 dataset_info <- HTML(paste("<h4><b>Replication Rate</b>"
                            , "<h5><br/>There are currently "
-                           , nrow(red)
+                           , nrow(df)
                            , " replication findings entered into the database. Of these, "
-                           , length(unique(red$ref_replication))
-                           , " replication findings are independent (i.e., use different samples/stem from different studies). Note that the following analyses treat all studies as independent. Apart from the table and bar chart, only studies for which sample sizes and effect sizes are available (for original study and replication) are considered here. The other can be viewed in the Dataset."
+                           , length(unique(df$ref_replication))
+                           , " replication findings are independent (i.e., use different samples/stem from different studies). Note that the following analyses treat all studies as independent. Apart from the table and bar chart, only studies for which sample sizes and effect sizes are available (for original study and replication) are considered here. The others can be viewed in the Dataset."
                            , " In total, "
-                           , length(unique(red$ref_original))
+                           , length(unique(df$ref_original))
                            , " different original studies have been replicated."
                            # , "According to the original researchers' assessments, there have been "
                            # , sum(red$pc05 == "informative failure to replicate", na.rm = TRUE)
@@ -73,9 +73,9 @@ dataset_info <- HTML(paste("<h4><b>Replication Rate</b>"
 
 forest_info <- HTML(paste("<h4><b>Study Overview</b>"
                           , "<h5><br/>The currently included "
-                          , nrow(red)
+                          , nrow(df)
                           , " replication findings entered into the database can be allocated to "
-                          , length(unique(red$ref_original))
+                          , length(unique(df$ref_original))
                           , " independent original studies. This is an overview of these studies."
                           , "<br/><br/><h6>"
                           , sep = ""))
@@ -152,7 +152,7 @@ checker_info <- HTML(paste("<h4><br/><br/><b>Replicability Checker</b><br/> "
                            , sep = ""))
 
 references_headline <- HTML(paste("<h4><br/><br/><b>References</b><br/> "
-                                  , "<br/><br/><h4>Currently, a large proportion of the replication studies stems from the CurateScience database. We added data from CORE, RPP, the OSF Registries, and individual submissions. A synthesis of ReD with FORRT's replications and reversals is coming soon. If you are aware of replications not listed here, please write us an e-mail or add them here: https://docs.google.com/spreadsheets/d/1x68oW2H_Xrdv44fIeycl4fegsmQgCa60GxeZZ_hAR90/edit?pli=1#gid=1463805480"
+                                  , "<br/><br/><h4>Currently, a large proportion of the replication studies stems from the CurateScience database. We added data from CORE, RPP, the OSF Registries, and individual submissions. A synthesis of ReD with FORRT's replications and reversals is coming soon. If you are aware of replications not listed here, please write us an e-mail or add them <a href = 'https://docs.google.com/spreadsheets/d/1x68oW2H_Xrdv44fIeycl4fegsmQgCa60GxeZZ_hAR90/edit?pli=1#gid=1463805480'>here.</a> "
                                   , sep = ""))
 
 
@@ -179,51 +179,5 @@ packages_headline <- HTML(paste("<br/><br/><br/><h4><b>R-packages used for this 
                                 , sep = ""))
 
 packages_list <- HTML(paste("<br/><br/>- ", names(sessionInfo()[["otherPkgs"]]),  sep = ""))
-
-
-faqs <- HTML(paste("<h3>Frequently Asked Questions"
-                   , "<h6><i>Hint: Use Ctrl+F to search the FAQs.</i>"
-                   , "<h4><br/><br/><b>Q: Can I submit studies that I did not conduct myself?</b><br/>
-                   A: Yes, you can! Entering other researchers' replication result will make you eligible for co-authorship on the App."
-                   , "<h4><br/><br/><b>Q: Does the replication study that I want to submit need to be peer-reviewed?</b><br/>
-                   A: No! Publishing replication studies can be met with quite some resistence, in our experience. Therefore, we want to keep the inclusion threshold as low as possible."
-                   , "<h4><br/><br/><b>Q: In what way does the study need to be public or published?</b><br/>
-                   A: There needs to be a way to verify that an entered study has indeed been executed."
-                   , "<h4><br/><br/><b>Q: I know about replication studies that you have not added yet but I do not have time to add them myself. Is there a way to have you note these studies anyway?</b><br/>
-                   A: Yes, please add them to the list in our <a href=https://docs.google.com/spreadsheets/d/1x68oW2H_Xrdv44fIeycl4fegsmQgCa60GxeZZ_hAR90/edit?pli=1#gid=305460056>ReD-spreadsheet</a>! "
-                   , "<h4><br/><br/><b>Q: What about large-scale replication projects such as Many Labs 2, those by Camerer et al., etc.?</b><br/>
-                   A: These are absolutely on our radar and we will add them as soon as possible. Please note that we are currently working with strongly limited resources. Get in touch if you want to support the project!"
-                   , "<h4><br/><br/><b>Q: Somebody entered my replication study. I want to become a contributor, is this still possible?</b><br/>
-                   A: The basis of the replication database are other databases that have existed for years, so this is the case for many studies. Still, there are houndreds of replications that are still missing. Contact us if you want to contribute replication study results!"
-                   , "<h4><br/><br/><b>Q: How do you make sure that nobody creates mock entries?</b><br/>
-                   A: Each entry will be validated. To do this, there needs to be a published paper, a pre-print, an OSF-project, or some kind of findable object that includes the results that were entered."
-                   , "<h4><br/><br/><b>Q: What is the definition of a replication study?</b><br/>
-                   A: This one is tough: In a nutshell, current definitions allow calling almost all studies replications. With respect to the dataset: For a study to be considered a replication, the hypothesis that is being investigated needs to have been investigated in another study in a way that is as close as possible to your way. If you are unsure about whether there is sufficient overlap between an original study and the replication study, please let us know in the notes or get in touch with us."
-                   , "<h4><br/><br/><b>Q: Is the database representative?</b><br/>
-                   A: No. We strive to include every replication of a social scientific study in the database. If we succeed, the database will be comprehensive but researchers do not select target studies for replication on the basis of representativeness - they rather choose central and not yet replicated findings."
-                   , "<h4><br/><br/><b>Q: How do I know the replication study entered here did not succeed due to methodological shortcomings?</b><br/>
-                   A: You don't. We encourage you to check out individual entries and their methodologies."
-                   , "<h4><br/><br/><b>Q: What do I need to do to become a contributor on the website?</b><br/>
-                   A: You need to enter results from at least one replication finding into the submission form or the spreadsheet, enter your e-mail so that we can contact you, and be available for potential questions during our validation of your entry. Sending us a reference of a replication of yours does not suffice."
-                   , "<h4><br/><br/><b>Q: Do failed replication studies mean that original findings are untrustworthy?</b><br/>
-                   A: No. Besides scientific misconduct or questionable research practices, replication attempts can fail due to practical reasons, due to unknown background factors, due to changes in (the perception of) concepts, and many more things."
-                   , "<h4><br/><br/><b>Q: Can I take the dataset and use it for my research?</b><br/>
-                   A: The FORRT Replication Database is open and shared under a CC-By Attribution 4.0 International license. Please cite us (see About-tab) if you use these resources. Reach out to us if you want to code a moderator and maybe we can join forces (some moderators have already been coded for parts of the data). Also, we are happy about feedback or knowing that other people can make use of this project!"
-                   , "<h4><br/><br/><b>Q: How is this project related to FORRT's replications and reversals? Should I enter my study in both places?</b><br/>
-                   A: This project is independent of FORRT's replications and reversals. Whereas FORRT focuses on research topics, we focus on individual replications. ReD is actively collaborating with FORRT and we plan to merge both databases, thus you do not need to enter your results in both places. However, we do not know yet when a synthesis will be possible, so we encourage you to join both projects."
-                   , "<h4><br/><br/><b>Q: I want to enter a replication study that has an average effect size but also item-wise effects. Which should I enter in the FORRT Replication Database?</b><br/>
-                   A: Both ways are possible. If it is possible for you, please enter the effect sizes as differentiated as possible. This will facilitate future analyses and better allow researchers, to determine how to successfully replicate prior research. If entering the results on an item-by-item basis is not possible for some reason, we are still very happy about you entering an aggregated effect size. In this case, please write into the note-variable, that more fine-graind results are available."
-                   , "<h4><br/><br/><b>Q: What is the data strucure? Can you account for dependent studies? Can there be multiple results for a single study?</b><br/>
-                   A: Yes, we do account for multilevel structure / dependent effect sizes. Check out the Figure below for an in-depth explanation.<br/>"
-                   , img(src = "datastructure.png", height = 750, width = 750)
-
-                   # ### Q&A Template
-                   # , "<h4><br/><br/><b>Q: XXX?</b><br/>
-                   # A: XXX"
-
-                   , "<h5><br/><br/><i>Still confused? Send us an e-mail (see the About-tab for contact info)!</i>"
-                   , sep = ""))
-
-
 
 breaks <- HTML(paste("<br/><br/>",  sep = ""))

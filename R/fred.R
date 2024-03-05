@@ -1,5 +1,9 @@
-# Package GLOBALS
-# Variables should be coded here, rather than within functions
+# Global imports - only for shiny
+#' @import shiny
+#' @import bslib
+#' @import shinycssloaders
+#' @import ggplot2
+#' @import dplyr
 
 
 .check_req_packages <- function(x, note = "") {

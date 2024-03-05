@@ -208,7 +208,7 @@ code_replication_outcomes <- function(fred_data,
 #' @param power_column Character. Name of target column for power.
 #' @return Augmented FReD dataset with power column.
 
-add_replication_power <- function(fred_data, es_original = "es_original", N_replication = "n_replication", power_column = "power_replication") {
+add_replication_power <- function(fred_data, es_original = "es_original", N_replication = "n_replication", power_column = "power_r") {
   # NA where N_replication is missing
   fred_data[, power_column] <- NA
   # Return 0 where sample_replication < 4, as pwr.r.test does not work for n < 4
