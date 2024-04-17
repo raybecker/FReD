@@ -40,7 +40,7 @@ info <- HTML(paste("<h3>Welcome to the FORRT Replication Database!"
 dataset_explanation <- shiny::HTML(paste("<h4><b>ReD Dataset</b>"
                                          , "<h5><br/>This is the entire FORRT Replication Database Datset. It currently contains "
                                          , nrow(df)
-                                         , " findings "
+                                         , " findings. The most recent version can be downloaded via the <a href=https://osf.io/9r62x/>OSF project</a>."
                                          , "<br/><br/>"
                                          , sep = ""))
 

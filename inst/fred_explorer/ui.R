@@ -85,8 +85,8 @@ ui <- fluidPage(
     ),
     tabPanel(
       "Dataset", dataset_explanation, breaks,
-      downloadButton("reddownload", label = "Download dataset"),
-      breaks,
+      # downloadButton("reddownload", label = "Download dataset"),
+      # breaks,
       dataset_headline,
       withSpinner(DT::DTOutput("dataset")),
       breaks,
