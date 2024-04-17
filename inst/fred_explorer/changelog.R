@@ -8,6 +8,12 @@ changelog <- HTML(paste("<h3><b>Changelog</b></h3><h5>"
                         # , "</br><i>Dataset name: Red.xlsx (from osf.io/z5u9b)</i>"
                         # , "</br>- ..."
 
+                        , "</br></br><b>17.04.2024</b>"
+                        , "</br><i>App version: Version 0.4.6</i>"
+                        , "</br><i>Dataset name: Red.xlsx (from osf.io/z5u9b)</i>"
+                        , "</br>- Corrected computation of variable 'result' (sign of the effect size was ignored when evaluating success)."
+                        , "</br>- Corrected computation of variable 'consistent' (NAs were erroneously counted as significant effects)."
+
                         , "</br></br><b>08.02.2024</b>"
                         , "</br><i>App version: Version 0.4.5</i>"
                         , "</br><i>Dataset name: Red.xlsx (from osf.io/z5u9b)</i>"
