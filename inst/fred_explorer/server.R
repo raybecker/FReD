@@ -1,7 +1,5 @@
 # APP ----------------------------------------------------------------------
 
-
-# Define server logic required to draw a histogram
 server <- function(input, output) {
   # Overview Table ----------------------------------------------------------
 
@@ -417,8 +415,16 @@ server <- function(input, output) {
 
 
 
-  output$dataset <- DT::renderDT(DT::datatable(df_display,
-    rownames = FALSE
+  output$dataset <- DT::renderDT(server = FALSE,
+                                 DT::datatable(df_display,
+    rownames = FALSE,
+    extensions = 'Buttons',
+    options = list(scrollX=TRUE, lengthMenu = c(5,10,15),
+                   paging = TRUE, searching = TRUE,
+                   fixedColumns = TRUE, autoWidth = TRUE,
+                   ordering = TRUE, dom = 'Bfrtip',
+                   buttons = list(list(extend = 'copy'),
+                                  list(extend = 'excel', filename = "FReD")))
   ))
 
   # variables

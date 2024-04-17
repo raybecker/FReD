@@ -8,7 +8,8 @@
 
 convert_effect_sizes <- function(es_values, es_types) {
   es_types <- tolower(es_types)
-  estype_map <- c("or" = "or", "d" = "d", "η²" = "eta", "etasq" = "eta", "f" = "f", "r" = "r", "r²" = "r2", "r2" = "r2")
+  estype_map <- c("or" = "or", "d" = "d", "η²" = "eta", "etasq" = "eta", "f" = "f", "r" = "r", "r²" = "r2", "r2" = "r2", "r" = "φ",
+                  "d" = "smd")
   es_values_r <- rep(NA, length(es_values))
 
   if (length(setdiff(na.omit(unique(es_types)), names(estype_map))) > 0) {
