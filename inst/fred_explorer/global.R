@@ -1,4 +1,6 @@
 
+library(FReD)
+
 df <- read_fred() %>%
   clean_variables() %>%
   add_common_effect_sizes() %>%
