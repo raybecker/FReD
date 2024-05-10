@@ -80,11 +80,6 @@ forest_info <- HTML(paste("<h4><b>Study Overview</b>"
                           , "<br/><br/><h6>"
                           , sep = ""))
 
-packages_info <- HTML(paste("<br/><br/><br/><h4><b>R-packages used for this App</b><h5>"
-                            , sep = ""))
-
-packages_list <- HTML(paste("<br/><br/>- ", names(sessionInfo()[["otherPkgs"]]),  sep = ""))
-
 scatterplot_title <- HTML(paste("
                                  <h4><br/><br/><b>Scatterplot of Original and Replication Effect Sizes</b><br/>"
                                 , "<br/><br/>"
@@ -175,7 +170,7 @@ references_list_redpublications <- HTML(paste(
   ,  sep = "<br/><br/>- "))
 
 
-packages_headline <- HTML(paste("<br/><br/><br/><h4><b>R-packages used for this App</b><h5>"
+packages_headline <- HTML(paste("<br/><br/><br/><h4><b>R-packages used for this App</b></h5>"
                                 , sep = ""))
 
 packages_list <- HTML(paste("<br/><br/>- ", names(sessionInfo()[["otherPkgs"]]),  sep = ""))

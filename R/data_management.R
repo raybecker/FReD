@@ -12,7 +12,7 @@ load_variable_descriptions <- function(sheet_name = "Key Variables", data = get_
   return(variable_descriptions)
 }
 
-#' Load the FReD dataset
+#' Read the FReD dataset
 #'
 #' This function loads the FReD dataset into R. It merges the data from the different sheets into one data frame.
 #'

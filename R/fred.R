@@ -83,3 +83,25 @@ get_dataset_changelog <- function(changelog_file = "https://osf.io/fj3xc/downloa
   changelog
 }
 
+#' Load the FReD dataset
+#'
+#' This function loads the FReD dataset into R, and conducts variable transformations to  prepare for analyses.
+#'
+#' @param data Path to the FReD dataset (defaults to current FReD data on OSF)
+#' @return A data frame with the processed FReD dataset
+#' @export
+
+
+load_fred_data <- function(data = get_param("FRED_DATA_FILE")) {
+
+  read_fred() %>%
+    clean_variables() %>%
+    add_common_effect_sizes() %>%
+    align_effect_direction() %>%
+    add_uncertainty() %>%
+    add_replication_power() %>%
+    code_replication_outcomes() %>%
+    augment_for_zcurve()
+}
+
+

@@ -17,6 +17,5 @@ can be set (before loading the package):
 \itemize{
 \item \code{FRED_DATA_URL}: The URL of the FReD dataset, needs to return the .xlsx file.
 \item \code{FRED_DATA_FILE}: The path to the .xlsx file, if you have downloaded it already (or want it to be saved to a particular location)
-\item \code{FRED_DATA_SHEETS}: The sheets in the .xlsx file that contain the data, always including the first row that contains data, with rows separated by : and sheets by |. E.g. this could be "Sheet1:3|Sheet2:1"
 }
 }

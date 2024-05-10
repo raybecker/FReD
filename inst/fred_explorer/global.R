@@ -1,14 +1,11 @@
 
-library(FReD)
+if (!exists("load_fred_data")) {
+  message("If launching the app directly rather than through run_explorer(), the FReD package needs to be loaded.
+          Trying devtools::load_all() - if that leads to issues, best load the package and use run_explorer() instead.")
+  devtools::load_all()
+}
 
-df <- read_fred() %>%
-  clean_variables() %>%
-  add_common_effect_sizes() %>%
-  align_effect_direction() %>%
-  add_uncertainty() %>%
-  add_replication_power() %>%
-  code_replication_outcomes() %>%
-  augment_for_zcurve()
+df <- load_fred_data()
 
 df_display <- df[, c("description", "es_original", "es_replication", "n_original", "n_replication", "osf_link", "contributors", "result", "result2", "ref_original", "ref_replication")]
 df_display$es_original <- round(df_display$es_original, 3)

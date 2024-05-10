@@ -2,7 +2,7 @@
 % Please edit documentation in R/data_management.R
 \name{read_fred}
 \alias{read_fred}
-\title{Load the FReD dataset}
+\title{Read the FReD dataset}
 \usage{
 read_fred(data = get_param("FRED_DATA_FILE"))
 }
