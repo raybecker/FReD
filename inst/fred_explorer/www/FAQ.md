@@ -18,7 +18,7 @@ A: Yes, please add them via this [Google form](https://docs.google.com/forms/d/e
 A: These are absolutely on our radar and we will add them as soon as possible. Please note that we are currently working with strongly limited resources. Get in touch if you want to support the project!
 
 #### Q: Somebody entered my replication study. I want to become a contributor, is this still possible?
-A: The basis of the replication database are other databases that have existed for years, so it is possible that your own study has already been entered. Still, there are hundreds of replications that are still missing or not sufficiently coded. To become a contributor, you need to code at least one replication study with its respective replication result. Get in touch if you need help identifying these studies.
+A: The basis of the FORRT Replication Database are other databases that have existed for years, so it is possible that your own study has already been entered. Still, there are hundreds of replications that are still missing or not sufficiently coded. To become a contributor, you need to code at least one replication study with its respective replication result. Get in touch if you need help identifying these studies.
 
 #### Q: How do you make sure that nobody creates mock entries?
 A: Each entry will be validated. To do this, there needs to be a published paper, a pre-print, an OSF-project, or some kind of findable object that includes the results that were entered.
