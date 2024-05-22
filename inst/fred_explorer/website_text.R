@@ -29,7 +29,7 @@ _Thanks to our funders:_
 info <- HTML(paste("<h3>Welcome to the FORRT Replication Database!"
                    , "<h4><br/><br/><b>What is FReD?</b><br/> <i>Science appears to be the human enterprise that is most systematic in its attempt to eliminate error in the search for knowledge </i>(Hoyningen-Huene, 2013, p. 89).
                    </br></br>Still, if - or how well - most of our findings replicate, is unknown. The FORRT Replication Database is a crowdsourced effort to include unpublished and published replication results to estimate and track the replicability along various fields and provide researchers with a way to assess replicability of crucial studies in a quick and transparent way. Check out the <a href=https://osf.io/f3w26>Call for Results</a> if you would like to contribute."
-                   , "<br/><br/><b>What are your benefits of joining us?</b><br/> You are very welcome to contribute data from your replication studies! In return, (apart from being rewarded by the good feeling of helping research on replicability to improve) we will list you as a co-author of the FReD (CRediT: Resources). Please use the <a href=https://www.soscisurvey.de/replicate>submission portal</a> to submit replication results.
+                   , "<br/><br/><b>What are your benefits of joining us?</b><br/> You are very welcome to contribute data from your replication studies! In return, (apart from being rewarded by the good feeling of helping research on replicability to improve) we will list you as a contributor of the FReD (CRediT: Resources). Please use the <a href=https://www.soscisurvey.de/replicate>submission portal</a> to submit replication results.
                         <br/><br/>Unpublished datasets as well as data from classroom experiments are also highly appreciated. Get in touch if you have any questions about the submission portal."
                    , "<br/><br/><b>How to use this website</b><br/> Here in our ShinyApp, you can explore replicability for all or filtered entries. Click on the other tabs and filter your results on the left side.
                         <br/><br/>In the <a href=https://osf.io/9r62x/>OSF project</a>, you can find further information and files on our project. There, you also can send us a contribution request to the project.
@@ -96,7 +96,7 @@ barplot2_title <- HTML(paste("
                              , sep = ""))
 
 barplot2_explanation <- HTML(paste("
-                                 <h5><i>Note. </i>Lebel et al. (2018) have suggested a more nuanced interpretation of replication results for cases where the original study found an effect. Whether or not the replication effect is significant, too, is indicated by signal/no-signal. Whether the replication effect is smaller, larger, or the same size is also indicated. We also included cases where the original study was not significant or no information about the original study's significance was available in grey."
+                                 <h5><i>Note. </i><a href='https://doi.org/10.15626/MP.2018.843'>LeBel et al. (2019)</a> have suggested a more nuanced interpretation of replication results for cases where the original study found an effect. Whether or not the replication effect is significant, too, is indicated by signal/no-signal. Whether the replication effect is smaller, larger, or the same size is also indicated. We also included cases where the original study was not significant or no information about the original study's significance was available in grey."
                                    , "<br/><br/>"
                                    , sep = ""))
 
@@ -106,7 +106,7 @@ zcurve_title <- HTML(paste("
                            , sep = ""))
 
 zcurve_explanation <- HTML(paste("
-                                 <h5><i>Note. </i>Z-curve (Bartos & Schimmack, 2020) can be used to estimate replicability of a set of studies. Observed discovery rate refers to the proportion of significant (p < .05) studies. Expected discovery rate is the proportion of studies that you would expect to be significant if you ran perfect and high powered replications of <i>all</i> studies. Expected replicability rate is the proportion of studies that you would expect to be significant if you ran perfect and high powered replications of <i>all significant</i> studies. You can compare the discovery and replicability rates with the actual replicability presented at the top of this page. We recommend running bootstraps to get confidence intervals for z-curve's estimates but refrain from doing so as it takes much time."
+                                 <h5><i>Note. </i>Z-curve (<a href='http://dx.doi.org/10.15626/MP.2021.2720'>Bartos & Schimmack, 2020</a>) can be used to estimate replicability of a set of studies. Note that it assumes that observations are independent, which is not the case here, and that it uses only significant results. We recommend not using z-curve on less than 200 tests.<br/>Observed discovery rate refers to the proportion of significant (p < .05) studies. Expected discovery rate is the proportion of studies that you would expect to be significant if you ran perfect and high powered replications of <i>all</i> studies. Expected replicability rate is the proportion of studies that you would expect to be significant if you ran perfect and high powered replications of <i>all significant</i> studies. You can compare the discovery and replicability rates with the actual replicability presented at the top of this page. We recommend running bootstraps to get confidence intervals for z-curve's estimates but refrain from doing so as it takes much time."
                                  , "<br/><br/>"
                                  , sep = ""))
 
@@ -157,7 +157,7 @@ references_list <- HTML(paste(
   , "FORRT Replications and Reversals: https://docs.google.com/spreadsheets/d/1IY56xdDmoU9VasdE0sry2xvsGFkWPrqbKXAs1Rw-9LA/edit#gid=0"
   , "Bartoš, F., & Schimmack, U. (2020). Z-Curve.2.0: Estimating Replication Rates and Discovery Rates. Advance online publication. https://doi.org/10.31234/osf.io/urgtn"
   , "Hoyningen-Huene, P. (2013). Systematicity: The nature of science. Oxford studies in philosophy of science. Oxford Univ. Press."
-  , "LeBel, E. P., McCarthy, R. J., Earp, B. D., Elson, M., & Vanpaemel, W. (2018). A unified framework to quantify the credibility of scientific findings. Advances in Methods and Practices in Psychological Science, 1(3), 389-402."
+  , "LeBel, E. P., Vanpaemel, W., Cheung, I., & Campbell, L. (2019). A brief guide to evaluate replications. Meta-Psychology, 3."
   , "Open Science Collaboration (2015). Psychology: Estimating the reproducibility of psychological science. Science (New York, N.Y.), 349(6251), aac4716. https://doi.org/10.1126/science.aac4716"
   ,  sep = "<br/><br/>- "))
 
@@ -167,6 +167,7 @@ references_redpublications <- HTML(paste("<br/><br/><br/><h4><b>Publications Usi
 
 references_list_redpublications <- HTML(paste(
   "Röseler, L. (2023). Predicting Replication Rates with Z-Curve: A Brief Exploratory Validation Study Using the FORRT Replication Database. Retrieved from https://osf.io/t7nwk"
+  , "Röseler, L., Kaiser, L., Doetsch, C. A., Klett, N., Seida, C., Schütz, A., … Zhang, Y., Mr. (2024, April 11). The Replication Database: Documenting the Replicability of Psychological Science. https://doi.org/10.31222/osf.io/me2ub"
   ,  sep = "<br/><br/>- "))
 
 
