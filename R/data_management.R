@@ -8,7 +8,7 @@
 
 
 load_variable_descriptions <- function(sheet_name = "Key Variables", data = get_param("FRED_DATA_FILE")) {
-  variable_descriptions <- openxlsx::read.xlsx(data, sheet = sheet_name, startRow = 2)
+  variable_descriptions <-  safe_read_xl(data, url = get_param("FRED_DATA_URL"), sheet = sheet_name, startRow = 2)
   return(variable_descriptions)
 }
 
@@ -21,13 +21,13 @@ load_variable_descriptions <- function(sheet_name = "Key Variables", data = get_
 
 read_fred <- function(data = get_param("FRED_DATA_FILE")) {
 
-  red <- openxlsx::read.xlsx(data, sheet = "Data") # .xlsx file
+  red <- safe_read_xl(data, url = get_param("FRED_DATA_URL"), sheet = "Data") # .xlsx file
   red <- red[-(1:2), ] # exclude labels and "X" column
-  forrt  <- openxlsx::read.xlsx(data, sheet = "FORRT R&R (editable)", startRow = 1)
+  forrt  <- safe_read_xl(data, url = get_param("FRED_DATA_URL"), sheet = "FORRT R&R (editable)", startRow = 1)
   forrt <- forrt[-(1:2), ] # exclude labels and "X" column
 
   # additional studies
-  as <- openxlsx::read.xlsx(data, sheet = "Additional Studies to be added", startRow = 2)
+  as <-  safe_read_xl(data, url = get_param("FRED_DATA_URL"), sheet = "Additional Studies to be added", startRow = 2)
   as$id <- paste("uncoded_studies_", rownames(as), sep = "")
 
   numeric_variables <- c("n_original", "n_replication", "es_orig_value", "es_rep_value",

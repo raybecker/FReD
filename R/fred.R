@@ -105,4 +105,8 @@ load_fred_data <- function(data = get_param("FRED_DATA_FILE")) {
     augment_for_zcurve()
 }
 
-
+safe_read_xl <- function(file, url, ...) {
+  tryCatch(openxlsx::read.xlsx(file, ...), error = function(e) {
+    openxlsx::read.xlsx(url, ...)
+  })
+}
