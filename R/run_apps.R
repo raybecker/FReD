@@ -37,7 +37,11 @@ shiny::runApp(appDir = '{appDir}', display.mode = 'normal', quiet = TRUE, host =
                           ")
     writeLines(launch_code, f)
 
-    eval(parse(text = glue::glue("invisible(rstudioapi::jobRunScript(path = '{f}', importEnv = TRUE, exportEnv = 'R_GlobalEnv', name = '{app} Shiny app'))")))
+    tryCatch(eval(parse(text = glue::glue("invisible(rstudioapi::jobRunScript(path = '{f}', importEnv = TRUE, exportEnv = 'R_GlobalEnv', name = '{app} Shiny app'))"))), error = function(e) {
+      message("App could not be loaded in background - likely due to an issue with tempfile permissions. Starting in Console instead.")
+      run_app(offer_install = offer_install, app = app, in_background = FALSE, port = port)
+      return(TRUE)
+    })
     message("Waiting for app launch")
     Sys.sleep(5)
     browseURL(url = glue::glue("http://127.0.0.1:{port}"))
