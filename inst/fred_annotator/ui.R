@@ -1,30 +1,5 @@
 
-moderator_choices <- list(
-  "Original Effect Size" = "es_original",
-  "Journal" = "orig_journal",
-  "Year of Original Publication" = "orig_year",
-  "Power of Replication Study" = "power"
-)
-
 # UI definition
-
-library(shiny)
-library(DT)
-library(markdown)
-library(plotly)
-
-library(shiny)
-library(DT)
-library(markdown)
-library(plotly)
-
-library(shiny)
-library(DT)
-library(markdown)
-library(plotly)
-
-library(bslib)
-
 
 sidebar_contents <- sidebar(
   id = "mySidebar",
@@ -34,7 +9,7 @@ sidebar_contents <- sidebar(
   fileInput("upload", "Or upload reference list (PDF, citation or text file)", accept = c("application/pdf", " text/plain", ".bib", ".ris")),
   uiOutput("button_area"),
   checkboxInput("validated", "Use validated database entries only", value = TRUE),
-  selectInput("success_criterion", "Success criterion", choices = c(Significance = "result", Consistency = "consistency"), selected = "result"),
+  selectInput("success_criterion", "Success criterion", choices = c(Significance = "significance", Consistency = "consistency"), selected = "significance"),
   conditionalPanel(
     condition = "output.showToggle",  # This JavaScript condition reacts to Shiny output
     tags$a(id = "toggle_link", "Show/Hide DOIs >", href = "#", class = "btn btn-link"),
@@ -80,13 +55,15 @@ study_selection_content <- nav_panel(
 
 report_content <- nav_panel(
   "Report",
-  tags$div(
-    style = "max-width: 800px; margin: auto;",
-         plotlyOutput("references_barplot"),
-         plotlyOutput("replicability_plot", height = "600px"),
+  div(
+    style = "max-width: 1000px; margin: auto;",
+    plotlyOutput("references_barplot", height = 150),
+    plotlyOutput("outcomes_barplot"),
+    br(),
+    plotlyOutput("replicability_plot", height = "600px"),
 
   ),
-  tags$div(
+  div(
     style = "max-width: 200px; margin: auto;",
   downloadButton("downloadPdf", "Download PDF reading list")),
   withSpinner(uiOutput("refs_annotated"))

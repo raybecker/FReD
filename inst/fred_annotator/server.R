@@ -243,36 +243,85 @@ server <- function(input, output, session) {
 
   output$references_barplot <- renderPlotly({
 
-    p1 <- count(tibble(doi_original = doi_vector$dois),in_FReD = doi_original %in% reactive_df()$doi_original) %>%
-      ggplot(aes(x = ifelse(in_FReD, "yes", "no"), y = n)) +
-      geom_bar(stat = "identity") +
+    df <- tibble(doi_original = doi_vector$dois, in_FReD = doi_original %in% reactive_df()$doi_original) %>%
+      mutate(in_FReD = ifelse(in_FReD, "yes", "no"))
+
+    # Calculate the counts and proportions
+    df_summary <- df %>%
+      count(in_FReD) %>%
+      mutate(proportion = n / sum(n),
+             label = paste(in_FReD, "\n(", scales::percent(proportion, accuracy = 1), ")"))
+
+    # Create the plot
+    p <- df_summary %>%
+      ggplot(aes(y = "", x = proportion, fill = in_FReD)) +
+      geom_bar(stat = "identity", position = "fill") +
+      geom_text(aes(label = label), position = position_fill(vjust = 0.5), size = 3) +  # Adjust size as needed
       theme_minimal() +
-      labs(x = "", y = "Count", subtitle = "Are references in FReD?")
+      labs(y = "", x = "Share", title = "Are replications for references in FReD?") +
+      scale_x_continuous(labels = scales::percent) +
+      guides(fill = "none") + theme_void()
 
+    plotly::ggplotly(p, tooltip = NULL, height = 150) %>%
+      plotly::config(displayModeBar = FALSE)
 
-    p2 <- reactive_df() %>% filter(doi_original %in% doi_vector$dois) %>%
+  })
 
+  output$outcomes_barplot <- renderPlotly({
+
+    df <- reactive_df() %>%
+      filter(doi_original %in% doi_vector$dois)
+
+    if (input$success_criterion == "consistency") {
+      df <- df %>% mutate(result = assess_success(consistency, success_criterion = "consistency"))
+      outcome_colors <- c("Inconsistent replication" = "#FF7F7F", "Consistent replication" = "#8FBC8F", "Replication (of n.s. finding)" = "#F0F0F0")
+
+    } else if (input$success_criterion == "significance") {
+      df <- df %>% mutate(result = assess_success(result, success_criterion = "significance"))
+      outcome_colors <- c("Non-significant replication" = "#FF7F7F", "Significant replication" = "#8FBC8F", "Replication (of n.s. finding)" = "#F0F0F0")
+    }
+
+    p <- df %>%
       mutate(result = result %>% forcats::fct_na_value_to_level("not coded")) %>%
-      ggplot(aes(x = result)) +
+      ggplot(aes(y = result, fill = result)) +
       geom_bar() +
       theme_minimal() +
-      labs(x = "", y = "Count", subtitle = "Outcomes of replication attempts")
+      labs(y = "", x = "Count", title = "Outcomes of replication attempts") +
+      scale_fill_manual(values = outcome_colors)
 
-    subplot(p1, p2)
+    plotly::ggplotly(p, tooltip = NULL) %>%
+      plotly::config(displayModeBar = FALSE)
 
   })
 
   # Functions to generate markdown
+  assess_success <- function(result, success_criterion = c("consistency", "significance")) {
+    if (success_criterion[[1]] == "consistency") {
+      case_when(
+        result == "OS not significant" ~ "Replication (of n.s. finding)",
+        result == "consistent" ~ "Consistent replication",
+        result %in% c("inconsistent", "inconsistent, smaller") ~ "Inconsistent replication"
+        )
 
-  assess_outcome <- function(replications, ..., success_criterion = c("consistency", "result"), return_html = TRUE) {
+    } else if (success_criterion[[1]] == "significance") {
+      case_when(
+        result == "successful replication" ~ "Significant replication",
+        result == "failed replication" ~ "Non-significant replication",
+        result == "OS not significant" ~ "Replication (of n.s. finding)",
+        TRUE ~ NA_character_
+      )
+    } else {
+      stop("Invalid type argument. Must be 'consistent'.")
+    }
+  }
+
+
+  assess_outcome <- function(replications, ..., success_criterion = c("consistency", "significance"), return_html = TRUE) {
 
     if (success_criterion[[1]] == "consistency") {
       replications %>%
-        mutate(replication_outcome = case_when(
-          consistency == "OS not significant" ~ "Replication (of n.s. finding)",
-          consistency == "consistent" ~ "Consistent replication",
-          consistency %in% c("inconsistent", "inconsistent, smaller") ~ "Inconsistent replication",
-        )) %>%
+        mutate(replication_outcome = assess_success(consistency, success_criterion = "consistency"),
+        result = consistency) %>%
         summarise(
           replications = paste0("  - **", replication_outcome, ":** ", ref_replication, collapse = "\n"),
           overall_outcome = case_when(
@@ -282,14 +331,9 @@ server <- function(input, output, session) {
             TRUE ~ if (return_html) "&#x2753;" else "[?Re]" #❓
           )
         )
-    } else if (success_criterion[[1]] == "result") {
+    } else if (success_criterion[[1]] == "significance") {
       replications %>%
-        mutate(replication_outcome = case_when(
-          result == "successful replication" ~ "Significant replication",
-          result == "failed replication" ~ "Non-significant replication",
-          result == "OS not significant" ~ "Replication (of n.s. finding)",
-          TRUE ~ NA_character_
-        )) %>%
+        mutate(replication_outcome = assess_success(result, success_criterion = "significance")) %>%
         summarise(
           replications = paste0("  - **", replication_outcome, ":** ", ref_replication, collapse = "\n"),
           overall_outcome = case_when(
@@ -377,8 +421,6 @@ server <- function(input, output, session) {
         markdown_output
       )
 
-      browser()
-
       writeLines(rmd_content, con = tempReport)
 
       out <- rmarkdown::render(tempReport, quiet = TRUE)
@@ -386,45 +428,101 @@ server <- function(input, output, session) {
     }
   )
 
-  library(ggplot2)
-  library(ggExtra)
-  library(dplyr)
-
-
-  output$replicability_plot <- renderPlotly({
+  output$replicability_plot <- plotly::renderPlotly({
 
     df <- reactive_df() %>%
-      filter(doi_original %in% doi_vector$dois) %>%
-      mutate(significant = case_when(significant_replication == 0 ~ "Not Significant",
-                                     significant_replication == 1 ~ "Significant",
-                                     TRUE ~ NA_character_)) %>%
-      filter(!is.na(es_replication))
+      filter(doi_original %in% doi_vector$dois)
 
-    subplot(
-      plot_ly(data = df, x = ~es_original, type = 'histogram',
-              alpha =.5, showlegend = FALSE) ,
-      plotly_empty(),
-      plot_ly(data = df, x = ~es_original, y = ~es_replication, type = 'scatter', size = ~power_r,
-              mode = 'markers', color = ~significant, alpha = .5, colors = c("Not Significant" = "red", "Significant" = "darkgreen"),
-              text = ~sprintf("Original (%s): %.2f\nReplication (%s): %.2f\nPower of replication: %.2f",
-                              doi_original, es_original, doi_replication, es_replication, power_r),
-              hoverinfo = "text",  showlegend = TRUE) %>%
-        layout(xaxis = list(title = 'Original Effect Size', zeroline = TRUE, showline = TRUE),
-               yaxis = list(title = 'Replication Effect Size', zeroline = TRUE, showline = TRUE)
-              ),
-      plot_ly(data = df, y = ~es_replication, type = 'histogram',
-              alpha = .5, showlegend = FALSE),
-      nrows = 2, heights = c(.2, .8), widths = c(.8,.2), margin = 0,
-      shareX = TRUE, shareY = TRUE, titleX = TRUE, titleY = TRUE) %>%
-      layout(title = "Comparison of original and replication findings")
+    if (input$success_criterion == "consistency") {
+      df <- df %>% mutate(result = assess_success(consistency, success_criterion = "consistency"))
+      outcome_colors <- c("Inconsistent replication" = "#FF7F7F", "Consistent replication" = "#8FBC8F", "Replication (of n.s. finding)" = "#F0F0F0")
 
+    } else if (input$success_criterion == "significance") {
+      df <- df %>% mutate(result = assess_success(result, success_criterion = "significance"))
+      outcome_colors <- c("Non-significant replication" = "#FF7F7F", "Significant replication" = "#8FBC8F", "Replication (of n.s. finding)" = "#F0F0F0")
 
+    }
+
+    df$significant_original <- c("Not significant", "Significant")[(df$p_value_original < .05) + 1] %>% factor()
+    df$significant_replication <- c("Not significant", "Significant")[(df$p_value_replication < .05) + 1] %>% factor()
+
+    df$result <- df$result %>% factor()
+
+    df$scatterplotdescription <- paste(stringr::str_wrap(df$description, 50), "\nr(original) = ",
+                                            round(df$es_original, 3),
+                                            ", r(replication) = ",
+                                            round(df$es_replication, 3),
+                                            sep = ""
+    )
+
+    pointsize <- ifelse(nrow(df) < 10, 5, ifelse(nrow(df) < 100, 4, 3))
+
+    df <- df %>% filter(!is.na(es_replication))
+
+    scatterplot <-
+      ggplot(df, aes(x = es_original, y = es_replication, text = scatterplotdescription)) +
+      geom_hline(aes(yintercept = 0), linetype = 2) +
+      geom_abline(intercept = 0, slope = 1, color = "Grey60") +
+      geom_point(aes(fill = result), size = pointsize, color = "Grey30", shape = 21, alpha = .8) +
+      # geom_point(data = df_temp[s3, ], fill = "#0077d9", color = "#f2ef1b", shape = 4) +
+      geom_rug(data = df[df$significant_original == "Significant", ], color = "darkgreen", size = 1, sides = "b", alpha = .6) +
+      geom_rug(data = df[df$significant_original == "Not significant", ], color = "darkred", size = 1, sides = "b", alpha = .6) +
+      geom_rug(data = df[df$significant_replication == "Significant", ], color = "darkgreen", size = 1, sides = "l", alpha = .6) +
+      geom_rug(data = df[df$significant_replication == "Not significant", ], color = "darkred", size = 1, sides = "l", alpha = .6) +
+      scale_x_continuous(name = "Original Effect Size", limits = c(0, 1), breaks = c(0, .25, .5, .75, 1)) +
+      scale_y_continuous(name = "Replication Effect Size", limits = c(-.5, 1), breaks = c(-.5, -.25, 0, .25, .5, .75, 1)) +
+      # ggtitle("") + #xlab("") + ylab("") +
+      # scale_size_continuous(name="Power",range=c(.5,3.5)) +
+      #scale_color_discrete(guide = "none") +
+      scale_fill_manual(values = outcome_colors) +
+      theme_bw() +
+      labs(fill = "Replication Outcome", color = "Significance")
+      #theme(legend.position = "inside", plot.margin = unit(c(-2,-1.5,2,2), "lines"))
+      #theme(legend.position = "none")
+
+    plotly::ggplotly(scatterplot, tooltip = "text") %>%
+      plotly::config(displayModeBar = FALSE) %>%
+      plotly::layout(xaxis = list(fixedrange = TRUE), yaxis = list(fixedrange = TRUE))
   })
 
-
-
-
 }
+
+#   output$replicability_plot <- renderPlotly({
+#
+#     df <- reactive_df() %>%
+#       filter(doi_original %in% doi_vector$dois) %>%
+#       mutate(significant = case_when(significant_replication == 0 ~ "Not Significant",
+#                                      significant_replication == 1 ~ "Significant",
+#                                      TRUE ~ NA_character_)) %>%
+#       filter(!is.na(es_replication))
+#
+#     browser()
+#
+#     subplot(
+#       plot_ly(data = df, x = ~es_original, type = 'histogram',
+#               alpha =.5, showlegend = FALSE) ,
+#       ggplot(),
+#       plot_ly(data = df, x = ~es_original, y = ~es_replication, type = 'scatter', size = ~power_r, fill = ~'',
+#               mode = 'markers', color = ~significant, alpha = .5, colors = c("Not Significant" = "red", "Significant" = "darkgreen"),
+#               text = ~sprintf("Original (%s): %.2f\nReplication (%s): %.2f\nPower of replication: %.2f",
+#                               doi_original, es_original, doi_replication, es_replication, power_r),
+#               hoverinfo = "text",  showlegend = TRUE) %>%
+#         layout(xaxis = list(title = 'Original Effect Size', zeroline = TRUE, showline = TRUE),
+#                yaxis = list(title = 'Replication Effect Size', zeroline = TRUE, showline = TRUE)
+#               ),
+#       plot_ly(data = df, y = ~es_replication, type = 'histogram',
+#               alpha = .5, showlegend = FALSE),
+#       nrows = 2, heights = c(.2, .8), widths = c(.8,.2), margin = 0,
+#       shareX = TRUE, shareY = TRUE, titleX = TRUE, titleY = TRUE) %>%
+#       layout(title = "Comparison of original and replication findings")
+#
+#
+#   })
+#
+#
+#
+#
+# }
 
 
 #

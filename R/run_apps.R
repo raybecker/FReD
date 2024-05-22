@@ -46,7 +46,8 @@ shiny::runApp(appDir = '{appDir}', display.mode = 'normal', quiet = TRUE, host =
     Sys.sleep(5)
     browseURL(url = glue::glue("http://127.0.0.1:{port}"))
     rstudioapi::executeCommand(commandId = "activateConsole")
-    message("If the app does not show in your browser, try refreshing after 10-20 seconds - it can take a moment to download and prepare the dataset.")
+    message("If the app does not show in your browser, try refreshing after 10-20 seconds - it can take a moment to download and prepare the dataset.",
+            "If you want to reopen it later, go to ",  glue::glue("http://127.0.0.1:{port}"), " in your browser. To stop the app, click on STOP in the Background Jobs pane.")
   }
 }
 

@@ -121,8 +121,6 @@ server <- function(input, output) {
       # geom_point(aes(size = power, fill=significant_replication), color = "Grey30", shape = 21,alpha = .8) +
       geom_point(aes(fill = significant_replication), size = pointsize, color = "Grey30", shape = 21, alpha = .8) +
 
-
-
       # highlighted studies
       # geom_point(data = df_temp[s3, ], mapping = aes(size = power), fill= "Grey30",color="Grey30",shape=4) +
       geom_point(data = df_temp[s3, ], fill = "#0077d9", color = "#f2ef1b", shape = 4) +

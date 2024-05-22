@@ -16,6 +16,7 @@ Description: FORRT's Replication Database collects replication studies across th
     and behavioural sciences. This package offers two Shiny apps to explore the database,
     enable meta-research and facilitate the search for replication studies.
 License: MIT + file LICENSE
+Remotes: github::forrtproject/FReD
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.1
@@ -44,4 +45,6 @@ Imports:
     checkmate,
     glue,
     shinyjs,
-    ggExtra
+    ggExtra,
+    markdown,
+    pkgload

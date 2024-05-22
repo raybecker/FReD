@@ -1,10 +1,13 @@
-# Global imports - only for shiny
+# Global imports - mostly for shiny
 #' @import shiny
 #' @import bslib
 #' @import shinycssloaders
 #' @import ggplot2
+#' @rawNamespace import(plotly, except = c(last_plot))
 #' @import dplyr
 #' @import checkmate
+#' @rawNamespace import(DT, except = c(dataTableOutput, renderDataTable))
+#' @import markdown
 
 
 .check_req_packages <- function(x, note = "") {

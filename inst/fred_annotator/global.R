@@ -2,8 +2,10 @@ options(shiny.maxRequestSize = 20 * 1024^2)
 
 if (!exists("load_fred_data")) {
   message("If launching the app directly rather than through run_annotator(), the FReD package needs to be loaded.
-          Trying devtools::load_all() - if that leads to issues, best load the package and use run_annotator() instead.")
-  devtools::load_all()
+          Trying devtools::load_all() and library() - if that leads to issues, best load the package manually and use run_annotator() instead.")
+  tryCatch(devtools::load_all(), error = function(e) {
+    library(FReD)
+  })
 }
 df <- load_fred_data()
 
