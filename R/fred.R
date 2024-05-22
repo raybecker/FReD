@@ -49,7 +49,7 @@ create_citation <- function(data_file = get_param("FRED_DATA_FILE"), cache = TRU
   if (cache && exists("citation", .cache, inherits = FALSE)) {
     return(.cache$citation)
   }
-  contributors <- openxlsx::read.xlsx(data_file, sheet = "Contributors FReD")
+  contributors <-  safe_read_xl(data, url = get_param("FRED_DATA_URL"), sheet = "Contributors FReD")
   contributors <- contributors[contributors$Added.to.FReD.website.as.contributor, ]
   contributors$first <- substr(contributors$First.name, 1, 1)
   contributors$middle <- ifelse(!is.na(contributors$Middle.name), paste(" ", substr(contributors$Middle.name, 1, 1), ".", sep = ""), "")
@@ -106,6 +106,7 @@ load_fred_data <- function(data = get_param("FRED_DATA_FILE")) {
 }
 
 safe_read_xl <- function(file, url, ...) {
+  # TK: make warning clearer
   tryCatch(openxlsx::read.xlsx(file, ...), error = function(e) {
     openxlsx::read.xlsx(url, ...)
   })
