@@ -96,7 +96,7 @@ barplot2_title <- HTML(paste("
                              , sep = ""))
 
 barplot2_explanation <- HTML(paste("
-                                 <h5><i>Note. </i><a href='https://doi.org/10.15626/MP.2018.843'>Lebel et al. (2019)</a> have suggested a more nuanced interpretation of replication results for cases where the original study found an effect. Whether or not the replication effect is significant, too, is indicated by signal/no-signal. Whether the replication effect is smaller, larger, or the same size is also indicated. We also included cases where the original study was not significant or no information about the original study's significance was available in grey."
+                                 <h5><i>Note. </i><a href='https://doi.org/10.15626/MP.2018.843'>LeBel et al. (2019)</a> have suggested a more nuanced interpretation of replication results for cases where the original study found an effect. Whether or not the replication effect is significant, too, is indicated by signal/no-signal. Whether the replication effect is smaller, larger, or the same size is also indicated. We also included cases where the original study was not significant or no information about the original study's significance was available in grey."
                                    , "<br/><br/>"
                                    , sep = ""))
 
@@ -167,6 +167,7 @@ references_redpublications <- HTML(paste("<br/><br/><br/><h4><b>Publications Usi
 
 references_list_redpublications <- HTML(paste(
   "Röseler, L. (2023). Predicting Replication Rates with Z-Curve: A Brief Exploratory Validation Study Using the FORRT Replication Database. Retrieved from https://osf.io/t7nwk"
+  , "Röseler, L., Kaiser, L., Doetsch, C. A., Klett, N., Seida, C., Schütz, A., … Zhang, Y., Mr. (2024, April 11). The Replication Database: Documenting the Replicability of Psychological Science. https://doi.org/10.31222/osf.io/me2ub"
   ,  sep = "<br/><br/>- "))
 
 
