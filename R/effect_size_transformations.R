@@ -8,8 +8,16 @@
 
 convert_effect_sizes <- function(es_values, es_types) {
   es_types <- tolower(es_types)
-  estype_map <- c("or" = "or", "d" = "d", "η²" = "eta", "etasq" = "eta", "f" = "f", "r" = "r", "r²" = "r2", "r2" = "r2", "r" = "φ",
-                  "d" = "smd")
+
+  # TK: dataset has a lot of different ways to refer to the same effect size type
+  # TK: should be cleaned up there eventually
+  estype_map <- c("or" = "or", "odds ratio" = "or",
+                  "d" = "d", "cohen's d" = "d", "hedges' g" = "d", "hedges'g" = "d", "hedge's g" = "d", "hedges g" = "d", "smd" = "d",
+                  "η²" = "eta", "etasq" = "eta",
+                  "f" = "f",
+                  "r" = "r", "φ" = "r", "phi" = "r",
+                  "r²" = "r2", "r2" = "r2")
+
   es_values_r <- rep(NA, length(es_values))
 
   if (length(setdiff(na.omit(unique(es_types)), names(estype_map))) > 0) {
@@ -53,10 +61,13 @@ convert_effect_sizes <- function(es_values, es_types) {
 #' @param fred_data FReD dataset
 #' @param es_value_columns Character vector of column names for effect sizes
 #' @param es_type_columns Character vector of column names for effect size types
+#' @param es_common_names Names of columns where effect sizes should be saved. If coalesce_values is TRUE, existing values in these columns will be retained *if* no conversion is possible.
+#' @param coalesce_values Logical. Should existing values in es_type_columns be retained?
 #' @return FReD dataset with additional columns for common effect sizes
 
 add_common_effect_sizes <- function(fred_data, es_value_columns = c("es_orig_value", "es_rep_value"),
-                                    es_type_columns = c("es_orig_estype", "es_rep_estype"), es_common_names = c("es_original", "es_replication")) {
+                                    es_type_columns = c("es_orig_estype", "es_rep_estype"), es_common_names = c("es_original", "es_replication"),
+                                    coalesce_values = TRUE) {
   if (!all.equal(length(es_value_columns), length(es_type_columns), length(es_common_names))) {
     stop("Length of es_value_columns, es_type_columns, and es_common_names must be equal")
   }
@@ -68,7 +79,14 @@ add_common_effect_sizes <- function(fred_data, es_value_columns = c("es_orig_val
       stop("Column ", es_type_columns[i], " not found in FReD dataset")
     }
 
-    fred_data[, es_common_names[i]] <- convert_effect_sizes(fred_data[, es_value_columns[i]], fred_data[, es_type_columns[i]])
+    if (coalesce_values && es_common_names[i] %in% names(fred_data)) {
+      prev_es <- as.numeric(fred_data[, es_common_names[i]])
+      prev_es[prev_es > 1] <- NA
+      prev_es[prev_es < -1] <- NA
+      fred_data[, es_common_names[i]] <- dplyr::coalesce(convert_effect_sizes(fred_data[, es_value_columns[i]], fred_data[, es_type_columns[i]]), prev_es)
+    } else {
+      fred_data[, es_common_names[i]] <- convert_effect_sizes(fred_data[, es_value_columns[i]], fred_data[, es_type_columns[i]])
+    }
 
   }
 

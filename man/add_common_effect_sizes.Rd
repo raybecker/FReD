@@ -8,7 +8,8 @@ add_common_effect_sizes(
   fred_data,
   es_value_columns = c("es_orig_value", "es_rep_value"),
   es_type_columns = c("es_orig_estype", "es_rep_estype"),
-  es_common_names = c("es_original", "es_replication")
+  es_common_names = c("es_original", "es_replication"),
+  coalesce_values = TRUE
 )
 }
 \arguments{
@@ -17,6 +18,10 @@ add_common_effect_sizes(
 \item{es_value_columns}{Character vector of column names for effect sizes}
 
 \item{es_type_columns}{Character vector of column names for effect size types}
+
+\item{es_common_names}{Names of columns where effect sizes should be saved. If coalesce_values is TRUE, existing values in these columns will be retained \emph{if} no conversion is possible.}
+
+\item{coalesce_values}{Logical. Should existing values in es_type_columns be retained?}
 }
 \value{
 FReD dataset with additional columns for common effect sizes

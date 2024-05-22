@@ -4,6 +4,7 @@
 #' @import shinycssloaders
 #' @import ggplot2
 #' @import dplyr
+#' @import checkmate
 
 
 .check_req_packages <- function(x, note = "") {

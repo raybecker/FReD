@@ -39,4 +39,9 @@ Imports:
     shiny,
     shinycssloaders,
     stringr,
-    zcurve
+    zcurve,
+    esc,
+    checkmate,
+    glue,
+    shinyjs,
+    ggExtra
