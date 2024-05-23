@@ -28,14 +28,12 @@ Imports:
     ggplot2,
     gridExtra,
     httr,
-    magrittr,
     metafor,
     openxlsx,
     plotly,
     plyr,
     psychometric,
     pwr,
-    readxl,
     reshape,
     shiny,
     shinycssloaders,
@@ -47,4 +45,4 @@ Imports:
     shinyjs,
     ggExtra,
     markdown,
-    pkgload
+    rlang
