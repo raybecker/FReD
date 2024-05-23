@@ -4,5 +4,8 @@ The FReD Reference Annotator can help you annotate any list of references with r
 
 ### Step 1: Select references
 
+You can paste a list of references into the text box, or upload a file with references. Currently, only DOIs will be extracted - and then used to search the FORRT Replication Database. You can also directly search the database on the "Study Selection" tab and therey add and remove studies from the list.
 
 ### Step 2: Explore or download reports
+
+Go to the "Report" tab to see visual summaries of replicability across your references, and to view/download an annotated reading list.
