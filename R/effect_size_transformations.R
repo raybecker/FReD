@@ -138,16 +138,10 @@ add_uncertainty <- function(fred_data, es_value_columns = c("es_original", "es_r
 
     fred_data[, vi_columns[i]] <- metafor::escalc(measure = "COR", ri = fred_data[, es_value_columns[i]], ni = fred_data[, N_columns[i]])$vi
 
-    # By default, the CIr function from psychometric only accepts a single r and n, so we need to vectorize it
-    get_cis <- Vectorize(function(r, n) {
-      if (is.na(n) | n <= 3) return(list(NA, NA) %>% matrix() %>% as.numeric())
-      psychometric::CIr(r =  r, n = n)
-    })
+    ci <- compute_ci_r(r =  fred_data[, es_value_columns[i]], n = fred_data[, N_columns[i]])
 
-    ci <- get_cis(r =  fred_data[, es_value_columns[i]], n = fred_data[, N_columns[i]])
-
-    fred_data[, ci_lower_columns[i]] <- ci[1,]
-    fred_data[, ci_upper_columns[i]] <- ci[2,]
+    fred_data[, ci_lower_columns[i]] <- ci[3]
+    fred_data[, ci_upper_columns[i]] <- ci[4]
 
     fred_data[, p_values[i]] <- p_from_r(fred_data[, es_value_columns[i]], fred_data[, N_columns[i]])
 
