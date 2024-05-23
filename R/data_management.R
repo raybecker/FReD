@@ -12,6 +12,40 @@ load_variable_descriptions <- function(sheet_name = "Key Variables", data = get_
   return(variable_descriptions)
 }
 
+#' Bind Rows with Character Columns
+#'
+#' A wrapper for `dplyr::bind_rows` that ensures any columns that are character
+#' in one of the data frames are converted to character in all data frames before binding.
+#' This reduces the likelihood of errors, but does not give up on type-checking entirely.
+#'
+#' @param ... Data frames to combine. Each argument should be a data frame.
+#' @param .id An optional string that will be used to create a column in the output.
+#' If supplied, this will create a new column with the name given by `.id`, and each
+#' row will have a value corresponding to the argument name from which it came.
+#'
+#' @return A data frame created by binding the rows of the input data frames.
+#' @keywords internal
+
+bind_rows_with_characters <- function(..., .id = NULL) {
+  dfs <- list(...)
+
+  all_cols <- unique(unlist(lapply(dfs, colnames)))
+
+  # Convert columns to character if any column in any dataframe is character
+  dfs <- lapply(dfs, function(df) {
+    for (col in all_cols) {
+      if (col %in% colnames(df)) {
+        if (any(sapply(dfs, function(x) col %in% colnames(x) && is.character(x[[col]])))) {
+          df[[col]] <- as.character(df[[col]])
+        }
+      }
+    }
+    return(df)
+  })
+  dplyr::bind_rows(dfs, .id = .id)
+}
+
+
 #' Read the FReD dataset
 #'
 #' This function loads the FReD dataset into R. It merges the data from the different sheets into one data frame.
@@ -39,10 +73,9 @@ read_fred <- function(data = get_param("FRED_DATA_FILE")) {
   red[, numeric_variables] <- sapply(red[ , numeric_variables], as.numeric)
   forrt[, numeric_variables] <- sapply(forrt[ , numeric_variables], as.numeric)
 
-  # merge the data
-  # TK: this performs no type checks, so less likely to fail than dplyr::bind_rows ... but more likely to cause downstream issues
+  # merge the data, aligning column types where one is character (as empty colums are imported as numeric)
+  bind_rows_with_characters(red, forrt, as)
   plyr::rbind.fill(red, forrt, as)
-
 }
 
 #' Clean variables
