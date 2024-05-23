@@ -18,7 +18,7 @@ jobs:
       - name: Push to shiny.io
         run: |
           Rscript -e "
-              rsconnect::setAccountInfo(name='forrt-replications', token='${{secrets.SHINYAPPS_TOKEN}}', secret='${{secrets.SHINYAPPS_SECRET}}');
+              rsconnect::setAccountInfo(name='forrt-replications', token=${{secrets.SHINYAPPS_TOKEN}}, secret=${{secrets.SHINYAPPS_SECRET}});
               if (!require(remotes)) install.packages('remotes');
               remotes::install_github('forrtproject/FReD');
               appDir <- system.file('fred_explorer', package = 'FReD');
