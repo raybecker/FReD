@@ -40,4 +40,6 @@ Imports:
     glue,
     shinyjs,
     markdown,
-    rlang
+    rlang,
+    pdftools,
+    psych
