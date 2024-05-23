@@ -6,8 +6,6 @@ library(DT)
 
 if (FALSE) library(FReD)
 
-requireNamespace(FReD) #for rsconnect deployment
-
 options(shiny.maxRequestSize = 20 * 1024^2)
 
 if (!exists("create_citation")) {
