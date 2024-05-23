@@ -3,7 +3,7 @@ library(bslib)
 library(dplyr)
 library(ggplot2)
 library(DT)
-requireNamespace(FReD) #for rsconnect deployment
+if (FALSE) library(FReD)
 
 
 if (!exists("create_citation")) {
