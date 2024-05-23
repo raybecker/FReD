@@ -14,14 +14,18 @@ jobs:
     if: "!contains(github.event.head_commit.message, '[automated]') && !contains(github.event.head_commit.message, '[no-deploy]')"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
+      - name: Install packages
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          cache-version: 2
+          packages: |
+            any::rsconnect
+            github::forrtproject/FReD
       - name: Push to shiny.io
         run: |
           Rscript -e "
-              install.packages('rsconnect');
               rsconnect::setAccountInfo(name='forrt-replications', token=${{secrets.SHINYAPPS_TOKEN}}, secret=${{secrets.SHINYAPPS_SECRET}});
-              if (!require(remotes)) install.packages('remotes');
-              remotes::install_github('forrtproject/FReD');
               appDir <- system.file('fred_explorer', package = 'FReD');
               rsconnect::deployApp(appDir);
               appDir <- system.file('fred_annotator', package = 'FReD');
