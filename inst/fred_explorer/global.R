@@ -1,9 +1,14 @@
+library(shiny)
+library(bslib)
+library(dplyr)
+library(ggplot2)
+library(DT)
 
-if (!exists("load_fred_data")) {
-  message("If launching the app directly rather than through run_explorer(), the FReD package needs to be loaded.
-          Trying devtools::load_all() - if that leads to issues, best load the package and use run_explorer() instead.")
-  devtools::load_all()
+if (!exists("create_citation")) {
+  attach(getNamespace("FReD")) # To enable use of un-exported functions
 }
+
+if (!exists("create_citation")) stop("Failed to attach FReD namespace.")
 
 df <- load_fred_data()
 

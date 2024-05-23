@@ -1,12 +1,17 @@
+library(shiny)
+library(bslib)
+library(dplyr)
+library(ggplot2)
+library(DT)
+
 options(shiny.maxRequestSize = 20 * 1024^2)
 
-if (!exists("load_fred_data")) {
-  message("If launching the app directly rather than through run_annotator(), the FReD package needs to be loaded.
-          Trying devtools::load_all() and library() - if that leads to issues, best load the package manually and use run_annotator() instead.")
-  tryCatch(devtools::load_all(), error = function(e) {
-    library(FReD)
-  })
+if (!exists("create_citation")) {
+  attach(getNamespace("FReD")) # To enable use of un-exported functions
 }
+
+if (!exists("create_citation")) stop("Failed to attach FReD namespace.")
+
 df <- load_fred_data()
 
 df_display <- df[, c("description", "es_original", "es_replication", "n_original", "n_replication", "osf_link", "contributors", "result", "result2", "ref_original", "ref_replication")]

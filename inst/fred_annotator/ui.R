@@ -57,16 +57,16 @@ report_content <- nav_panel(
   "Report",
   div(
     style = "max-width: 1000px; margin: auto;",
-    plotlyOutput("references_barplot", height = 150),
-    plotlyOutput("outcomes_barplot"),
+    plotly::plotlyOutput("references_barplot", height = 150),
+    plotly::plotlyOutput("outcomes_barplot"),
     br(),
-    plotlyOutput("replicability_plot", height = "600px"),
+    plotly::plotlyOutput("replicability_plot", height = "600px"),
 
   ),
   div(
     style = "max-width: 200px; margin: auto;",
   downloadButton("downloadPdf", "Download PDF reading list")),
-  withSpinner(uiOutput("refs_annotated"))
+  shinycssloaders::withSpinner(uiOutput("refs_annotated"))
 )
 
 about_content <- nav_panel("About",

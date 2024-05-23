@@ -3,13 +3,9 @@
 server <- function(input, output) {
   # Overview Table ----------------------------------------------------------
 
+  df_temp <- reactive({
 
-  output$table <- DT::renderDT(server = FALSE, {
-    ## apply filters
-    df_temp <- df
-    df_temp <- df_temp[rev(row.names(df_temp)), ]
-
-    df_temp <- df_temp[df_temp$power_r >= input$minpower, ]
+    df_temp <- df[rev(row.names(df)), ]
 
     # source
     if (input$source == "All studies") {
@@ -27,11 +23,19 @@ server <- function(input, output) {
     if (input$codedentries == TRUE) {
       df_temp <- df_temp[!is.na(df_temp$result), ]
     }
+    df_temp
+  })
+
+  df_temp_DT <- reactive({
+    df_temp()[input$table_rows_all, ] # rows on all pages (after being filtered)
+  })
+
+
+  output$table <- DT::renderDT(server = FALSE, {
+    ## apply filters
+    df_temp <- df_temp()
+
     df_temp[is.na(df_temp$result), "result"] <- "not coded"
-
-    # exclude NAs
-    # df_temp <- df_temp[!is.na(df_temp$result), ]
-
 
     # df_temp_filtered <- df_temp[, c("description", "n_original", "n_replication", "power", "result")]
     df_temp_filtered <- df_temp[, c(
@@ -54,55 +58,16 @@ server <- function(input, output) {
       # , options = list(pageLength = 5)
       # , rownames = FALSE
     )
-
-    # DT::datatable(
-    #   df_temp[, c("description", "tags", "result", "ref_original", "ref_replication")]
-    #   , extensions = "Buttons"
-    #   , options = list(scrollX = TRUE
-    #                    , dom = "Bfrtip"
-    #                    , buttons = c('copy', 'csv', 'excel')
-    #                    , pageLength = 5
-    #                    # , lengthMenu = c(5, 10, 100) # XXX not working yet
-    #   ), rownames = FALSE
-    # )
   })
 
 
   # Overview Plot -----------------------------------------------------------
 
-
-
-
   output$overviewplot <- plotly::renderPlotly({
     ## apply filters
-    df_temp <- df
-    df_temp <- df_temp[rev(row.names(df_temp)), ]
+    df_temp <- df_temp_DT()
 
-    df_temp <- df_temp[df_temp$power_r >= input$minpower, ]
-
-    # source
-    if (input$source == "All studies") {
-      df_temp <- df_temp
-    } else {
-      df_temp <- df_temp[df_temp$source == input$source, ]
-    }
-
-    # validated
-    if (input$validated == TRUE) {
-      df_temp <- df_temp[!is.na(df_temp$validated), ]
-    }
-
-    # exclude NAs
-    df_temp <- df_temp[!is.na(df_temp$result), ]
-
-    df_temp$significant_original <- as.factor(df_temp$significant_original)
-    df_temp$significant_replication <- as.factor(df_temp$significant_replication)
-
-    ## Choose only entries that are also displayed in the table
-    s1 <- input$table_rows_current # rows on the current page
-    s2 <- input$table_rows_all # rows on all pages (after being filtered)
-    s3 <- input$table_rows_selected # selected rows
-    df_temp <- df_temp[s2, ]
+    validate(need(nrow(df_temp) > 0, "Plot cannot be created if no studies are selected"))
 
     df_temp$scatterplotdescription <- paste(df_temp$description, "\nr(original) = ",
       round(df_temp$es_original, 3),
@@ -112,6 +77,11 @@ server <- function(input, output) {
     )
 
     pointsize <- ifelse(nrow(df_temp) < 10, 5, ifelse(nrow(df_temp) < 100, 4, 3))
+
+    s3 <- input$table_rows_selected
+
+    df_temp$significant_original <- c("Not significant", "Significant")[(df_temp$p_value_original < .05) + 1] %>% factor()
+    df_temp$significant_replication <- c("Not significant", "Significant")[(df_temp$p_value_replication < .05) + 1] %>% factor()
 
     scatterplot <-
       ggplot(df_temp, aes(x = es_original, y = es_replication, text = scatterplotdescription)) +
@@ -124,8 +94,8 @@ server <- function(input, output) {
       # highlighted studies
       # geom_point(data = df_temp[s3, ], mapping = aes(size = power), fill= "Grey30",color="Grey30",shape=4) +
       geom_point(data = df_temp[s3, ], fill = "#0077d9", color = "#f2ef1b", shape = 4) +
-      geom_rug(aes(color = significant_original), size = 1, sides = "b", alpha = .6) +
-      geom_rug(aes(color = significant_replication), size = 1, sides = "l", alpha = .6) +
+      geom_rug(aes(color = significant_original), linewidth = 1, sides = "b", alpha = .6) +
+      geom_rug(aes(color = significant_replication), linewidth = 1, sides = "l", alpha = .6) +
       scale_x_continuous(name = "Original Effect Size", limits = c(0, 1), breaks = c(0, .25, .5, .75, 1)) +
       scale_y_continuous(name = "Replication Effect Size", limits = c(-.5, 1), breaks = c(-.5, -.25, 0, .25, .5, .75, 1)) +
       # ggtitle("") + #xlab("") + ylab("") +
@@ -137,7 +107,7 @@ server <- function(input, output) {
       theme(legend.position = "none")
 
 
-    overviewplotly <- plotly::ggplotly(scatterplot, tooltip = "text") %>%
+    plotly::ggplotly(scatterplot, tooltip = "text") %>%
       plotly::config(displayModeBar = FALSE) %>%
       plotly::layout(xaxis = list(fixedrange = TRUE), yaxis = list(fixedrange = TRUE))
   }) # , height = 800
@@ -208,131 +178,78 @@ server <- function(input, output) {
       plotly::layout(xaxis = list(fixedrange = TRUE), yaxis = list(fixedrange = TRUE)) #  %>% layout(height = 10000, width = 1200)
   })
 
+  outcome_colors <- reactive({
 
+    # Only "result" currently implemented - others taken from annotator, to be pursued later
+
+    if (input$result_var == "result") {
+      outcome_colors <- c("failed replication" = "#FF7F7F", "successful replication" = "#8FBC8F", "OS not significant" = "#F0F0F0")
+    } else if (input$success_criterion == "consistency") {
+        outcome_colors <- c("Inconsistent replication" = "#FF7F7F", "Consistent replication" = "#8FBC8F", "Replication (of n.s. finding)" = "#F0F0F0")
+      } else if (input$success_criterion == "significance") {
+        outcome_colors <- c("Non-significant replication" = "#FF7F7F", "Significant replication" = "#8FBC8F", "Replication (of n.s. finding)" = "#F0F0F0")
+      }
+
+  })
 
 
   # Bar Plot -------------------------------------------------------------
 
   output$barplot <- plotly::renderPlotly({
-    ## apply filters
-    df_temp <- df
-    df_temp <- df_temp[rev(row.names(df_temp)), ]
 
-    df_temp <- df_temp[df_temp$power_r >= input$minpower, ]
+    df_temp <- df_temp_DT()
 
-    # source
-    if (input$source == "All studies") {
-      df_temp <- df_temp
-    } else {
-      df_temp <- df_temp[df_temp$source == input$source, ]
-    }
-
-    # validated
-    if (input$validated == TRUE) {
-      df_temp <- df_temp[!is.na(df_temp$validated), ]
-    }
-
-    # only show show coded entries?
-    if (input$codedentries == TRUE) {
-      df_temp <- df_temp[!is.na(df_temp$result), ]
-    }
     df_temp[is.na(df_temp$result), "result"] <- "not coded"
 
-    # exclude NAs
-    # df_temp <- df_temp[!is.na(df_temp$result), ]
+    validate(need(nrow(df_temp) > 0, "Plot cannot be created if no studies are selected"))
 
-    ## Choose only entries that are also displayed in the table
-    s1 <- input$table_rows_current # rows on the current page
-    s2 <- input$table_rows_all # rows on all pages (after being filtered)
-    s3 <- input$table_rows_selected # selected rows
-    df_temp <- df_temp[s2, ]
+    # Calculate proportions - separately to enable tooltip text
+    df_summary <- df_temp %>%
+      group_by(result) %>%
+      summarise(count = n()) %>%
+      mutate(Proportion = count / sum(count),
+             text = paste(result, ":\n", round(Proportion * 100, 1), "%"))
 
-    bardata <- as.data.frame(base::table(df_temp$result, useNA = "always") / nrow(df_temp))
-    names(bardata) <- c("Result", "Proportion")
-    bardata$Proportion <- round(bardata$Proportion, 4) * 100
-
-    bardata$description <- paste(bardata$Result, ": ", bardata$Proportion, "%", sep = "")
-
-    barchart <- ggplot(bardata, aes(x = "", fill = Result, y = Proportion, text = description)) +
-      geom_bar(position = "fill", stat = "identity") +
+    barchart <- ggplot(df_summary, aes(x = "", fill = result, y = Proportion, text = text)) +
+      geom_bar(stat = "identity", position = "fill") +
       theme_bw() +
       ylab("Percentage") +
       xlab("") +
       coord_flip() +
-      scale_fill_manual("Result", values = c(
-        "success" = "#30c25a",
-        "informative failure to replicate" = "#f0473e",
-        "practical failure to replicate" = "#f2bbb8",
-        "inconclusive" = "#60bef7"
-      )) + # , NA = "grey"
-      ggtitle(paste(nrow(df_temp), "of", nrow(df), "studies selected."))
-    p <- plotly::ggplotly(barchart, tooltip = "text") %>%
+      scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+      scale_fill_manual("Result", values = outcome_colors()) +
+      ggtitle(paste(nrow(df_temp), "of", nrow(df_temp_DT()), "studies selected."))
+
+    plotly::ggplotly(barchart, tooltip = "text") %>%
       plotly::config(displayModeBar = FALSE) %>%
-      plotly::layout(xaxis = list(fixedrange = TRUE), yaxis = list(fixedrange = TRUE)) #  %>% layout(height = 10000, width = 1200)
+      plotly::layout(xaxis = list(fixedrange = TRUE), yaxis = list(fixedrange = TRUE))
   })
-
-
-
-
 
   # Barplot Result2 ---------------------------------------------------------
 
   output$barplot2 <- plotly::renderPlotly({
     ## apply filters
-    df_temp <- df
-    df_temp <- df_temp[rev(row.names(df_temp)), ]
-
-
-    # # text inputs
-    # if (nchar(input$tags) > 0) {
-    #   df_temp <- df_temp[grepl(tolower(as.character(input$tags)),         tolower(df_temp$tags)), ]
-    # }
-    #
-    # if (nchar(input$titles) > 0) {
-    #   df_temp <- df_temp[grepl(tolower(as.character(input$titles)),       tolower(df_temp$description)), ]
-    # }
-    #
-    # if (nchar(input$contributors) > 0) {
-    #   df_temp <- df_temp[grepl(tolower(as.character(input$contributors)), tolower(df_temp$contributors)), ]
-    # }
-
-    df_temp <- df_temp[df_temp$power_r >= input$minpower, ]
-
-    # source
-    if (input$source == "All studies") {
-      df_temp <- df_temp
-    } else {
-      df_temp <- df_temp[df_temp$source == input$source, ]
-    }
-
-    # validated
-    if (input$validated == TRUE) {
-      df_temp <- df_temp[!is.na(df_temp$validated), ]
-    }
-
+    df_temp <- df_temp_DT()
 
     ## Exclude NAs
     df_temp <- df_temp[!is.na(df_temp$result2), ]
 
-    ## Choose only entries that are also displayed in the table
-    s1 <- input$table_rows_current # rows on the current page
-    s2 <- input$table_rows_all # rows on all pages (after being filtered)
-    s3 <- input$table_rows_selected # selected rows
-    df_temp <- df_temp[s2, ]
+    validate(need(nrow(df_temp) > 0, "Plot cannot be created if no studies are selected"))
 
+    df_summary <- df_temp %>%
+      group_by(result2) %>%
+      summarise(count = n()) %>%
+      mutate(Proportion = count / sum(count),
+             text = paste(result2, ": ", round(Proportion * 100, 1), "%"))
 
-    bardata <- as.data.frame(base::table(df_temp$result2, useNA = "always") / nrow(df_temp))
-    names(bardata) <- c("Result", "Proportion")
-    bardata$Proportion <- round(bardata$Proportion, 4) * 100
-
-    bardata$description <- paste(bardata$Result, ": ", bardata$Proportion, "%", sep = "")
-
-    barchart <- ggplot(bardata, aes(x = Result, fill = Result, y = Proportion, text = description)) +
-      geom_bar(stat = "identity") +
+    # Create the barchart with tooltip text
+    barchart <- ggplot(df_summary, aes(x = "", fill = result2, y = Proportion, text = text)) +
+      geom_bar(stat = "identity", position = "dodge") +
       theme_bw() +
       ylab("Percentage") +
       xlab("") +
       coord_flip() +
+      scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
       scale_fill_manual("Result", values = c(
         "no signal - inconsistent" = "#9c0505",
         "signal - consistent" = "#05e361",
@@ -341,13 +258,14 @@ server <- function(input, output) {
         "signal - inconsistent, smaller" = "#a4d11b",
         "signal - inconsistent, larger" = "#77bd06",
         "signal - OS n.s." = "grey",
-        "no signal - consistent" = "#b4d4a5"
-        # , "NA" = "grey"
-      )) + # , NA = "grey"
-      ggtitle(paste(nrow(df_temp), "of", nrow(df), "studies selected."))
-    p <- plotly::ggplotly(barchart, tooltip = "text") %>%
+        "no signal - consistent" = "#b4d4a5",
+        "not coded" = "grey"
+      )) +
+      ggtitle(paste(nrow(df_temp), "of", nrow(df_temp_DT()), "studies selected."))
+
+    plotly::ggplotly(barchart, tooltip = "text") %>%
       plotly::config(displayModeBar = FALSE) %>%
-      plotly::layout(xaxis = list(fixedrange = TRUE), yaxis = list(fixedrange = TRUE)) #  %>% layout(height = 10000, width = 1200)
+      plotly::layout(xaxis = list(fixedrange = TRUE), yaxis = list(fixedrange = TRUE))
   })
 
 
@@ -356,39 +274,12 @@ server <- function(input, output) {
 
   output$zcurve_plot <- shiny::renderPlot({
     ## apply filters
-    df_temp <- df
-    df_temp <- df_temp[rev(row.names(df_temp)), ]
+    df_temp <- df_temp_DT()
 
-    df_temp <- df_temp[df_temp$power_r >= input$minpower, ]
-
-    # source
-    if (input$source == "All studies") {
-      df_temp <- df_temp
-    } else {
-      df_temp <- df_temp[df_temp$source == input$source, ]
-    }
-
-    # validated
-    if (input$validated == TRUE) {
-      df_temp <- df_temp[!is.na(df_temp$validated), ]
-    }
-
-    # exclude NAs
-    df_temp <- df_temp[!is.na(df_temp$result), ]
-
-
-    ## Choose only entries that are also displayed in the table
-    s1 <- input$table_rows_current # rows on the current page
-    s2 <- input$table_rows_all # rows on all pages (after being filtered)
-    s3 <- input$table_rows_selected # selected rows
-    df_temp <- df_temp[s2, ]
-
-
-    # # make descriptions shorter
-    # df_temp$description <- gsub("(.{70,}?)\\s", "\\1\n", df_temp$description) # line breaks
-
-    # use only studies with complete data
+    # use only studies with effect size data
     df_temp <- df_temp[!is.na(df_temp$z), ]
+
+    validate(need(nrow(df_temp) > 0, "Plot cannot be created if no studies are selected"))
 
     # run z-curve analysis
     zc <- zcurve::zcurve(z = df_temp$z, method = "EM", bootstrap = 0)
@@ -397,9 +288,8 @@ server <- function(input, output) {
     err <- zc$coefficients[1]
 
     # create plot
-    zcurve::plot.zcurve(zc, annotation = TRUE, CI = TRUE, main = paste("Observed Replication Rate: ", orr
-      # , "\nCorrected ERR: ", round(1.85*err-0.573, digits = 2)
-      ,
+    zcurve::plot.zcurve(zc, annotation = TRUE, CI = TRUE, main = paste("Observed Replication Rate: ", orr,
+      # "\nCorrected ERR: ", round(1.85*err-0.573, digits = 2),
       sep = ""
     ))
   })
@@ -435,31 +325,53 @@ server <- function(input, output) {
 
   # Correlates of R ---------------------------------------------------------
 
+  library(dplyr)
+  library(rlang)
+
+  aggregate_results <- function(df, ..., result = NULL, mixed_text = "mixed", NA_text = "not coded yet") {
+    # Dynamically determining the column to operate on
+    result_sym <- if (is.null(result)) {
+
+       if (is.null(input$result_var)) {
+        stop("Input for 'result' is required when 'result' argument is NULL.")
+      } else {
+        sym(input$result_var)
+      }
+    } else {
+      ensym(result)
+    }
+
+    # Replace NA values in the chosen result column with NA_text
+    df <- df %>%
+      mutate({{ result_sym }} := if_else(is.na({{ result_sym }}), NA_text, as.character({{ result_sym }})))
+
+    # Grouping, summarizing and renaming dynamically
+    df %>%
+      dplyr::group_by(...) %>%
+      dplyr::summarise(result_col = if (all({{ result_sym }} == first({{ result_sym }}))) {
+        first({{ result_sym }})
+      } else {
+        mixed_text
+      }, .groups = "drop") %>%
+      dplyr::rename({{ result_sym }} := result_col)
+  }
+
+
+
+
 
   output$correlate_decade <- plotly::renderPlotly({
-    df[is.na(df$result), "result"] <- "not coded yet"
 
-    # Aggregate results so that there is one value for each original study
-    red_agg <- aggregate(result ~ ref_original, data = df, FUN = function(x) {
-      paste(unique(x), collapse = ", ")
-    })
-
-    # recode mixed results
-    red_agg$result <- dplyr::recode(red_agg$result,
-      "success" = "success",
-      "informative failure to replicate" = "informative failure to replicate",
-      "inconclusive" = "inconclusive",
-      "practical failure to replicate" = "practical failure to replicate",
-      "not coded yet" = "not coded yet",
-      .default = "mixed"
-    )
+    red_agg <- aggregate_results(df, ref_original)
 
     red_agg$year_orig <- as.numeric(substr(gsub("\\D", "", red_agg$ref_original), 1, 4))
-    red_agg$year_orig <- ifelse(red_agg$year_orig > 2050, NA, red_agg$year_orig)
-    red_agg$decade_orig <- as.numeric(substr(gsub("\\D", "", red_agg$ref_original), 1, 3))
-    red_agg$decade_orig <- as.numeric(ifelse(!is.na(red_agg$decade_orig), paste(red_agg$decade_orig, "0", sep = ""), red_agg$decade_orig))
-    red_agg$decade_orig <- ifelse(red_agg$decade_orig > 2050, NA, red_agg$decade_orig)
 
+    # Remove implausible years
+    current_year <- as.numeric(format(Sys.Date(), "%Y"))
+    red_agg$year_orig <- ifelse(red_agg$year_orig > current_year+2, NA, red_agg$year_orig)
+    red_agg$year_orig <- ifelse(red_agg$year_orig < 1900, NA, red_agg$year_orig)
+
+    red_agg$decade_orig <- floor(red_agg$year_orig / 10) * 10
 
     ### DECADE (ORIGINAL)
     red_agg$row <- 1:nrow(red_agg)
@@ -475,14 +387,7 @@ server <- function(input, output) {
         x = "Decade the Original Finding was Published", y = "Number of Replication Findings",
         title = paste("Aggregated replication outcomes by decade for k = ", sum(reprate_decade$k), " replicated original studies", sep = "")
       ) +
-      scale_color_manual("Result", values = c(
-        "success" = "#30c25a",
-        "informative failure to replicate" = "#f0473e",
-        "practical failure to replicate" = "#f2bbb8",
-        "inconclusive" = "#60bef7",
-        "mixed" = "#ffc000"
-      ))
-
+      scale_color_manual("Result", values = outcome_colors())
 
     plotly::ggplotly(p) %>%
       plotly::config(displayModeBar = FALSE) %>%
@@ -490,35 +395,15 @@ server <- function(input, output) {
   })
 
   output$correlate_journal <- plotly::renderPlotly({
-    ### JOURNAL (ORIGINAL)
-    df[is.na(df$result), "result"] <- "not coded yet"
+    red_agg <- aggregate_results(df, ref_original, orig_journal)
 
-    # df[df$source == "FORRT" & is.na(df$validated), "result"] <- "not coded yet"
 
-    # Aggregate results so that there is one value for each original study
-    red_agg <- aggregate(result ~ ref_original + orig_journal, data = df, FUN = function(x) {
-      paste(unique(x), collapse = ", ")
-    })
-
-    # recode mixed results
-    red_agg$result <- dplyr::recode(red_agg$result,
-      "success" = "success",
-      "informative failure to replicate" = "informative failure to replicate",
-      "inconclusive" = "inconclusive",
-      "practical failure to replicate" = "practical failure to replicate",
-      "not coded yet" = "not coded yet",
-      .default = "mixed"
-    )
-
-    # remove faulty rows
-    red_agg <- red_agg[red_agg$orig_journal != "signal", ]
-    red_agg <- red_agg[red_agg$orig_journal != "no signal", ]
-    red_agg <- red_agg[red_agg$orig_journal != "success", ]
 
     red_agg$row <- 1:nrow(red_agg)
     reprate_journal <- aggregate(row ~ orig_journal * result, data = red_agg, FUN = "length")
     names(reprate_journal) <- c("journal_orig", "Result", "k")
 
+    # remove faulty rows
     reprate_journal <- reprate_journal[reprate_journal$journal_orig != "consistent", ]
     reprate_journal <- reprate_journal[reprate_journal$journal_orig != "inconsistent", ]
     reprate_journal <- reprate_journal[reprate_journal$journal_orig != "mixed", ]
@@ -534,13 +419,7 @@ server <- function(input, output) {
         x = "", y = "Number of Replicated Original Studies",
         title = paste("Aggregated replication outcomes by journal for k = ", sum(reprate_journal$k), " replicated original studies.", sep = "")
       ) +
-      scale_fill_manual("Result", values = c(
-        "success" = "#30c25a",
-        "informative failure to replicate" = "#f0473e",
-        "practical failure to replicate" = "#f2bbb8",
-        "inconclusive" = "#60bef7",
-        "mixed" = "#f0c91f"
-      )) +
+      scale_fill_manual("Result", values = outcome_colors()) +
       scale_x_discrete(limits = rev) +
       coord_flip()
 
@@ -699,14 +578,10 @@ server <- function(input, output) {
       ylab("Percentage") +
       xlab("") +
       coord_flip() +
-      scale_fill_manual("Result", values = c(
-        "success" = "#30c25a",
-        "informative failure to replicate" = "#f0473e",
-        "practical failure to replicate" = "#f2bbb8",
-        "inconclusive" = "#60bef7"
-      )) + # , NA = "grey"
+      scale_fill_manual("Result", values = outcome_colors()) +
       ggtitle(paste(nrow(df_temp), "Replication findings were identified. These stem from", length(unique(df_temp$doi_original)), "different publication(s)."))
-    p <- plotly::ggplotly(barchart, tooltip = "text") %>%
+
+     p <- plotly::ggplotly(barchart, tooltip = "text") %>%
       plotly::config(displayModeBar = FALSE) %>%
       plotly::layout(xaxis = list(fixedrange = TRUE), yaxis = list(fixedrange = TRUE)) #  %>% layout(height = 10000, width = 1200)
   })
@@ -744,18 +619,9 @@ server <- function(input, output) {
 
 
   output$checkertable <- DT::renderDT(server = FALSE, {
-    # combine coded and uncoded studies
-    df[is.na(df$result), "result"] <- "not coded yet"
-
-    ## apply filters
-    df_temp <- df
-    df_temp <- df_temp[rev(row.names(df_temp)), ]
-
-    # exclude NAs
-    df_temp <- df_temp[!is.na(df_temp$result), ]
 
     # exclude non-validated entries
-    df_temp <- df_temp[!is.na(df_temp$validated), ]
+    df_temp <- df_temp()
 
 
     # df_temp_filtered <- df_temp[, c("description", "n_original", "n_replication", "power", "result")]
@@ -944,13 +810,8 @@ server <- function(input, output) {
       theme_bw() +
       ylab("Percentage") +
       xlab("") +
-      coord_flip() +
-      scale_fill_manual("Result", values = c(
-        "success" = "#30c25a",
-        "informative failure to replicate" = "#f0473e",
-        "practical failure to replicate" = "#f2bbb8",
-        "inconclusive" = "#60bef7"
-      )) + # , NA = "grey"
+      coord_flip()  +
+      scale_fill_manual("Result", values = outcome_colors()) +
       ggtitle(paste(nrow(df_temp), "of", nrow(df), "studies selected."))
     p <- plotly::ggplotly(barchart, tooltip = "text") %>%
       plotly::config(displayModeBar = FALSE) %>%
@@ -1036,18 +897,7 @@ server <- function(input, output) {
 
   output$flexiblesummarizertext <- shiny::renderText({
     # this plot is based on the filtered entries from the checkertable
-    df_temp <- df
-    df_temp <- df_temp[rev(row.names(df_temp)), ]
-
-    # exclude non-validated entries
-    df_temp <- df_temp[!is.na(df_temp$validated), ]
-
-    # use only filtered studies
-    s1 <- input$checkertable_rows_current # rows on the current page
-    s2 <- input$checkertable_rows_all # rows on all pages (after being filtered)
-    s3 <- input$checkertable_rows_selected # selected rows
-
-    df_temp <- df_temp[s2, ]
+    df_temp <- df_temp()
 
     # exclude NAs
     df_temp <- df_temp[!is.na(df_temp$result), ]

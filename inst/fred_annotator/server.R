@@ -241,7 +241,7 @@ server <- function(input, output, session) {
   outputOptions(output, "selected_references", suspendWhenHidden = FALSE)
   outputOptions(output, "database_search", suspendWhenHidden = FALSE)
 
-  output$references_barplot <- renderPlotly({
+  output$references_barplot <- plotly::renderPlotly({
 
     df <- tibble(doi_original = doi_vector$dois, in_FReD = doi_original %in% reactive_df()$doi_original) %>%
       mutate(in_FReD = ifelse(in_FReD, "yes", "no"))
@@ -252,6 +252,8 @@ server <- function(input, output, session) {
       mutate(proportion = n / sum(n),
              label = paste(in_FReD, "\n(", scales::percent(proportion, accuracy = 1), ")"))
 
+    color_values = c("no" = "#FF7F7F", "yes" = "#8FBC8F")
+
     # Create the plot
     p <- df_summary %>%
       ggplot(aes(y = "", x = proportion, fill = in_FReD)) +
@@ -260,6 +262,7 @@ server <- function(input, output, session) {
       theme_minimal() +
       labs(y = "", x = "Share", title = "Are replications for references in FReD?") +
       scale_x_continuous(labels = scales::percent) +
+      scale_fill_manual(values = color_values) +
       guides(fill = "none") + theme_void()
 
     plotly::ggplotly(p, tooltip = NULL, height = 150) %>%
@@ -267,7 +270,7 @@ server <- function(input, output, session) {
 
   })
 
-  output$outcomes_barplot <- renderPlotly({
+  output$outcomes_barplot <- plotly::renderPlotly({
 
     df <- reactive_df() %>%
       filter(doi_original %in% doi_vector$dois)
@@ -465,10 +468,10 @@ server <- function(input, output, session) {
       geom_abline(intercept = 0, slope = 1, color = "Grey60") +
       geom_point(aes(fill = result), size = pointsize, color = "Grey30", shape = 21, alpha = .8) +
       # geom_point(data = df_temp[s3, ], fill = "#0077d9", color = "#f2ef1b", shape = 4) +
-      geom_rug(data = df[df$significant_original == "Significant", ], color = "darkgreen", size = 1, sides = "b", alpha = .6) +
-      geom_rug(data = df[df$significant_original == "Not significant", ], color = "darkred", size = 1, sides = "b", alpha = .6) +
-      geom_rug(data = df[df$significant_replication == "Significant", ], color = "darkgreen", size = 1, sides = "l", alpha = .6) +
-      geom_rug(data = df[df$significant_replication == "Not significant", ], color = "darkred", size = 1, sides = "l", alpha = .6) +
+      geom_rug(data = df[df$significant_original == "Significant", ], color = "darkgreen", linewidth = 1, sides = "b", alpha = .6) +
+      geom_rug(data = df[df$significant_original == "Not significant", ], color = "darkred", linewidth = 1, sides = "b", alpha = .6) +
+      geom_rug(data = df[df$significant_replication == "Significant", ], color = "darkgreen", linewidth = 1, sides = "l", alpha = .6) +
+      geom_rug(data = df[df$significant_replication == "Not significant", ], color = "darkred", linewidth = 1, sides = "l", alpha = .6) +
       scale_x_continuous(name = "Original Effect Size", limits = c(0, 1), breaks = c(0, .25, .5, .75, 1)) +
       scale_y_continuous(name = "Replication Effect Size", limits = c(-.5, 1), breaks = c(-.5, -.25, 0, .25, .5, .75, 1)) +
       # ggtitle("") + #xlab("") + ylab("") +

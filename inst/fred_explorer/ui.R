@@ -43,11 +43,17 @@ ui <- fluidPage(
       "Replicability Tracker",
       fluidRow(
         sidebarPanel(
+          tags$style(HTML("
+            #result_var {
+              display: none;
+            }
+          ")), # Remove this to actually use the result_var input
           sliderInput("minpower", "Minimum Power", min = .05, max = .999, value = .05),
           selectInput("source", "Browse Large-Scale Projects:",
             choices = large_scale_project_choices,
             selected = "All studies"
           ),
+          selectInput("result_var", label = "Success criterion", choices = c("result"), selected = "result"),
           checkboxInput("validated", "Show validated entries only", value = TRUE),
           checkboxInput("codedentries", "Show coded entries only", value = TRUE),
           width = 2
@@ -56,31 +62,31 @@ ui <- fluidPage(
           8,
           dataset_info,
           # Red-and-green Barplot
-          withSpinner(plotly::plotlyOutput("barplot", width = "100%", height = "250px")),
+          shinycssloaders::withSpinner(plotly::plotlyOutput("barplot", width = "100%", height = "250px")),
           # Table for filtering
-          withSpinner(DT::DTOutput("table")),
+          shinycssloaders::withSpinner(DT::DTOutput("table")),
           # RPP-Scatterplot
           scatterplot_title,
-          withSpinner(plotly::plotlyOutput("overviewplot", width = "100%", height = 800)),
+          shinycssloaders::withSpinner(plotly::plotlyOutput("overviewplot", width = "100%", height = 800)),
           scatterplot_explanation,
           # Barplot 2
           barplot2_title,
-          withSpinner(plotly::plotlyOutput("barplot2", width = "100%", height = "250px")),
+          shinycssloaders::withSpinner(plotly::plotlyOutput("barplot2", width = "100%", height = "250px")),
           barplot2_explanation,
           # Z-Curve
           breaks,
           zcurve_title, breaks,
-          withSpinner(shiny::plotOutput("zcurve_plot")),
+          shinycssloaders::withSpinner(shiny::plotOutput("zcurve_plot")),
           zcurve_explanation, breaks
-          # , withSpinner(shiny::tableOutput("overview")), dataset_info1b
+          # , shinycssloaders::withSpinner(shiny::tableOutput("overview")), dataset_info1b
         )
       )
     ),
     tabPanel(
       "Study Overview",
       fluidRow(
-        column(8, forest_info, withSpinner(plotly::plotlyOutput("forestplot", width = "100%", height = forestplotheight)))
-        # , withSpinner(shiny::tableOutput("overview")), dataset_info1b
+        column(8, forest_info, shinycssloaders::withSpinner(plotly::plotlyOutput("forestplot", width = "100%", height = forestplotheight)))
+        # , shinycssloaders::withSpinner(shiny::tableOutput("overview")), dataset_info1b
       )
     ),
     tabPanel(
@@ -88,18 +94,18 @@ ui <- fluidPage(
       # downloadButton("reddownload", label = "Download dataset"),
       # breaks,
       dataset_headline,
-      withSpinner(DT::DTOutput("dataset")),
+      shinycssloaders::withSpinner(DT::DTOutput("dataset")),
       breaks,
       variables_headline,
-      withSpinner(DT::DTOutput("variables"))
+      shinycssloaders::withSpinner(DT::DTOutput("variables"))
     ),
     tabPanel(
       "Correlates of Replicability",
       correlates_info,
       correlates_decade,
-      withSpinner(plotly::plotlyOutput("correlate_decade")),
+      shinycssloaders::withSpinner(plotly::plotlyOutput("correlate_decade")),
       correlates_journal,
-      withSpinner(plotly::plotlyOutput("correlate_journal", width = "100%", height = "2000px"))
+      shinycssloaders::withSpinner(plotly::plotlyOutput("correlate_journal", width = "100%", height = "2000px"))
     ),
     tabPanel(
       "Moderators [alpha]",
@@ -108,10 +114,10 @@ ui <- fluidPage(
         label = "Moderators",
         choices = moderator_choices
       ),
-      fluidRow(withSpinner(plotly::plotlyOutput("flexibleplot", width = "100%", height = 600))),
+      fluidRow(shinycssloaders::withSpinner(plotly::plotlyOutput("flexibleplot", width = "100%", height = 600))),
       fluidRow(
-        column(6, withSpinner(DT::DTOutput("flexiblemodtable"))),
-        column(6, withSpinner(shiny::htmlOutput("flexiblemoderatortext")))
+        column(6, shinycssloaders::withSpinner(DT::DTOutput("flexiblemodtable"))),
+        column(6, shinycssloaders::withSpinner(shiny::htmlOutput("flexiblemoderatortext")))
       )
     ),
 
@@ -119,16 +125,16 @@ ui <- fluidPage(
     #            , fluidRow(
     #                    column(12
     #                           , checker_info
-    #                           , withSpinner(DT::DTOutput("checkertable"))
-    #                           , withSpinner(DT::DTOutput("flexiblecheckertable"))
-    #                           , withSpinner(shiny::htmlOutput("flexiblesummarizertext"))
+    #                           , shinycssloaders::withSpinner(DT::DTOutput("checkertable"))
+    #                           , shinycssloaders::withSpinner(DT::DTOutput("flexiblecheckertable"))
+    #                           , shinycssloaders::withSpinner(shiny::htmlOutput("flexiblesummarizertext"))
     #                    ), column(6
     #
-    #                           , withSpinner(plotly::plotlyOutput("checker_violin", width = "100%", height = "400px"))
+    #                           , shinycssloaders::withSpinner(plotly::plotlyOutput("checker_violin", width = "100%", height = "400px"))
     #                       )
     #                       , column(6
-    #                           # , withSpinner(plotly::plotlyOutput("checker_maplot")
-    #                           , withSpinner(plotly::plotlyOutput("checker_bar")
+    #                           # , shinycssloaders::withSpinner(plotly::plotlyOutput("checker_maplot")
+    #                           , shinycssloaders::withSpinner(plotly::plotlyOutput("checker_bar")
     #                                 # , checker_matable
     #                                )
     #                       )
@@ -143,8 +149,8 @@ ui <- fluidPage(
         height = "200px",
         placeholder = NULL
       ),
-      withSpinner(plotly::plotlyOutput("references_barplot")),
-      withSpinner(tableOutput("references_doi"))
+      shinycssloaders::withSpinner(plotly::plotlyOutput("references_barplot")),
+      shinycssloaders::withSpinner(tableOutput("references_doi"))
     ),
     tabPanel(
       "References",

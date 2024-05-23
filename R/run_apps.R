@@ -29,6 +29,9 @@ run_app <- function(offer_install = interactive(), app = "fred_explorer", in_bac
   } else {
     f <- tempfile(fileext = ".R")
     launch_code <- glue::glue("
+    tryCatch({library(FReD)}, error = function(e) {{
+      message('FReD package could not be loaded. Try re-installing FReD.', call. = FALSE)
+    })
           appDir <- '{appDir}'
 if (appDir == '') {{
   stop('Could not find the app directory. Try re-installing FReD.', call. = FALSE)
