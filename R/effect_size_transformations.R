@@ -225,13 +225,11 @@ add_replication_power <- function(fred_data, es_original = "es_original", N_repl
   # NA where N_replication is missing
   fred_data[, power_column] <- NA
   # Return 0 where sample_replication < 4, as pwr.r.test does not work for n < 4
-  # This will underestimate power for small samples, but they should be visible as low power rather than missing
+  # This will underestimate power for tiny samples, but they should be visible as low power rather than missing
   fred_data[fred_data[, N_replication] %>% {!is.na(.) & . < 4}, power_column] <- 0
   # Return power where sample_replication >= 4
-  vector_power <- Vectorize(function(n, r) {
-    pwr::pwr.r.test(n = n, r = r, sig.level = 0.05, alternative = "two.sided")$power
-  })
-  fred_data[fred_data[, N_replication] %>% {!is.na(.) & . >= 4}, power_column] <- vector_power(n = fred_data[fred_data[, N_replication] %>% {!is.na(.) & . >= 4}, N_replication], r = fred_data[fred_data[, N_replication] %>% {!is.na(.) & . >= 4}, es_original])
+  fred_data[fred_data[, N_replication] %>% {!is.na(.) & . >= 4}, power_column] <-
+    compute_power_r(r = fred_data[fred_data[, N_replication] %>% {!is.na(.) & . >= 4}, es_original], n = fred_data[fred_data[, N_replication] %>% {!is.na(.) & . >= 4}, N_replication])
   fred_data
 }
 

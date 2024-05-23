@@ -30,7 +30,6 @@ Imports:
     metafor,
     openxlsx,
     plotly,
-    pwr,
     shiny,
     shinycssloaders,
     stringr,

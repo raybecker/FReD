@@ -42,8 +42,40 @@ compute_ci_r <- function(r, n, conf.level = 0.95) {
   data.frame(r = r, n = n, lower = r_lower, upper = r_upper)
 }
 
-# Example usage
-r <- c(0.5, 0.3)
-n <- c(30, 40)
-conf.level <- 0.95
-compute_ci_r(r, n, conf.level)
+#' Compute Statistical Power for Correlation Coefficient
+#'
+#' Computes the statistical power for testing a correlation coefficient using a two-sided hypothesis given r, n, and alpha.
+#'
+#' @param r Numeric vector. The correlation coefficients.
+#' @param n Integer vector. The sample sizes.
+#' @param alpha Numeric. The significance level for the test. Default is 0.05.
+#'
+#' @return A numeric vector of the computed statistical power.
+#'
+#' @source Derived from the `pwr.r.test` function in the `pwr` package, copyright (c) 2020 by Stephane Champely.
+#'
+#' @examples
+#' r <- c(0.3, 0.5)
+#' n <- c(30, 50)
+#' alpha <- 0.05
+#' compute_power_r(r, n, alpha)
+#'
+compute_power_r <- function(r, n, alpha = 0.05) {
+  # Ensure r and n are the same length
+  if (length(r) != length(n)) {
+    stop("The length of 'r' and 'n' must be the same")
+  }
+
+  # Compute the power
+  power <- numeric(length(r))
+  for (i in seq_along(r)) {
+    ttt <- qt(alpha / 2, df = n[i] - 2, lower.tail = FALSE)
+    rc <- sqrt(ttt^2 / (ttt^2 + n[i] - 2))
+    zr <- atanh(abs(r[i])) + abs(r[i]) / (2 * (n[i] - 1))
+    zrc <- atanh(rc)
+    power[i] <- pnorm((zr - zrc) * sqrt(n[i] - 3)) + pnorm((-zr - zrc) * sqrt(n[i] - 3))
+  }
+
+  return(power)
+}
+
