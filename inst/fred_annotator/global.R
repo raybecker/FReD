@@ -3,6 +3,7 @@ library(bslib)
 library(dplyr)
 library(ggplot2)
 library(DT)
+requireNamespace(FReD) #for rsconnect deployment
 
 options(shiny.maxRequestSize = 20 * 1024^2)
 

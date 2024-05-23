@@ -3,6 +3,8 @@ library(bslib)
 library(dplyr)
 library(ggplot2)
 library(DT)
+requireNamespace(FReD) #for rsconnect deployment
+
 
 if (!exists("create_citation")) {
   attach(getNamespace("FReD")) # To enable use of un-exported functions
