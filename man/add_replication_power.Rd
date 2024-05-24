@@ -16,9 +16,9 @@ add_replication_power(
 
 \item{es_original}{Character. Name of original effect size column.}
 
-\item{power_column}{Character. Name of target column for power.}
+\item{N_replication}{Character. Name of replication sample size column.}
 
-\item{sample_replication}{Character. Name of replication sample size column.}
+\item{power_column}{Character. Name of target column for power.}
 }
 \value{
 Augmented FReD dataset with power column.

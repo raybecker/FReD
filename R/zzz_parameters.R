@@ -1,7 +1,7 @@
 # Set cache for package, to avoid repeated function calls
 .cache <- new.env()
 
-#' Setting parameters for the FReD package
+#' Setting Parameters for the FReD Package
 #'
 #' Generally, the FReD package is designed to work with the latest FReD dataset.
 #' However, you might want to use an older version, or even your own. For such advanced
@@ -10,7 +10,15 @@
 #' can be set (before loading the package):
 #'
 #' - `FRED_DATA_URL`: The URL of the FReD dataset, needs to return the .xlsx file.
-#' - `FRED_DATA_FILE`: The path to the .xlsx file, if you have downloaded it already (or want it to be saved to a particular location)
+#' - `FRED_DATA_FILE`: The path to the .xlsx file, if you have downloaded it already (or want it to be saved to a particular location). If the file exists, it will be used - otherwise, the file will be downloaded and saved there.
+#'
+#' @examples
+#' Sys.setenv(FRED_DATA_URL = "http://your_url")
+#' options(FRED_DATA_URL = "http://your_url")
+#'
+#' @name setting-parameters
+NULL
+
 
 .onLoad <- function(libname, pkgname) {
   parameters <- c("FRED_DATA_URL" = "https://osf.io/z5u9b/download",
@@ -20,9 +28,9 @@
       env_value <- Sys.getenv(param, unset = NA)
 
       if (!is.na(env_value) && nzchar(env_value)) {
-        options(setNames(list(env_value), param))
+        options(stats::setNames(list(env_value), param))
       } else {
-        options(setNames(list(parameters[param]), param))
+        options(stats::setNames(list(parameters[param]), param))
       }
     }
 }

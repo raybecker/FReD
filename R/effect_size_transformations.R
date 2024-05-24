@@ -13,10 +13,10 @@ convert_effect_sizes <- function(es_values, es_types) {
   # TK: should be cleaned up there eventually
   estype_map <- c("or" = "or", "odds ratio" = "or",
                   "d" = "d", "cohen's d" = "d", "hedges' g" = "d", "hedges'g" = "d", "hedge's g" = "d", "hedges g" = "d", "smd" = "d",
-                  "η²" = "eta", "etasq" = "eta",
+                  "etasq" = "eta", "\u03B7\u00B2" = "eta", #η²
                   "f" = "f",
-                  "r" = "r", "φ" = "r", "phi" = "r",
-                  "r²" = "r2", "r2" = "r2")
+                  "r" = "r", "phi" = "r", "\u03C6" = "r", #φ
+                  "r2" = "r2", "r\u00B2" = "r2") #r²
 
   es_values_r <- rep(NA, length(es_values))
 
@@ -109,15 +109,24 @@ align_effect_direction <- function(fred_data, es_original = "es_original", es_re
   fred_data
 }
 
-#' Add sampling variances, confidence intervals and p-values
+#' Add Sampling Variances, Confidence Intervals, and P-values
 #'
-#' Adds sampling variances, confidence intervals (asymmetric, using z-transformation) and p-values for common-metric effect sizes (r) to the FReD dataset.
+#' Adds sampling variances, confidence intervals (asymmetric, using z-transformation), and p-values for common-metric effect sizes (r) to the FReD dataset.
 #'
 #' @param fred_data FReD dataset
 #' @param es_value_columns Character vector of column names with correlation values
 #' @param N_columns Character vector of column names with sample sizes
-#' @param se_columns Character vector of target columns for standard errors
-#' @return FReD dataset with additional columns for standard errors
+#' @param vi_columns Character vector of target columns for sampling variances
+#' @param ci_lower_columns Character vector of target columns for lower bounds of confidence intervals
+#' @param ci_upper_columns Character vector of target columns for upper bounds of confidence intervals
+#' @param p_values Character vector of target columns for p-values
+#' @return FReD dataset with additional columns for standard errors, confidence intervals, and p-values
+#'
+#' @noRd
+#' @examples
+#' fred_data <- data.frame(es_original = c(0.3, 0.5), es_replication = c(0.4, 0.6),
+#'                         n_original = c(30, 40), n_replication = c(50, 60))
+#' add_uncertainty(fred_data)
 
 add_uncertainty <- function(fred_data, es_value_columns = c("es_original", "es_replication"),
                             N_columns = c("n_original", "n_replication"),
@@ -163,6 +172,8 @@ add_uncertainty <- function(fred_data, es_value_columns = c("es_original", "es_r
 #' @param es_replication Character. Name of replication effect size column.
 #' @param p_original Character. Significance of original effect size.
 #' @param p_replication Character. Significance of replication effect size.
+#' @param ci_lower_replication Character. Lower bound of replication confidence interval.
+#' @param ci_upper_replication Character. Upper bound of replication confidence interval.
 #' @return Augmented FReD dataset with replication outcome columns, including `signal`
 #' @importFrom rlang sym
 #' @importFrom dplyr mutate case_when
@@ -197,16 +208,16 @@ code_replication_outcomes <- function(fred_data,
       )
     ) %>%
     dplyr::mutate(
-      consistency = dplyr::coalesce(os_ns, consistent, inconsistent),
+      consistency = dplyr::coalesce(.data$os_ns, .data$consistent, .data$inconsistent),
       result = dplyr::case_when(
         !!p_original_sym >= 0.05 ~ "OS not significant",
         !!p_replication_sym < 0.05 & sign(!!es_original_sym) == sign(!!es_replication_sym) ~ "successful replication",
         !!p_replication_sym >= 0.05 | sign(!!es_original_sym) != sign(!!es_replication_sym) ~ "failed replication",
         TRUE ~ NA_character_
       ),
-      result2 = paste(signal, consistency, sep = " - ")
+      result2 = paste(.data$signal, .data$consistency, sep = " - ")
     ) %>%
-    dplyr::select(-consistent, -inconsistent, -os_ns)
+    dplyr::select(-.data$consistent, -.data$inconsistent, -.data$os_ns)
 
   return(fred_data)
 }
@@ -217,7 +228,7 @@ code_replication_outcomes <- function(fred_data,
 #'
 #' @param fred_data FReD dataset
 #' @param es_original Character. Name of original effect size column.
-#' @param sample_replication Character. Name of replication sample size column.
+#' @param N_replication Character. Name of replication sample size column.
 #' @param power_column Character. Name of target column for power.
 #' @return Augmented FReD dataset with power column.
 
@@ -243,6 +254,7 @@ add_replication_power <- function(fred_data, es_original = "es_original", N_repl
 #' @param N Sample size.
 #'
 #' @return Numeric p-value for the two-tailed test of the correlation.
+#' @noRd
 #' @examples
 #' p_from_r(r = c(0.5, 0.3), N = c(30, 25))
 
@@ -266,13 +278,13 @@ p_from_r <- function(r, N) {
 
 #' Add confidence intervals
 #'
-#' Adds standard errors for common-metric effect sizes (r) to the FReD dataset, using metafor::escalc
+#' Adds sampling variances for common-metric effect sizes (r) to the FReD dataset, using metafor::escalc
 #'
 #' @param fred_data FReD dataset
 #' @param es_value_columns Character vector of column names with correlation values
 #' @param N_columns Character vector of column names with sample sizes
-#' @param se_columns Character vector of target columns for standard errors
-#' @return FReD dataset with additional columns for standard errors
+#' @param vi_columns Character vector of target columns for sampling variances
+#' @return FReD dataset with additional columns for sampling variances (metafor's `vi`)
 
 add_sampling_variances <- function(fred_data, es_value_columns = c("es_original", "es_replication"),
                                    N_columns = c("n_original", "n_replication"), vi_columns = c("vi_original", "vi_replication")) {
@@ -294,20 +306,16 @@ add_sampling_variances <- function(fred_data, es_value_columns = c("es_original"
 #' Augment Data for Z-Curve Analysis
 #'
 #' This function calculates and appends the standard error and z-score
-#' for z-curve analysis based on original effect size and sample size.
+#' for z-curve analysis based on the original effect size and sample size.
 #'
 #' @param fred_data A dataframe containing `es_original`
 #'   for the effect size of the original study, and `n_original` for the
 #'   sample size of the original study.
-#' @return `fred_data` but with two additional columns:
+#' @param method A character vector indicating the method to calculate the z-score.
+#'   Options are `"rtoz"` for Fisher's z transformation, or `"r/se"` for the method used in the current Shiny app. Default is `c("rtoz", "r/se")`.
+#' @return A dataframe with the original `fred_data` and two additional columns:
 #'   `se` for the standard error, and `z` for the z-score.
-
-# Example data for testing - target_p come from cor.test
-z_test_data <- data.frame(
-   es_original = c(0.522607 , -0.4926866 , -0.1175698),
-   n_original = c(32, 32, 150),
-   target_p = c(0.002151, 0.004173, 0.1519)
- )
+#' @noRd
 
 augment_for_zcurve <- function(fred_data, method = c("rtoz", "r/se")) {
 
@@ -329,3 +337,10 @@ augment_for_zcurve <- function(fred_data, method = c("rtoz", "r/se")) {
   }
   return(fred_data)
 }
+
+# Example data for testing - target_p come from cor.test
+z_test_data <- data.frame(
+  es_original = c(0.522607 , -0.4926866 , -0.1175698),
+  n_original = c(32, 32, 150),
+  target_p = c(0.002151, 0.004173, 0.1519)
+)

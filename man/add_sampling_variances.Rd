@@ -18,11 +18,11 @@ add_sampling_variances(
 
 \item{N_columns}{Character vector of column names with sample sizes}
 
-\item{se_columns}{Character vector of target columns for standard errors}
+\item{vi_columns}{Character vector of target columns for sampling variances}
 }
 \value{
-FReD dataset with additional columns for standard errors
+FReD dataset with additional columns for sampling variances (metafor's \code{vi})
 }
 \description{
-Adds standard errors for common-metric effect sizes (r) to the FReD dataset, using metafor::escalc
+Adds sampling variances for common-metric effect sizes (r) to the FReD dataset, using metafor::escalc
 }

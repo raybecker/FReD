@@ -507,7 +507,8 @@ server <- function(input, output) {
     # check moderator type (factor or metric)
     if (is.numeric(mod)) { # metric
 
-      modtable <- psych::describe(es$mod, fast = TRUE) # [c(2:5, 8, 9)]
+      modtable <- es %>%
+        summarise(n = n(), mean = mean(mod), sd = sd(mod), min = min(mod), max = max(mod))
       rownames(modtable) <- substring(input$moderator, first = 4)
       modtable[, 2:6] <- round(as.data.frame(modtable)[, 2:6], digits = 2)
       modelbeta <- metafor::rma.mv(

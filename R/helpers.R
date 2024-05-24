@@ -7,7 +7,7 @@
 #' @param conf.level Numeric. The confidence level for the interval. Default is 0.95.
 #'
 #' @return A data frame with columns `r`, `n`, `lower`, and `upper` containing the confidence intervals.
-#'
+#' @noRd
 #' @examples
 #' r <- c(0.5, 0.3)
 #' n <- c(30, 40)
@@ -54,6 +54,7 @@ compute_ci_r <- function(r, n, conf.level = 0.95) {
 #'
 #' @source Derived from the `pwr.r.test` function in the `pwr` package, copyright (c) 2020 by Stephane Champely.
 #'
+#' @noRd
 #' @examples
 #' r <- c(0.3, 0.5)
 #' n <- c(30, 50)

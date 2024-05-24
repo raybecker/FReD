@@ -26,7 +26,6 @@ Imports:
     DT,
     forcats,
     ggplot2,
-    httr,
     metafor,
     openxlsx,
     plotly,
@@ -40,5 +39,6 @@ Imports:
     shinyjs,
     markdown,
     rlang,
-    pdftools,
-    psych
+    pdftools
+Suggests: 
+    rstudioapi

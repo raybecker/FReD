@@ -22,7 +22,7 @@ access and analyse the dataset.
 
 The FReD Explorer allows users to explore the dataset, and to assess replicability
 and effect sizes of the included studies based on various filters. It primarily
-serves as a gateway to meta-science. You can access the FReD Explorer [online] or
+serves as a gateway to meta-science. You can access the FReD Explorer [online](https://forrt-replications.shinyapps.io/fred_explorer/) or
 by calling `run_explorer()` in your R console after you have loaded the package.
 
 ## FReD Annotator
@@ -31,7 +31,7 @@ The FReD Annotator allows users to annotate lists of articles (e.g. reading list
 for classes, or reference lists for draft articles) with any replication findings.
 This is intended to make it easier to use replications in teaching and research,
 and to thus ensure that claims are based on the best available evidence.
-You can access the FReD Annotator [online] or by calling `run_annotator()` in your
+You can access the FReD Annotator [online](https://forrt-replications.shinyapps.io/fred_annotator/) or by calling `run_annotator()` in your
 R console after you have loaded the package.
 
 ## Installation

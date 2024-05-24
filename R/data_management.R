@@ -75,7 +75,6 @@ read_fred <- function(data = get_param("FRED_DATA_FILE")) {
 
   # merge the data, aligning column types where one is character (as empty colums are imported as numeric)
   bind_rows_with_characters(red, forrt, as)
-  plyr::rbind.fill(red, forrt, as)
 }
 
 #' Clean variables

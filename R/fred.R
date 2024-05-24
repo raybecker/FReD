@@ -9,7 +9,22 @@
 #' @import checkmate
 #' @rawNamespace import(DT, except = c(dataTableOutput, renderDataTable))
 #' @import markdown
+#' @importFrom stats na.omit pnorm pt qnorm qt
+#' @importFrom utils browseURL download.file
+NULL
 
+utils::globalVariables(c("."))
+
+# Dummy function calls to ensure R CMD check recognizes the usage
+# these packages are use in the Shiny apps
+dummy_function_calls <- function() {
+  if (FALSE) {
+    forcats::fct_relevel
+    pdftools::pdf_text
+    shinyjs::useShinyjs
+    zcurve::zcurve
+  }
+}
 
 .check_req_packages <- function(x, note = "") {
   res <- unlist(suppressWarnings(lapply(x, requireNamespace, quietly = TRUE)))
@@ -53,7 +68,7 @@ create_citation <- function(data_file = get_param("FRED_DATA_FILE"), cache = TRU
   if (cache && exists("citation", .cache, inherits = FALSE)) {
     return(.cache$citation)
   }
-  contributors <-  safe_read_xl(data, url = get_param("FRED_DATA_URL"), sheet = "Contributors FReD")
+  contributors <-  safe_read_xl(data_file, url = get_param("FRED_DATA_URL"), sheet = "Contributors FReD")
   contributors <- contributors[contributors$Added.to.FReD.website.as.contributor, ]
   contributors$first <- substr(contributors$First.name, 1, 1)
   contributors$middle <- ifelse(!is.na(contributors$Middle.name), paste(" ", substr(contributors$Middle.name, 1, 1), ".", sep = ""), "")

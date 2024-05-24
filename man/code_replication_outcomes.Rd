@@ -23,6 +23,10 @@ code_replication_outcomes(
 
 \item{p_replication}{Character. Significance of replication effect size.}
 
+\item{ci_lower_replication}{Character. Lower bound of replication confidence interval.}
+
+\item{ci_upper_replication}{Character. Upper bound of replication confidence interval.}
+
 \item{es_replication}{Character. Name of replication effect size column.}
 }
 \value{
