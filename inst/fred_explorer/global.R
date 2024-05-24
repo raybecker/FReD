@@ -23,7 +23,7 @@ dataset_variables <- load_variable_descriptions()
 
 df$ref_original <- gsub("(.{70,}?)\\s", "\\1\n", df$ref_original) # line breaks
 
-forestplotheight <- "17000px"
+forestplotheight <- "28000px"
 
 # WEBSITE TEXT --------------------------------------------------------------
 

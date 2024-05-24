@@ -166,7 +166,7 @@ references_redpublications <- HTML(paste("<br/><br/><br/><h4><b>Publications Usi
                                          , sep = ""))
 
 references_list_redpublications <- HTML(paste(
-  "Röseler, L. (2023). Predicting Replication Rates with Z-Curve: A Brief Exploratory Validation Study Using the FORRT Replication Database. Retrieved from https://osf.io/t7nwk"
+  "- Röseler, L. (2023). Predicting Replication Rates with Z-Curve: A Brief Exploratory Validation Study Using the FORRT Replication Database. Retrieved from https://osf.io/t7nwk"
   , "Röseler, L., Kaiser, L., Doetsch, C. A., Klett, N., Seida, C., Schütz, A., … Zhang, Y., Mr. (2024, April 11). The Replication Database: Documenting the Replicability of Psychological Science. https://doi.org/10.31222/osf.io/me2ub"
   ,  sep = "<br/><br/>- "))
 
