@@ -3,6 +3,7 @@ large_scale_project_choices <- list(
   "All studies" = "All studies",
   "Individual submissions" = "Individual submissions",
   "FORRT Replications and Reversals" = "FORRT",
+  "Boyce et al., 2023 (student replications)" = "Boyce_etal2023",
   "CORE (Feldman JDM Replications)" = "CORE",
   "CRSP special issue",
   "Data Replicada" = "datareplicada",

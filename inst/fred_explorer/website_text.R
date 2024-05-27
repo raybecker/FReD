@@ -106,7 +106,7 @@ zcurve_title <- HTML(paste("
                            , sep = ""))
 
 zcurve_explanation <- HTML(paste("
-                                 <h5><i>Note. </i>Z-curve (<a href='http://dx.doi.org/10.15626/MP.2021.2720'>Bartos & Schimmack, 2020</a>) can be used to estimate replicability of a set of studies. Note that it assumes that observations are independent, which is not the case here, and that it uses only significant results. We recommend not using z-curve on less than 200 tests.<br/>Observed discovery rate refers to the proportion of significant (p < .05) studies. Expected discovery rate is the proportion of studies that you would expect to be significant if you ran perfect and high powered replications of <i>all</i> studies. Expected replicability rate is the proportion of studies that you would expect to be significant if you ran perfect and high powered replications of <i>all significant</i> studies. You can compare the discovery and replicability rates with the actual replicability presented at the top of this page. We recommend running bootstraps to get confidence intervals for z-curve's estimates but refrain from doing so as it takes much time."
+                                 <h5><i>Note. </i>Z-curve (<a href='http://dx.doi.org/10.15626/MP.2021.2720'>Bartos & Schimmack, 2020</a>) can be used to estimate replicability of a set of studies. Note that it assumes that observations are independent, which is not the case here, and that it uses only significant results. We recommend not using z-curve on less than 200 tests.<br/>Observed discovery rate refers to the proportion of significant (p < .05) studies. Expected discovery rate is the proportion of studies that you would expect to be significant if you ran replications of <i>all</i> studies with the same sample size. Expected replicability rate is the proportion of studies that you would expect to be significant if you ran perfect and high powered replications of <i>all significant</i> studies. You can compare the discovery and replicability rates with the actual replicability presented at the top of this page. We recommend running bootstraps to get confidence intervals for z-curve's estimates but refrain from doing so as it takes much time."
                                  , "<br/><br/>"
                                  , sep = ""))
 
@@ -166,7 +166,7 @@ references_redpublications <- HTML(paste("<br/><br/><br/><h4><b>Publications Usi
                                          , sep = ""))
 
 references_list_redpublications <- HTML(paste(
-  "Röseler, L. (2023). Predicting Replication Rates with Z-Curve: A Brief Exploratory Validation Study Using the FORRT Replication Database. Retrieved from https://osf.io/t7nwk"
+  "- Röseler, L. (2023). Predicting Replication Rates with Z-Curve: A Brief Exploratory Validation Study Using the FORRT Replication Database. Retrieved from https://osf.io/t7nwk"
   , "Röseler, L., Kaiser, L., Doetsch, C. A., Klett, N., Seida, C., Schütz, A., … Zhang, Y., Mr. (2024, April 11). The Replication Database: Documenting the Replicability of Psychological Science. https://doi.org/10.31222/osf.io/me2ub"
   ,  sep = "<br/><br/>- "))
 
