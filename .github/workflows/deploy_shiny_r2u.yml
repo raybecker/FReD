@@ -33,6 +33,8 @@ jobs:
         run: ./run.sh install_all
 
       - name: Push to shiny.io
+        env:
+          GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
         run: |
           Rscript -e "
               install.packages(c('rsconnect', 'remotes'));
