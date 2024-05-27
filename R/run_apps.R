@@ -8,9 +8,41 @@
 #' @param in_background Should the app be run in the background (i.e. not block the R console)? Default to TRUE if RStudio is used.
 #' @param port The port to run the app on (can usually be left at the default value)
 
-
 run_app <- function(offer_install = interactive(), app = "fred_explorer", in_background = NULL, port = 3838) {
   assert_logical(in_background, null.ok = TRUE)
+
+  check_port <- function(port) {
+    con <- suppressWarnings(try(socketConnection(host = "127.0.0.1", port = port, open = "r+"), silent = TRUE))
+    if (inherits(con, "try-error")) {
+      return(FALSE)
+    } else {
+      close(con)
+      return(TRUE)
+    }
+  }
+
+  find_free_port <- function(start_port = 3838, end_port = 4000) {
+    for (p in start_port:end_port) {
+      if (!check_port(p)) {
+        return(p)
+      }
+    }
+    stop("No free port available in the specified range.")
+  }
+
+  if (check_port(port)) {
+    message(glue::glue("Port {port} is already in use. The app may be running already."))
+    user_input <- menu(c("Open that location in the browser", "Use a new port", "Abort"), title = "Select an option:")
+    if (user_input == 1) {
+      browseURL(url = glue::glue("http://127.0.0.1:{port}"))
+      return(invisible(NULL))
+    } else if (user_input == 2) {
+      port <- find_free_port()
+    } else {
+      cli::cli_inform("Aborted by user.")
+      return(invisible(NULL))
+    }
+  }
 
   if (is.null(in_background)) {
     in_background <- check_rstudio()
@@ -25,19 +57,22 @@ run_app <- function(offer_install = interactive(), app = "fred_explorer", in_bac
   appDir <- system.file(app, package = "FReD")
 
   if (!in_background) {
-    shiny::runApp(appDir, display.mode = "normal")
+    if (is.null(port)) {
+      port <- find_free_port()
+    }
+    shiny::runApp(appDir, display.mode = "normal", port = port)
   } else {
     f <- tempfile(fileext = ".R")
     launch_code <- glue::glue("
-    tryCatch({library(FReD)}, error = function(e) {{
+    tryCatch({{library(FReD)}}, error = function(e) {{
       message('FReD package could not be loaded. Try re-installing FReD.', call. = FALSE)
-    })
-          appDir <- '{appDir}'
-if (appDir == '') {{
-  stop('Could not find the app directory. Try re-installing FReD.', call. = FALSE)
-}}
-shiny::runApp(appDir = '{appDir}', display.mode = 'normal', quiet = TRUE, host = '127.0.0.1', port = {port})
-                          ")
+    }})
+    appDir <- '{appDir}'
+    if (appDir == '') {{
+      stop('Could not find the app directory. Try re-installing FReD.', call. = FALSE)
+    }}
+    shiny::runApp(appDir = '{appDir}', display.mode = 'normal', quiet = TRUE, host = '127.0.0.1', port = {port})
+    ")
     writeLines(launch_code, f)
 
     tryCatch(eval(parse(text = glue::glue("invisible(rstudioapi::jobRunScript(path = '{f}', importEnv = TRUE, exportEnv = 'R_GlobalEnv', name = '{app} Shiny app'))"))), error = function(e) {
@@ -53,7 +88,6 @@ shiny::runApp(appDir = '{appDir}', display.mode = 'normal', quiet = TRUE, host =
             "If you want to reopen it later, go to ",  glue::glue("http://127.0.0.1:{port}"), " in your browser. To stop the app, click on STOP in the Background Jobs pane.")
   }
 }
-
 
 check_rstudio <- function() {
   if (requireNamespace("rstudioapi", quietly = TRUE)) {
@@ -93,7 +127,7 @@ run_explorer <- function(offer_install = interactive(), in_background = NULL, po
 #'   # To run the Replication Annotator app:
 #'   run_annotator()
 #' }
-run_annotator <- function(offer_install = interactive(), in_background = NULL, port = 3838) {
+run_annotator <- function(offer_install = interactive(), in_background = NULL, port = 3839) {
   run_app(offer_install = offer_install, app = "fred_annotator", in_background = in_background, port = port)
 }
 
