@@ -8,6 +8,7 @@ run_app(
   offer_install = interactive(),
   app = "fred_explorer",
   in_background = NULL,
+  auto_close = interactive(),
   port = 3838
 )
 }
@@ -17,6 +18,8 @@ run_app(
 \item{app}{The name of the app folder within the package (i.e. within the inst folder)}
 
 \item{in_background}{Should the app be run in the background (i.e. not block the R console)? Default to TRUE if RStudio is used.}
+
+\item{auto_close}{Should the app be automatically ended when the browser is closed (or refreshed)?}
 
 \item{port}{The port to run the app on (can usually be left at the default value)}
 }
