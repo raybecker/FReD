@@ -75,6 +75,8 @@ jobs:
         run: ./run.sh bootstrap
 
       - name: Install rcmdcheck
+        env:
+          GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
         run: |
           R -e "
             install.packages(c('rcmdcheck', 'devtools'));
