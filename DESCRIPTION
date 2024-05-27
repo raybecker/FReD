@@ -39,6 +39,7 @@ Imports:
     shinyjs,
     markdown,
     rlang,
-    pdftools
+    pdftools,
+    cli
 Suggests: 
     rstudioapi
