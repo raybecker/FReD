@@ -10,14 +10,8 @@ env:
   _R_CHECK_FORCE_SUGGESTS_: "false"
 
 jobs:
-  R-CMD-check:
-    strategy:
-      matrix:
-        include:
-          - {os: macOS-latest}
-          - {os: ubuntu-latest}
-
-    runs-on: ${{ matrix.os }}
+  document:
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
@@ -56,5 +50,30 @@ jobs:
           git add -f man/\* NAMESPACE
           git commit -m 'Documentation' || echo "No changes to commit"
           git push origin || echo "No changes to commit"
+
+  R-CMD-check:
+    needs: document
+    strategy:
+      matrix:
+        include:
+          - {os: macOS-latest}
+          - {os: ubuntu-latest}
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - name: Setup
+        uses: eddelbuettel/github-actions/r-ci-setup@master
+
+      - name: Install rcmdcheck
+        run: |
+          R -e "
+            install.packages(c('rcmdcheck'));
+          "
 
       - uses: r-lib/actions/check-r-package@v2
