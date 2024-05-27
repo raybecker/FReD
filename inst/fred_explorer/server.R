@@ -1,6 +1,14 @@
 # APP ----------------------------------------------------------------------
 
-server <- function(input, output) {
+server <- function(input, output, session) {
+
+  session$onSessionEnded(function() {
+    if (Sys.getenv("SHINY_FRED_AUTOCLOSE") == "TRUE") {
+      message("App has ended because the session was ended.")
+      stopApp()
+    }
+  })
+
   # Overview Table ----------------------------------------------------------
 
   df_temp <- reactive({
@@ -120,8 +128,8 @@ server <- function(input, output) {
 
 
   output$forestplot <- plotly::renderPlotly({
-    ## apply filters
-    df_temp <- df
+
+    df_temp <- df_temp_DT()
     df_temp <- df_temp[rev(row.names(df_temp)), ]
 
     # use only studies with a replication effect size
@@ -153,7 +161,7 @@ server <- function(input, output) {
       geom_errorbar(aes(xmin = ci.lower_original, xmax = ci.upper_original), color = "dark grey") +
 
       # highlighted studies
-      geom_point(data = red_temp_selected, aes(x = es_replication, y = ref_original), color = ifelse(nrow(df_temp) == nrow(red_temp_selected), "black", "df")) +
+     # geom_point(data = red_temp_selected, aes(x = es_replication, y = ref_original), color = ifelse(nrow(df_temp) == nrow(red_temp_selected), "black", "df")) +
 
       # Theme and formatting
       theme_classic() +
@@ -362,7 +370,7 @@ server <- function(input, output) {
 
   output$correlate_decade <- plotly::renderPlotly({
 
-    red_agg <- aggregate_results(df, ref_original)
+    red_agg <- aggregate_results(df_temp_DT(), ref_original)
 
     red_agg$year_orig <- as.numeric(substr(gsub("\\D", "", red_agg$ref_original), 1, 4))
 
@@ -395,7 +403,7 @@ server <- function(input, output) {
   })
 
   output$correlate_journal <- plotly::renderPlotly({
-    red_agg <- aggregate_results(df, ref_original, orig_journal)
+    red_agg <- aggregate_results(df_temp_DT(), ref_original, orig_journal)
 
 
 
@@ -435,7 +443,7 @@ server <- function(input, output) {
   # Reactives for repeated elements -----------------------------------------
 
   preprocessed_data <- reactive({
-    es <- df
+    es <- df_temp_DT()
     es$mod <- es[, input$moderator]
     es <- es[!is.na(es$mod), ]
     es <- es[!is.na(es$ref_original), ]
@@ -953,7 +961,7 @@ server <- function(input, output) {
       paste("df-", Sys.Date(), ".csv", sep = "")
     },
     content = function(con) {
-      write.csv(df, con, fileEncoding = "WINDOWS-1252") # XXX nochmal prüfen
+      write.csv(df_temp_DT(), con, fileEncoding = "WINDOWS-1252") # XXX nochmal prüfen
     }
   )
 }

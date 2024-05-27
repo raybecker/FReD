@@ -6,10 +6,13 @@
 #' @param offer_install Should user be prompted to install required packages if they are missing?
 #' @param app The name of the app folder within the package (i.e. within the inst folder)
 #' @param in_background Should the app be run in the background (i.e. not block the R console)? Default to TRUE if RStudio is used.
+#' @param auto_close Should the app be automatically ended when the browser is closed (or refreshed)?
 #' @param port The port to run the app on (can usually be left at the default value)
 
-run_app <- function(offer_install = interactive(), app = "fred_explorer", in_background = NULL, port = 3838) {
+run_app <- function(offer_install = interactive(), app = "fred_explorer", in_background = NULL,  auto_close = interactive(), port = 3838) {
   assert_logical(in_background, null.ok = TRUE)
+  assert_logical(auto_close, null.ok = TRUE)
+  Sys.setenv("SHINY_FRED_AUTOCLOSE" = auto_close)
 
   check_port <- function(port) {
     con <- suppressWarnings(try(socketConnection(host = "127.0.0.1", port = port, open = "r+"), silent = TRUE))
@@ -60,6 +63,7 @@ run_app <- function(offer_install = interactive(), app = "fred_explorer", in_bac
     if (is.null(port)) {
       port <- find_free_port()
     }
+    if (auto_close) cli::cli_inform("NB: The app will stop automatically when you close or refresh the browser window.")
     shiny::runApp(appDir, display.mode = "normal", port = port)
   } else {
     f <- tempfile(fileext = ".R")
@@ -84,8 +88,10 @@ run_app <- function(offer_install = interactive(), app = "fred_explorer", in_bac
     Sys.sleep(5)
     browseURL(url = glue::glue("http://127.0.0.1:{port}"))
     rstudioapi::executeCommand(commandId = "activateConsole")
-    message("If the app does not show in your browser, try refreshing after 10-20 seconds - it can take a moment to download and prepare the dataset.",
-            "If you want to reopen it later, go to ",  glue::glue("http://127.0.0.1:{port}"), " in your browser. To stop the app, click on STOP in the Background Jobs pane.")
+
+    cli::cli_inform(c(glue::glue("App launched in the background. It may take 10-20 seconds for the app to be ready; your browser will then refresh automatically."),
+                      ifelse(auto_close, "NB: The app will stop automatically when you close or refresh the browser window.",
+                      glue::glue("If you want to reopen it later, go to http://127.0.0.1:{port} in your browser. To stop the app, click on STOP in the Background Jobs pane."))))
   }
 }
 
@@ -110,8 +116,8 @@ check_rstudio <- function() {
 #'   # To run the Replication Explorer app:
 #'   run_explorer()
 #' }
-run_explorer <- function(offer_install = interactive(), in_background = NULL, port = 3838) {
-  run_app(offer_install = offer_install, app = "fred_explorer", in_background = in_background, port = port)
+run_explorer <- function(offer_install = interactive(), in_background = NULL, auto_close = interactive(), port = 3838) {
+  run_app(offer_install = offer_install, app = "fred_explorer", in_background = in_background, auto_close = auto_close, port = port)
 }
 
 
@@ -127,8 +133,8 @@ run_explorer <- function(offer_install = interactive(), in_background = NULL, po
 #'   # To run the Replication Annotator app:
 #'   run_annotator()
 #' }
-run_annotator <- function(offer_install = interactive(), in_background = NULL, port = 3839) {
-  run_app(offer_install = offer_install, app = "fred_annotator", in_background = in_background, port = port)
+run_annotator <- function(offer_install = interactive(), in_background = NULL, auto_close = interactive(), port = 3839) {
+  run_app(offer_install = offer_install, app = "fred_annotator", in_background = in_background, auto_close = auto_close,  port = port)
 }
 
 #' Get the date of last modification

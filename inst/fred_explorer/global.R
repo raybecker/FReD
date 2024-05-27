@@ -29,7 +29,34 @@ forestplotheight <- "28000px"
 
 source("website_text.R", local = TRUE) # Evaluate in calling environment, otherwise fails on app start
 
+
 ## Add custom theme (formatting)
+custom_css <- ("
+.tab-pane {
+  padding: 0px 20px;
+}
+.tab-pane-narrow {
+  width: 100%;
+  max-width: 30cm;
+}
+ .navbar-default .navbar-brand {color:black;}
+        .navbar-default .navbar-brand:hover {color:black;}
+        .navbar { background-color:#EAEAEA;}
+        .navbar-default .navbar-nav > li > a {color: dark grey;}
+        .navbar-default .navbar-nav > .active > a,
+        .navbar-default .navbar-nav > .active > a:focus,
+        .navbar-default .navbar-nav > .active > a:hover {color:black;background-color:#fc2d2d;}
+        .navbar-default .navbar-nav > li > a:hover {color:black;background-color:#A6A6A6;text-decoration}
+        .page-like {
+            background-color: white;
+            padding: 20px;
+            margin: 20px auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+        }
+")
+
 custom_theme <- bs_theme(
   version = 5,
   bg = "#FFFFFF",
@@ -38,5 +65,6 @@ custom_theme <- bs_theme(
   secondary = "#FF374B",
   base_font = "Calibri"
 )
+
 
 

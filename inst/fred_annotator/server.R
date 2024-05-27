@@ -2,6 +2,13 @@
 server <- function(input, output, session) {
   doi_vector <- reactiveValues(dois = c(), selected_rows = NULL)
 
+  session$onSessionEnded(function() {
+    if (Sys.getenv("SHINY_FRED_AUTOCLOSE") == "TRUE") {
+      message("App has ended because the session was ended.")
+      stopApp()
+    }
+  })
+
   reactive_df <- reactive({
     df <- df %>% arrange(ref_original)
     if (input$validated == "TRUE") {
