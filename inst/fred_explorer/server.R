@@ -226,7 +226,7 @@ server <- function(input, output, session) {
       coord_flip() +
       scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
       scale_fill_manual("Result", values = outcome_colors()) +
-      ggtitle(paste(nrow(df_temp), "of", nrow(df_temp_DT()), "studies selected."))
+      ggtitle(paste(nrow(df_temp), "studies selected."))
 
     plotly::ggplotly(barchart, tooltip = "text") %>%
       plotly::config(displayModeBar = FALSE) %>%
