@@ -176,7 +176,7 @@ server <- function(input, output, session) {
       ggtitle(paste(
         "Blobbogram\n",
         sum(!is.na(df_temp$es_original)),
-        "Effect sizes available.\n"
+        "Effect sizes selected.\n"
         # , length(unique(df_temp$ref_original))
         # , "Original studies were examined in replication studies."
       ))
@@ -296,10 +296,12 @@ server <- function(input, output, session) {
     err <- zc$coefficients[1]
 
     # create plot
-    zcurve::plot.zcurve(zc, annotation = TRUE, CI = TRUE, main = paste("Observed Replication Rate: ", orr,
-      # "\nCorrected ERR: ", round(1.85*err-0.573, digits = 2),
-      sep = ""
-    ))
+    zcurve::plot.zcurve(zc, annotation = TRUE, CI = TRUE
+    #                     , main = paste("Observed Replication Rate: ", orr,
+    #   # "\nCorrected ERR: ", round(1.85*err-0.573, digits = 2),
+    #   sep = ""
+    # )
+    )
   })
 
 
@@ -821,7 +823,7 @@ server <- function(input, output, session) {
       xlab("") +
       coord_flip()  +
       scale_fill_manual("Result", values = outcome_colors()) +
-      ggtitle(paste(nrow(df_temp), "of", nrow(df), "studies selected."))
+      ggtitle(paste(nrow(df_temp), "findings selected."))
     p <- plotly::ggplotly(barchart, tooltip = "text") %>%
       plotly::config(displayModeBar = FALSE) %>%
       plotly::layout(xaxis = list(fixedrange = TRUE), yaxis = list(fixedrange = TRUE)) #  %>% layout(height = 10000, width = 1200)

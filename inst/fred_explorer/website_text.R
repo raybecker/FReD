@@ -53,9 +53,9 @@ variables_headline <- HTML(paste("<h4><b>Variables</b><h5>"
 dataset_info <- HTML(paste("<h4><b>Replication Rate</b>"
                            , "<h5><br/>There are currently "
                            , nrow(df)
-                           , " replication findings entered into the database. Of these, "
+                           , " replication findings entered into the database. By default, only validated and coded findings are selected. Of all findings, "
                            , length(unique(df$ref_replication))
-                           , " replication findings are independent (i.e., use different samples/stem from different studies). Note that the following analyses treat all studies as independent. Apart from the table and bar chart, only studies for which sample sizes and effect sizes are available (for original study and replication) are considered here. The others can be viewed in the Dataset."
+                           , " are independent (i.e., use different samples/stem from different studies). Note that the following analyses treat all studies as independent. Apart from the table and bar chart, only studies for which sample sizes and effect sizes are available (for original study and replication) are considered here. The others can be viewed in the Dataset."
                            , " In total, "
                            , length(unique(df$ref_original))
                            , " different original studies have been replicated."
@@ -72,9 +72,9 @@ dataset_info <- HTML(paste("<h4><b>Replication Rate</b>"
                            , sep = ""))
 
 forest_info <- HTML(paste("<h4><b>Study Overview</b>"
-                          , "<h5><br/>The currently included "
+                          , "<h5><br/>Currently, "
                           , nrow(df)
-                          , " replication findings entered into the database can be allocated to "
+                          , " replication findings are entered into the database. These stem from "
                           , length(unique(df$ref_original))
                           , " independent original studies. This is an overview of these studies."
                           , "<br/><br/><h6>"
