@@ -320,6 +320,7 @@ server <- function(input, output, session) {
 
     # create plot
     zcurve::plot.zcurve(zc, annotation = TRUE, CI = TRUE
+                        , main = ""
     #                     , main = paste("Observed Replication Rate: ", orr,
     #   # "\nCorrected ERR: ", round(1.85*err-0.573, digits = 2),
     #   sep = ""
