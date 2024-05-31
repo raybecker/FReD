@@ -11,9 +11,9 @@ convert_effect_sizes <- function(es_values, es_types) {
 
   # TK: dataset has a lot of different ways to refer to the same effect size type
   # TK: should be cleaned up there eventually
-  estype_map <- c("or" = "or", "odds ratio" = "or",
+  estype_map <- c("or" = "or", "odds ratio" = "or", "odds ratio (study 3)" = "or",
                   "d" = "d", "cohen's d" = "d", "hedges' g" = "d", "hedges'g" = "d", "hedge's g" = "d", "hedges g" = "d", "smd" = "d",
-                  "etasq" = "eta", "\u03B7\u00B2" = "eta", #η²
+                  "etasq" = "eta", "etaq" = "eta", "\u03B7\u00B2" = "eta", #η²
                   "f" = "f",
                   "r" = "r", "phi" = "r", "\u03C6" = "r", #φ
                   "r2" = "r2", "r\u00B2" = "r2") #r²
