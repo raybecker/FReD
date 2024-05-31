@@ -46,9 +46,9 @@ study_selection_content <- nav_panel(
   h2("Selected studies"),
          DTOutput("selected_references", fill = FALSE),
   h2("Available studies in FReD"),
-  HTML("Select/unselect rows to add/remove studies from the report. You can search by DOI, reference or description.
+  HTML(paste("Select/unselect rows to add/remove studies from the report. You can search by DOI, reference or description.
        At present, only studies where the DOI is listed in FReD can be used in the annotator, rows without DOIs will
-       be ignored here, but can be retrieved from <a href='https://osf.io/9r62x/'>the FReD dataset</a>."),
+       be ignored here, but can be retrieved from the FReD dataset."), sep = ""), # <a href=https://www.osf.io/9r62x/>the FReD dataset</a>
          DTOutput("database_search", fill = FALSE)
   )
 
