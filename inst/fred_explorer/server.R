@@ -13,24 +13,12 @@ server <- function(input, output, session) {
 
   # Disclaimer --------------------------------------------------------------
 
-#   shinyalert(
-#     title = "Disclaimer",
-#     text = "The FORRT Replication Database is a collection of crowdsourced findings from replication studies (i.e., studies that investigated one or more previously tested hypotheses using new data). The aims of this project are (1) to document replication attempts across many areas of science and make replications findable and (2) to provide meta-scientists with a database for research on replicability. We advise researchers to carefully investigate replication findings before making judgments about the robustness of research findings.
-# </br></br>You can find more information on the FORRT Replication Hub (https://forrt.org/replication-hub/). If you would like to contribute replication findings, please check out our call for results (https://osf.io/f3w26) or send us an e-mail.",
-#     size = "l",
-#     closeOnEsc = TRUE,
-#     closeOnClickOutside = FALSE,
-#     html = TRUE,
-#     type = "info",
-#     showConfirmButton = TRUE,
-#     showCancelButton = FALSE,
-#     confirmButtonText = "OK",
-#     confirmButtonCol = "#C70C12",
-#     timer = 0,
-#     imageUrl = "",
-#     animation = TRUE
-#   )
-
+  showModal(modalDialog(
+    title = welcome_title,
+    welcome_text,
+    size = "l",
+    easyClose = TRUE
+  ))
 
   # Overview Table ----------------------------------------------------------
 
