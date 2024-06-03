@@ -1,4 +1,6 @@
 
+# ANNOTATOR ---------------------------------------------------------------
+
 server <- function(input, output, session) {
   doi_vector <- reactiveValues(dois = c(), selected_rows = NULL)
 
@@ -8,6 +10,15 @@ server <- function(input, output, session) {
       stopApp()
     }
   })
+
+  # Disclaimer --------------------------------------------------------------
+
+  showModal(modalDialog(
+    title = welcome_title,
+    welcome_text,
+    size = "l",
+    easyClose = TRUE
+  ))
 
   reactive_df <- reactive({
     df <- df %>% arrange(ref_original)
