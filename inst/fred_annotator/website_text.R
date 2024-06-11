@@ -16,7 +16,7 @@ about_page <- glue::glue("
 
 **Acknowledgements:** We thank all researchers who have invested resources in conducting replication research, researchers who have submitted their replication studies, and researchers who used the Replication Recipe Post-Completion template to register their results. FORRT Replication Database is supported through the University of Bamberg's Interne Forschungsförderung, by the University of Münster, by the Nederlandse Organisatie voor Wetenschappelijk's (NWO) Open Science Fund, and by the Leuphana University Lüneburg.
 
-**Important note:** This is work in progress. Please beware that there might be bugs or errors in the dataset. If you spot any, please let us know (by email, or on [GitHub](https://github.com/forrtproject/FReD/issues)). Note that many entries are not yet validated - if you care more about accuracy than coverage, please select the option to only use validated entries.
+**Important note:** This is work in progress. Please beware that there might be bugs or errors in the dataset. If you spot any, please let us know (by email, or on [GitHub](https://github.com/forrtproject/FReD/issues)).
 
 _Thanks to our funders:_
 <img src='ub.png' height='100' /> <img src='um.png' height='50' /> <img src='nwo.png' height='100' />
@@ -28,7 +28,7 @@ welcome_text <- HTML("<br /><p style=\'color:black;\'>The FReD is a collection o
 </br>(1) to document replication attempts across many areas of science and make replications findable and
 </br>(2) to provide meta-scientists with a database for research on replicability.
 </br></br>This is the FReD <b>Annotator</b>. The annotator reads references (DOIs) from a list and returns replication studies for these references based on the FReD entries.
-</br></br>We advise researchers to carefully investigate replication findings before making judgments about the robustness of research findings.
+</br></br>We advise researchers to carefully investigate replication findings before making judgments about the robustness of research findings. Note that many entries are not yet validated - if you care more about accuracy than coverage, please select the option to only use validated entries.
                      </br></br>You can find more information on the <a href=https://forrt.org/replication-hub>FORRT Replication Hub</a>. If you would like to contribute replication findings, please check out our <a href=https://osf.io/f3w26>call for results</a> or send us an e-mail.</p><br/>")
 
 
