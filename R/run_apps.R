@@ -33,9 +33,25 @@ run_app <- function(offer_install = interactive(), app = "fred_explorer", in_bac
     stop("No free port available in the specified range.")
   }
 
+  wait_for_app <- function(url, timeout = 30) {
+    start_time <- Sys.time()
+    sp <- cli::make_spinner(template = "{spin} Waiting for app to launch - please allow up to 15 seconds.")
+    while (Sys.time() - start_time < timeout) {
+      sp$spin()
+      response <- try(httr::GET(url), silent = TRUE)
+      if (!inherits(response, "try-error") && httr::status_code(response) == 200) {
+        sp$finish()
+        return(TRUE)
+      }
+      Sys.sleep(.5)
+    }
+    sp$finish()
+    stop("App did not become ready within the timeout period. Please have a look at the background job output to see why and report any errors.")
+  }
+
   if (check_port(port)) {
     message(glue::glue("Port {port} is already in use. The app may be running already."))
-    user_input <- menu(c("Open that location in the browser", "Use a new port", "Abort"), title = "Select an option:")
+    user_input <- utils::menu(c("Open that location in the browser", "Use a new port", "Abort"), title = "Select an option:")
     if (user_input == 1) {
       browseURL(url = glue::glue("http://127.0.0.1:{port}"))
       return(invisible(NULL))
@@ -84,12 +100,15 @@ run_app <- function(offer_install = interactive(), app = "fred_explorer", in_bac
       run_app(offer_install = offer_install, app = app, in_background = FALSE, port = port)
       return(TRUE)
     })
-    message("Waiting for app launch")
-    Sys.sleep(5)
-    browseURL(url = glue::glue("http://127.0.0.1:{port}"))
+
     rstudioapi::executeCommand(commandId = "activateConsole")
 
-    cli::cli_inform(c(glue::glue("App launched in the background. It may take 10-20 seconds for the app to be ready; your browser will then refresh automatically."),
+    app_url <- glue::glue("http://127.0.0.1:{port}")
+    wait_for_app(app_url)
+
+    browseURL(url = glue::glue("http://127.0.0.1:{port}"))
+
+    cli::cli_inform(c(glue::glue("App launched in the background."),
                       ifelse(auto_close, "NB: The app will stop automatically when you close or refresh the browser window.",
                       glue::glue("If you want to reopen it later, go to http://127.0.0.1:{port} in your browser. To stop the app, click on STOP in the Background Jobs pane."))))
   }
