@@ -293,6 +293,10 @@ server <- function(input, output, session) {
     df <- reactive_df() %>%
       filter(doi_original %in% doi_vector$dois)
 
+    validate(
+      need(nrow(df) > 0, "No replications found")
+    )
+
     if (input$success_criterion == "consistency") {
       df <- df %>% mutate(result = assess_success(consistency, success_criterion = "consistency"))
       outcome_colors <- c("Inconsistent replication" = "#FF7F7F", "Consistent replication" = "#8FBC8F", "Replication (of n.s. finding)" = "#F0F0F0")
@@ -411,6 +415,10 @@ server <- function(input, output, session) {
     df <- reactive_df() %>%
       filter(doi_original %in% doi_vector$dois)
 
+    validate(
+      need(nrow(df) > 0, "No replications found")
+    )
+
     markdown_output <- generate_markdown(df)
 
     tags$div(
@@ -420,6 +428,18 @@ server <- function(input, output, session) {
     )
 
     })
+
+
+  observe({
+    df <- reactive_df() %>%
+      filter(doi_original %in% doi_vector$dois)
+
+    if (nrow(df) == 0) {
+      shinyjs::disable("downloadPdf")
+    } else {
+      shinyjs::enable("downloadPdf")
+    }
+  })
 
   output$downloadPdf <- downloadHandler(
     filename = function() {
@@ -453,6 +473,10 @@ server <- function(input, output, session) {
 
     df <- reactive_df() %>%
       filter(doi_original %in% doi_vector$dois)
+
+    validate(
+      need(nrow(df) > 0, "No replications found")
+    )
 
     if (input$success_criterion == "consistency") {
       df <- df %>% mutate(result = assess_success(consistency, success_criterion = "consistency"))

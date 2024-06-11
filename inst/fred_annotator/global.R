@@ -1,4 +1,5 @@
 library(shiny)
+library(shinyjs)
 library(bslib)
 library(dplyr)
 library(ggplot2)
