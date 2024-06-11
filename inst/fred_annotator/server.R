@@ -294,7 +294,7 @@ server <- function(input, output, session) {
       filter(doi_original %in% doi_vector$dois)
 
     validate(
-      need(nrow(df) > 0, "No replications found")
+      need(nrow(df) > 0, "", label = "No replications found")
     )
 
     if (input$success_criterion == "consistency") {
@@ -416,7 +416,7 @@ server <- function(input, output, session) {
       filter(doi_original %in% doi_vector$dois)
 
     validate(
-      need(nrow(df) > 0, "No replications found")
+      need(nrow(df) > 0, "", label = "No replications found")
     )
 
     markdown_output <- generate_markdown(df)
@@ -475,7 +475,7 @@ server <- function(input, output, session) {
       filter(doi_original %in% doi_vector$dois)
 
     validate(
-      need(nrow(df) > 0, "No replications found")
+      need(nrow(df) > 0, "", label = "No replications found")
     )
 
     if (input$success_criterion == "consistency") {
