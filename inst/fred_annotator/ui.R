@@ -9,7 +9,7 @@ sidebar_contents <- sidebar(
   textAreaInput("references", "Paste references with DOIs", placeholder = "Paste references here...", width = '95%', height = '200px'),
   fileInput("upload", "Or upload reference list (PDF, citation or text file)", accept = c("application/pdf", " text/plain", ".bib", ".ris")),
   uiOutput("button_area"),
-  checkboxInput("validated", "Use validated database entries only", value = TRUE),
+  checkboxInput("validated", "Use validated database entries only", value = FALSE),
   selectInput("success_criterion", "Success criterion", choices = c(Significance = "significance", Consistency = "consistency"), selected = "significance"),
   conditionalPanel(
     condition = "output.showToggle",  # This JavaScript condition reacts to Shiny output
