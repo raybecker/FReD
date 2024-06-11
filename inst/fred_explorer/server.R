@@ -300,8 +300,20 @@ server <- function(input, output, session) {
 
     validate(need(nrow(df_temp) > 0, "Plot cannot be created if no studies are selected"))
 
+    # # create zcurvedata object
+    # zcurvedata_clustered <- data.frame("input" = NA, "p" = (1-pnorm(abs(df_temp$z)))*2, "id" = paste(df_temp$refonly_original, df_temp$study_original, sep = "_"))
+    # zcurvedata_clustered <- zcurvedata_clustered[!is.na(zcurvedata_clustered$p), ]
+    # zcurvedata_clustered_list <- list("precise" = zcurvedata_clustered, "censored" = data.frame("input" = as.character()
+    #                                                                                             , "p.lb" =  as.logical()
+    #                                                                                             , "p.ub" =  as.logical()
+    #                                                                                             , "p.rep" = as.logical()
+    #                                                                                             , "id" =    as.logical()))
+    # class(zcurvedata_clustered_list) <- "zcurve_data"
+    # # run z-curve analysis (clustered)
+    # zc <- zcurve::zcurve_clustered(data = zcurvedata_clustered_list, method = "w", bootstrap = FALSE) # clustered (new version), requires bootstrap
+
     # run z-curve analysis
-    zc <- zcurve::zcurve(z = df_temp$z, method = "EM", bootstrap = 0)
+    zc <- zcurve::zcurve(z = df_temp$z, method = "EM", bootstrap = 0) # non clustered (old version)
 
     orr <- round(mean(df_temp$result == "success", na.rm = TRUE), 2)
     err <- zc$coefficients[1]
