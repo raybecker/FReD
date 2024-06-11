@@ -10,7 +10,9 @@ sidebar_contents <- sidebar(
   fileInput("upload", "Or upload reference list (PDF, citation or text file)", accept = c("application/pdf", " text/plain", ".bib", ".ris")),
   uiOutput("button_area"),
   checkboxInput("validated", "Use validated database entries only", value = FALSE),
-  selectInput("success_criterion", "Success criterion", choices = c(Significance = "significance", Consistency = "consistency"), selected = "significance"),
+  selectInput("success_criterion", "Success criterion", choices = c(Significance = "significance", Consistency = "consistency"), selected = "significance",
+              # tags$div(style = c("display:inline-block;", "display:inline-block;"), title = c("test", "test2"), icon(c("info-circle", "info-circle")))
+              ),
   conditionalPanel(
     condition = "output.showToggle",  # This JavaScript condition reacts to Shiny output
     tags$a(id = "toggle_link", "Show/Hide DOIs >", href = "#", class = "btn btn-link"),
