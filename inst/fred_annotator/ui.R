@@ -65,8 +65,10 @@ report_content <- nav_panel(
 
   ),
   div(
-    style = "max-width: 200px; margin: auto;",
-  downloadButton("downloadPdf", "Download PDF reading list")),
+    style = "max-width: 450px; margin: auto; display: flex; gap: 10px; align-items: center; !important",
+    downloadButton("downloadWord", "Download annotated Word file"),
+    downloadButton("downloadPdf", "Download annotated PDF")
+  ),
   shinycssloaders::withSpinner(uiOutput("refs_annotated"))
 )
 

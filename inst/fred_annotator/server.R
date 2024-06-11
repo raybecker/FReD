@@ -469,6 +469,58 @@ server <- function(input, output, session) {
     }
   )
 
+  output$downloadWord <- downloadHandler(
+    filename = function() {
+      paste("reading_list", Sys.Date(), ".docx", sep = "")
+    },
+    content = function(file) {
+      tempReport <- tempfile(fileext = ".Rmd")
+
+      df <- reactive_df() %>%
+        filter(doi_original %in% doi_vector$dois)
+
+      markdown_output <- generate_markdown(df, return_html = TRUE)
+
+      # Create the Rmd content
+      rmd_content <- paste0(
+        "---\n",
+        "title: \"Annotated Reading List\"\n",
+        "output:\n  word_document:\n    reference_docx: null\n",
+        "---\n\n",
+        "*NB: This contains bookmarks that are likely displayed as []. You can change your Word settings to hide those; we are still working to remove them when creating the file.* \n",
+        markdown_output %>% stringr::str_remove(".*\n")
+      )
+
+
+      writeLines(rmd_content, con = tempReport)
+
+      out <- rmarkdown::render(tempReport, quiet = TRUE)
+
+      # # Pandoc inserts unnecessary bookmarks that are displayed and look like errors - so remove them
+      # remove_bookmarks <- function(doc_path, output_path) {
+      #   doc <- officer::read_docx(doc_path)
+      #
+      #   # Get all bookmarks in the document
+      #   bookmarks <- officer::docx_bookmarks(doc)
+      #
+      #   # Iterate over all bookmarks and remove them
+      #   for (bookmark in bookmarks) {
+      #     cursor <- officer::cursor_bookmark(doc, bookmark)
+      #     doc <- officer::cursor_reach(cursor)
+      #     doc <- officer::body_remove(cursor)
+      #   }
+      #
+      #   # Save the modified document to the output path
+      #   print(doc, target = output_path)
+      # }
+      #
+      # remove_bookmarks(out, out)
+
+      file.rename(out, file)
+    }
+  )
+
+
   output$replicability_plot <- plotly::renderPlotly({
 
     df <- reactive_df() %>%
