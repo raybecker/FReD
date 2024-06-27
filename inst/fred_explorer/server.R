@@ -187,7 +187,7 @@ server <- function(input, output, session) {
       ggtitle(paste(
         "Blobbogram\n",
         sum(!is.na(df_temp$es_original)),
-        "Effect sizes selected.\n"
+        "Effect sizes selected.\nGrey dots represent original effect sizes. Black dots represent replication effect sizes."
         # , length(unique(df_temp$ref_original))
         # , "Original studies were examined in replication studies."
       ))
@@ -195,6 +195,7 @@ server <- function(input, output, session) {
     p <- plotly::ggplotly(forest) %>%
       plotly::config(displayModeBar = FALSE) %>%
       plotly::layout(xaxis = list(fixedrange = TRUE), yaxis = list(fixedrange = TRUE)) #  %>% layout(height = 10000, width = 1200)
+
   })
 
   outcome_colors <- reactive({
