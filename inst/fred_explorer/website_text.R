@@ -47,7 +47,7 @@ welcome_text <- HTML("<br /><p style=\'color:black;\'>The FReD is a collection o
 
 
 dataset_explanation <- shiny::HTML(paste("<h4><b>FReD Dataset</b>"
-                                         , "<h5><br/>This is the entire FORRT Replication Database Datset. It currently contains "
+                                         , "<h5><br/>This is the entire FORRT Replication Database Dataset. It currently contains "
                                          , nrow(df)
                                          , " findings. The most recent version can be downloaded via the <a href=https://osf.io/9r62x/>OSF project</a>."
                                          , "<br/><br/>"
