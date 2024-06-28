@@ -449,6 +449,8 @@ server <- function(input, output, session) {
 
 
     red_agg$row <- 1:nrow(red_agg)
+    # red_agg$orig_journal <- tolower(red_agg$orig_journal)
+    red_agg$orig_journal <- gsub("\\b([A-Za-z])", "\\U\\1", red_agg$orig_journal, perl = TRUE)
     reprate_journal <- aggregate(row ~ orig_journal * result, data = red_agg, FUN = "length")
     names(reprate_journal) <- c("journal_orig", "Result", "k")
 
@@ -502,7 +504,8 @@ server <- function(input, output, session) {
       tdist = TRUE,
       data = es,
       mods = ~ mod - 1,
-      method = "ML"
+      method = "ML",
+      sparse = TRUE
     )
 
     message("Done estimating")

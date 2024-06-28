@@ -198,7 +198,7 @@ ui <- tagList(
     study_overview_content,
     dataset_content,
     correlates_content,
-    moderators_content,
+    # moderators_content, # temporarily commented out until we found a stable and quick way to run these analyses
     # references_checker_content, # commented out because we have the separate app for it but left here in case we want to compare the two versions
     references_content,
     faq_content,
