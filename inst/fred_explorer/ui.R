@@ -81,7 +81,9 @@ replicability_tracker_content <- nav_panel(
 
 study_overview_content <- nav_panel(
   "Study Overview",
- forest_info, shinycssloaders::withSpinner(plotly::plotlyOutput("forestplot", width = "100%", height = forestplotheight))
+ forest_info, shinycssloaders::withSpinner(plotly::plotlyOutput("forestplot", width = "100%")) # , height = forestplotheight
+ , column(width = 10, uiOutput("forestplot_ui")
+ )
   )
 
 dataset_content <- nav_panel(

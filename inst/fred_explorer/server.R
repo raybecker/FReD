@@ -138,6 +138,13 @@ server <- function(input, output, session) {
   # Forest Plot -------------------------------------------------------------
 
 
+  plotHeight <- reactive({
+
+    df_temp <- df_temp_DT()
+
+    return(length(unique(df_temp$ref_original)) * 100)
+  })
+
   output$forestplot <- plotly::renderPlotly({
 
     df_temp <- df_temp_DT()
@@ -194,9 +201,16 @@ server <- function(input, output, session) {
 
     p <- plotly::ggplotly(forest) %>%
       plotly::config(displayModeBar = FALSE) %>%
-      plotly::layout(xaxis = list(fixedrange = TRUE), yaxis = list(fixedrange = TRUE)) #  %>% layout(height = 10000, width = 1200)
+      plotly::layout(xaxis = list(fixedrange = TRUE), yaxis = list(fixedrange = TRUE), width = 1200) # , height = plotHeight
 
   })
+
+
+  output$forestplot_ui <- renderUI({
+    plotlyOutput("forestplot", height = plotHeight())
+  })
+
+
 
   outcome_colors <- reactive({
 
