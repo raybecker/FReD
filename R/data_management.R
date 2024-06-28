@@ -59,6 +59,7 @@ read_fred <- function(data = get_param("FRED_DATA_FILE")) {
   red <- red[-(1:2), ] # exclude labels and "X" column
   forrt  <- safe_read_xl(data, url = get_param("FRED_DATA_URL"), sheet = "FORRT R&R (editable)", startRow = 1)
   forrt <- forrt[-(1:2), ] # exclude labels and "X" column
+  forrt <- forrt[!(forrt$doi_original %in% red$doi_original), ] # exclude forrt entries of original study that already appear in FReD (based on DOIs)
 
   # additional studies
   as <-  safe_read_xl(data, url = get_param("FRED_DATA_URL"), sheet = "Additional Studies to be added", startRow = 2)
