@@ -64,6 +64,8 @@ read_fred <- function(data = get_param("FRED_DATA_FILE")) {
   # additional studies
   as <-  safe_read_xl(data, url = get_param("FRED_DATA_URL"), sheet = "Additional Studies to be added", startRow = 2)
   as$id <- paste("uncoded_studies_", rownames(as), sep = "")
+  as <- as[as$`Study.listed.in.ReD?` != "1.0", ] # exclude additional studies that are already listed in the main dataset
+  as <- as[!is.na(as$doi_original), ] # exclude studies for which doi_original is unavailable because they will not be finable in the annotator anyway
 
   numeric_variables <- c("n_original", "n_replication", "es_orig_value", "es_rep_value",
                          "validated", "published_rep", "same_design", "same_test",
