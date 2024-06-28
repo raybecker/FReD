@@ -1000,12 +1000,12 @@ server <- function(input, output, session) {
   # Downloadbutton ----------------------------------------------------------
 
 
-  output$reddownload <- downloadHandler(
+  output$download_data <- downloadHandler(
     filename = function() {
-      paste("df-", Sys.Date(), ".csv", sep = "")
+      paste("FReD-", Sys.Date(), ".xlsx", sep = "")
     },
-    content = function(con) {
-      write.csv(df_temp_DT(), con, fileEncoding = "WINDOWS-1252") # XXX nochmal prüfen
+    content = function(file) {
+      openxlsx::write.xlsx(df_temp_DT(), file, fileEncoding = "WINDOWS-1252")
     }
   )
 }
