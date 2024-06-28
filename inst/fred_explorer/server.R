@@ -355,18 +355,20 @@ server <- function(input, output, session) {
   output$dataset <- DT::renderDT(server = FALSE,
                                  DT::datatable(df_display,
     rownames = FALSE,
-    extensions = 'Buttons',
-    options = list(scrollX=TRUE, lengthMenu = c(5,10,15),
+    # extensions = 'Buttons',
+    options = list(scrollX=TRUE, lengthMenu = c(5, 10, 15),
                    paging = TRUE, searching = TRUE,
                    fixedColumns = TRUE, autoWidth = TRUE,
-                   ordering = TRUE, dom = 'Bfrtip',
-                   buttons = list(list(extend = 'copy'),
-                                  list(extend = 'excel', filename = "FReD")))
+                   ordering = TRUE
+                   # , dom = 'Bfrtip'
+                   # buttons = list(list(extend = 'copy'),
+                   #                list(extend = 'excel', filename = "FReD"))
+                   )
   ))
 
   # variables
   output$variables <- DT::renderDT(DT::datatable(dataset_variables,
-    rownames = FALSE, options = list(pageLength = 20)
+    rownames = FALSE, options = list(pageLength = 20, dom = 't')
   ))
 
 

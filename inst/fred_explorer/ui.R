@@ -88,7 +88,7 @@ study_overview_content <- nav_panel(
 
 dataset_content <- nav_panel(
   "Dataset",
-  dataset_explanation, downloadButton("download_data", "Download filtered dataset."),
+  dataset_explanation, downloadButton("download_data", "Download processed dataset"),
   breaks,
   dataset_headline,
   shinycssloaders::withSpinner(DT::DTOutput("dataset")),
