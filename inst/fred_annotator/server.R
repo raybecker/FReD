@@ -284,8 +284,8 @@ server <- function(input, output, session) {
       guides(fill = "none") + theme_void()
 
     plotly::ggplotly(p, tooltip = NULL, height = 150) %>%
-      plotly::config(displayModeBar = FALSE) %>%
-      layout(xaxis = list(fixedrange = TRUE), yaxis = list(fixedrange = TRUE))
+      plotly::layout(xaxis = list(fixedrange = TRUE), yaxis = list(fixedrange = TRUE)) %>%
+      plotly::config(displayModeBar = FALSE)
 
   })
 
@@ -317,7 +317,7 @@ server <- function(input, output, session) {
 
     plotly::ggplotly(p, tooltip = NULL) %>%
       plotly::config(displayModeBar = FALSE) %>%
-      layout(xaxis = list(fixedrange = TRUE), yaxis = list(fixedrange = TRUE))
+      plotly::layout(xaxis = list(fixedrange = TRUE), yaxis = list(fixedrange = TRUE))
 
   })
 
