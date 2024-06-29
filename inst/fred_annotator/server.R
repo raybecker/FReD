@@ -432,44 +432,44 @@ server <- function(input, output, session) {
     })
 
 
-  observe({
-    df <- reactive_df() %>%
-      filter(doi_original %in% doi_vector$dois)
-
-    if (nrow(df) == 0) {
-      shinyjs::disable("downloadPdf")
-    } else {
-      shinyjs::enable("downloadPdf")
-    }
-  })
-
-  output$downloadPdf <- downloadHandler(
-    filename = function() {
-      paste("reading_list", Sys.Date(), ".pdf", sep = "")
-    },
-    content = function(file) {
-      tempReport <- tempfile(fileext = ".Rmd")
-
-      df <- reactive_df() %>%
-        filter(doi_original %in% doi_vector$dois)
-
-      markdown_output <- generate_markdown(df, return_html = FALSE)
-
-      # Create the Rmd content
-      rmd_content <- paste0(
-        "---\n",
-        "title: \"Annotated Reading List\"\n",
-        "output:\n  pdf_document:\n    latex_engine: xelatex\n",
-        "---\n\n",
-        markdown_output
-      )
-
-      writeLines(rmd_content, con = tempReport)
-
-      out <- rmarkdown::render(tempReport, quiet = TRUE)
-      file.rename(out, file)
-    }
-  )
+  # observe({
+  #   df <- reactive_df() %>%
+  #     filter(doi_original %in% doi_vector$dois)
+  #
+  #   if (nrow(df) == 0) {
+  #     shinyjs::disable("downloadPdf")
+  #   } else {
+  #     shinyjs::enable("downloadPdf")
+  #   }
+  # })
+  #
+  # output$downloadPdf <- downloadHandler(
+  #   filename = function() {
+  #     paste("reading_list", Sys.Date(), ".pdf", sep = "")
+  #   },
+  #   content = function(file) {
+  #     tempReport <- tempfile(fileext = ".Rmd")
+  #
+  #     df <- reactive_df() %>%
+  #       filter(doi_original %in% doi_vector$dois)
+  #
+  #     markdown_output <- generate_markdown(df, return_html = FALSE)
+  #
+  #     # Create the Rmd content
+  #     rmd_content <- paste0(
+  #       "---\n",
+  #       "title: \"Annotated Reading List\"\n",
+  #       "output:\n  pdf_document:\n    latex_engine: xelatex\n",
+  #       "---\n\n",
+  #       markdown_output
+  #     )
+  #
+  #     writeLines(rmd_content, con = tempReport)
+  #
+  #     out <- rmarkdown::render(tempReport, quiet = TRUE)
+  #     file.rename(out, file)
+  #   }
+  # )
 
   output$downloadWord <- downloadHandler(
     filename = function() {
