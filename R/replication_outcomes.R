@@ -6,6 +6,7 @@
 
 ### open FReD (for testing purposes)
 library(metafor)
+library(plotly)
 
 ## open dataset
 red_link <- "https://osf.io/z5u9b/download"
@@ -18,6 +19,7 @@ ds$n_original <- as.numeric(ds$n_original)
 ds$es_replication <- as.numeric(ds$es_replication)
 ds$n_replication <- as.numeric(ds$n_replication)
 
+ds$es_original <- ifelse(ds$es_original == 1, .999999, ds$es_original)
 
 
 
@@ -287,3 +289,39 @@ assess_replication_success <- function(es_o, n_o, es_r, n_r, criterion) {
 # table(ds$outcome, useNA = "always")
 
 
+
+# Compare criteria --------------------------------------------------------
+
+for (i in 1:nrow(ds)) {
+  ds[i, "significance_r"] <- assess_replication_success(es_o = ds$es_original[i], n_o = ds$n_original[i], es_r = ds$es_replication[i], n_r = ds$n_replication[i], "significance_r")
+  ds[i, "significance_or"] <- assess_replication_success(es_o = ds$es_original[i], n_o = ds$n_original[i], es_r = ds$es_replication[i], n_r = ds$n_replication[i], "significance_or")
+  ds[i, "consistency_nhst"] <- assess_replication_success(es_o = ds$es_original[i], n_o = ds$n_original[i], es_r = ds$es_replication[i], n_r = ds$n_replication[i], "consistency_nhst")
+  ds[i, "consistency_pi"] <- assess_replication_success(es_o = ds$es_original[i], n_o = ds$n_original[i], es_r = ds$es_replication[i], n_r = ds$n_replication[i], "consistency_pi")
+  ds[i, "homogeneity"] <- assess_replication_success(es_o = ds$es_original[i], n_o = ds$n_original[i], es_r = ds$es_replication[i], n_r = ds$n_replication[i], "homogeneity")
+  ds[i, "homogeneity_significance"] <- assess_replication_success(es_o = ds$es_original[i], n_o = ds$n_original[i], es_r = ds$es_replication[i], n_r = ds$n_replication[i], "homogeneity_significance")
+}
+
+dslong <- reshape::melt(ds[ , c("id", "ref_original", "ref_replication", "significance_r", "significance_or", "consistency_nhst", "consistency_pi", "homogeneity", "homogeneity_significance")], id = c("id", "ref_original", "ref_replication"))
+dslong_agg <- aggregate(id ~ value + variable, data = dslong, FUN = "length")
+outcome_colors <- c('aggregated effect is larger than 0' = "lightgreen"
+                    , 'aggregated effect is not larger than 0' = "red"
+                    , 'replication effect is significantly larger than 0' = "lightgreen"
+                    , 'replication effect is not significantly larger than 0' = "red"
+                    , 'aggregated effect is larger than 0' = "lightgreen"
+                    , 'aggregated effect is not larger than 0' = "red"
+                    , 'Original effect size is within replication\'s CI' = "lightgreen"
+                    , 'Original effect size is not within replication\'s CI' = "red"
+                    , 'replication\'s PI overlaps with original effect' = "lightgreen"
+                    , 'replication\'s PI does not overlap with original effect' = "red"
+                    , 'effects are heterogeneous' = "red"
+                    , 'effects are not heterogeneous' = "lightgreen"
+                    , 'effect sizes are homogeneous and larger than 0' = "lightgreen"
+                    , 'effect sizes are not homogeneous or not larger than 0' = "red"
+                    , 'not coded' = "grey"
+                    , 'original effect is not significant' = "black"
+                    )
+library(ggplot2)
+p <- ggplot(data = dslong_agg, aes(x = variable, y = id, fill = value)) + geom_bar(position = "stack", stat = "identity") + ylab("k") + xlab("Outcome criterion") +
+  scale_fill_manual(values = outcome_colors)
+p
+# plotly::ggplotly(p)
