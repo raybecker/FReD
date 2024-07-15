@@ -95,15 +95,15 @@ assess_replication_success <- function(es_o, n_o, es_r, n_r, criterion) {
       {
         # test if replication effect is significantly larger than 0
         if (psychometric::CIr(r = es_r, n = n_r, level = .95)[1] > 0) {
-          outcome <- "replication effect is significantly larger than 0"
+          outcome <- "+ replication effect is significantly larger than 0"
         } else {
-          outcome <- "replication effect is not significantly larger than 0"
+          outcome <- "- replication effect is not significantly larger than 0"
         }
       } else { # if original effect is not significantly larger than 0
-        outcome <- "original effect is not significant"
+        outcome <- "- original effect is not significant"
       }
     } else { # if any of the necessary values are missing
-      outcome <- "not coded"
+      outcome <- "0 not coded"
     }
 
 
@@ -121,13 +121,13 @@ assess_replication_success <- function(es_o, n_o, es_r, n_r, criterion) {
       ce <- compare_effectsizes(r1 = es_o, n1 = n_o, r2 = es_r, n2 = n_r)
 
       if (ce$ci.lb < 0) {
-        outcome <- "aggregated effect is larger than 0"
+        outcome <- "+ aggregated effect is larger than 0"
       } else {
-        outcome <- "aggregated effect is not larger than 0"
+        outcome <- "- aggregated effect is not larger than 0"
       }
 
     } else { # if any of the necessary values are missing
-      outcome <- "not coded"
+      outcome <- "0 not coded"
     }
 
     rm(ce)
@@ -148,15 +148,15 @@ assess_replication_success <- function(es_o, n_o, es_r, n_r, criterion) {
 
       # test if original effect is in confidence interval
       if (es_o > ci_r[1] & es_o < ci_r[2]) {
-        outcome <- "Original effect size is within replication's CI"
+        outcome <- "+ Original effect size is within replication's CI"
       } else {
-        outcome <- "Original effect size is not within replication's CI"
+        outcome <- "- Original effect size is not within replication's CI"
       }
 
 
 
     } else { # if any of the necessary values are missing
-      outcome <- "not coded"
+      outcome <- "0 not coded"
     }
 
     rm(ci_r)
@@ -183,18 +183,18 @@ assess_replication_success <- function(es_o, n_o, es_r, n_r, criterion) {
 
 
 
-      # test if original effect size is in replication's prediction intervals
+      # test if replication effect size is in original effect's prediction interval
 
-      if (es_o > pi_lower & es_o < pi_upper) {
-        outcome <- "replication's PI overlaps with original effect"
+      if (es_r > pi_lower & es_r < pi_upper) {
+        outcome <- "+ original study's PI overlaps with replication effect"
       } else {
-        outcome <- "replication's PI does not overlap with original effect"
+        outcome <- "- original study's PI does not overlap with replication effect"
       }
 
 
 
     } else { # if any of the necessary values are missing
-      outcome <- "not coded"
+      outcome <- "0 not coded"
     }
 
     rm(pi_lower)
@@ -214,14 +214,14 @@ assess_replication_success <- function(es_o, n_o, es_r, n_r, criterion) {
       ce <- compare_effectsizes(r1 = es_o, n1 = n_o, r2 = es_r, n2 = n_r)
 
       if (ce$QEp < .05) {
-        outcome <- "effects are heterogeneous"
+        outcome <- "- effects are heterogeneous"
       } else {
-        outcome <- "effects are not heterogeneous"
+        outcome <- "+ effects are not heterogeneous"
       }
 
 
     } else { # if any of the necessary values are missing
-      outcome <- "not coded"
+      outcome <- "0 not coded"
     }
 
     rm(ce)
@@ -242,14 +242,14 @@ assess_replication_success <- function(es_o, n_o, es_r, n_r, criterion) {
       ce <- compare_effectsizes(r1 = es_o, n1 = n_o, r2 = es_r, n2 = n_r)
 
       if (ce$QEp > .05 & ce$ci.lb > 0) {
-        outcome <- "effect sizes are homogeneous and larger than 0"
+        outcome <- "+ effect sizes are homogeneous and larger than 0"
       } else {
-        outcome <- "effect sizes are not homogeneous or not larger than 0"
+        outcome <- "- effect sizes are not homogeneous or not larger than 0"
       }
 
 
     } else { # if any of the necessary values are missing
-      outcome <- "not coded"
+      outcome <- "0 not coded"
     }
 
     rm(ce)
@@ -309,26 +309,26 @@ for (i in 1:nrow(ds)) {
 
 dslong <- reshape::melt(ds[ , c("id", "ref_original", "ref_replication", "significance_r", "significance_or", "consistency_nhst", "consistency_pi", "homogeneity", "homogeneity_significance")], id = c("id", "ref_original", "ref_replication"))
 dslong_agg <- aggregate(id ~ value + variable, data = dslong, FUN = "length")
-outcome_colors <- c('aggregated effect is larger than 0' = "lightgreen"
-                    , 'aggregated effect is not larger than 0' = "red"
-                    , 'replication effect is significantly larger than 0' = "lightgreen"
-                    , 'replication effect is not significantly larger than 0' = "red"
-                    , 'aggregated effect is larger than 0' = "lightgreen"
-                    , 'aggregated effect is not larger than 0' = "red"
-                    , 'Original effect size is within replication\'s CI' = "lightgreen"
-                    , 'Original effect size is not within replication\'s CI' = "red"
-                    , 'replication\'s PI overlaps with original effect' = "lightgreen"
-                    , 'replication\'s PI does not overlap with original effect' = "red"
-                    , 'effects are heterogeneous' = "red"
-                    , 'effects are not heterogeneous' = "lightgreen"
-                    , 'effect sizes are homogeneous and larger than 0' = "lightgreen"
-                    , 'effect sizes are not homogeneous or not larger than 0' = "red"
-                    , 'not coded' = "grey"
-                    , 'original effect is not significant' = "black"
+outcome_colors <- c(  '+ aggregated effect is larger than 0' = "lightgreen"
+                    , '- aggregated effect is not larger than 0' = "red"
+                    , '+ replication effect is significantly larger than 0' = "lightgreen"
+                    , '- replication effect is not significantly larger than 0' = "red"
+                    , '+ aggregated effect is larger than 0' = "lightgreen"
+                    , '- aggregated effect is not larger than 0' = "red"
+                    , '+ Original effect size is within replication\'s CI' = "lightgreen"
+                    , '- Original effect size is not within replication\'s CI' = "red"
+                    , '+ original study\'s PI overlaps with replication effect' = "lightgreen"
+                    , '- original study\'s PI does not overlap with replication effect' = "red"
+                    , '- effects are heterogeneous' = "red"
+                    , '+ effects are not heterogeneous' = "lightgreen"
+                    , '+ effect sizes are homogeneous and larger than 0' = "lightgreen"
+                    , '- effect sizes are not homogeneous or not larger than 0' = "red"
+                    , '0 not coded' = "grey"
+                    , '0 original effect is not significant' = "black"
                     )
 library(ggplot2)
 p <- ggplot(data = dslong_agg, aes(x = variable, y = id, fill = value)) + geom_bar(position = "stack", stat = "identity") + ylab("k") + xlab("Outcome criterion") +
-  scale_fill_manual(values = outcome_colors)
+  scale_fill_manual(values = outcome_colors) + coord_flip()
 p
 # plotly::ggplotly(p)
 #
