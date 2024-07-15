@@ -7,6 +7,7 @@
 ### open FReD (for testing purposes)
 library(metafor)
 library(plotly)
+library(predictionInterval)
 
 ## open dataset
 red_link <- "https://osf.io/z5u9b/download"
@@ -174,8 +175,13 @@ assess_replication_success <- function(es_o, n_o, es_r, n_r, criterion) {
 
       # get prediction intervals for replication effect
       # roriginal +/- z0.975*sqrt( (1/noriginal-3) + (1/nreplication-3) ).
-      pi_lower <- es_o - qnorm(.975)*sqrt((1/(n_o-3)) + (1/(n_r-3)) )
-      pi_upper <- es_o + qnorm(.975)*sqrt((1/(n_o-3)) + (1/(n_r-3)) )
+      # pi_lower <- es_o - qnorm(.975)*sqrt((1/(n_o-3)) + (1/(n_r-3)) )
+      # pi_upper <- es_o + qnorm(.975)*sqrt((1/(n_o-3)) + (1/(n_r-3)) )
+
+      pi_lower <- predictionInterval::pi.r(r = es_o, n = n_o)$lower_prediction_interval
+      pi_upper <- predictionInterval::pi.r(r = es_o, n = n_o)$upper_prediction_interval
+
+
 
       # test if original effect size is in replication's prediction intervals
 
@@ -325,3 +331,36 @@ p <- ggplot(data = dslong_agg, aes(x = variable, y = id, fill = value)) + geom_b
   scale_fill_manual(values = outcome_colors)
 p
 # plotly::ggplotly(p)
+#
+# table(
+#  ds$significance_r
+# , ds$significance_or
+# , ds$consistency_nhst
+# , ds$consistency_pi
+# , ds$homogeneity
+# , ds$homogeneity_significance
+#  )
+#
+# table(
+#   ds$significance_r
+#   , ds$significance_or)
+#
+# table(
+#   ds$significance_r
+#   , ds$consistency_nhst)
+#
+# table(
+#   ds$significance_r
+#   , ds$homogeneity)
+
+
+
+
+# ### Comparison of PI calculations
+#
+# pi_lower <- ds$es_original[i] - qnorm(.975)*sqrt((1/(ds$n_original[i]-3)) + (1/(ds$n_original[i]-3)) )
+# pi_upper <- ds$es_original[i] + qnorm(.975)*sqrt((1/(ds$n_original[i]-3)) + (1/(ds$es_original[i]-3)) )
+#
+# predictionInterval::pi.r(r = ds$es_original[i], n = ds$n_original[i])$lower_prediction_interval
+# predictionInterval::pi.r(r = ds$es_original[i], n = ds$n_original[i])$upper_prediction_interval
+
