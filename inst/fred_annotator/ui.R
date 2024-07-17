@@ -10,6 +10,7 @@ sidebar_contents <- sidebar(
   fileInput("upload", "Or upload reference list (PDF, citation or text file)", accept = c("application/pdf", " text/plain", ".bib", ".ris")),
   uiOutput("button_area"),
   checkboxInput("validated", "Use validated database entries only", value = FALSE),
+  actionButton("load_retractions", "Load Retraction Database", icon = icon("database")),
   selectInput("success_criterion", "Success criterion", choices = c(Significance = "significance", Consistency = "consistency"), selected = "significance"),
   conditionalPanel(
     condition = "output.showToggle",  # This JavaScript condition reacts to Shiny output

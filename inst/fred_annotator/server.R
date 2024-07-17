@@ -3,6 +3,37 @@
 
 server <- function(input, output, session) {
   doi_vector <- reactiveValues(dois = c(), selected_rows = NULL)
+  retracted_dois <- reactiveVal(NULL)
+
+  observeEvent(input$load_retractions, {
+    showModal(modalDialog(
+      title = "Loading Retraction Database",
+      "Please wait while the retraction database is being loaded.",
+      easyClose = FALSE
+    ))
+    retracted_dois(load_retractionwatch() %>%
+                     dplyr::filter(RetractionNature == "Retraction") %>%
+                    dplyr::select(OriginalPaperDOI))
+    reactive_df() <- reactive_df() %>%
+      dplyr::left_join(retracted_dois() %>% mutate(retracted_replication = TRUE), retraction_data(),
+                       by = c("doi_replication" = "OriginalPaperDOI"), na_matches = "never") %>%
+      dplyr::mutate(retracted_replication = dplyr::coalesce(retracted_replication, FALSE),
+                    retracted_original = dplyr::coalesce(retracted_original, FALSE),
+                    ref_original = ifelse(
+                      grepl("^RETRACTED", ref_original, ignore.case = TRUE),
+                      ref_original,
+                      paste("RETRACTED:", ref_original)
+                    ),
+                    ref_replication = ifelse(
+                      grepl("^RETRACTED", ref_replication, ignore.case = TRUE),
+                      ref_replication,
+                      paste("RETRACTED:", ref_replication)
+                    ))
+    browser()
+    removeModal()
+    showNotification("Retraction database loaded successfully.")
+    shinyjs::disable("load_retractions")
+  })
 
   session$onSessionEnded(function() {
     if (Sys.getenv("SHINY_FRED_AUTOCLOSE") == "TRUE") {

@@ -112,6 +112,16 @@ clean_variables <- function(fred_data) {
   fred_data$validated <- ifelse(fred_data$validated == 1 | fred_data$validated == 2, 1, fred_data$validated)
 
   fred_data
+}
 
+#' Load RetractionWatch data
+#'
+#' Loads the RetractionWatch data from Crossref to update the FReD dataset with the most recent retraction data.
+#'
+#' @param data URL to download RetractionWatch data from - defaults to use the `RETRACTIONWATCH_DATA` parameter, which enables temporary caching of the download
+#' @internal
+
+load_retractionwatch <- function(data = get_param("RETRACTIONWATCH_DATA_FILE")) {
+  read.csv(data, stringsAsFactors = FALSE)
 }
 
