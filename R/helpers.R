@@ -70,13 +70,14 @@ compute_power_r <- function(r, n, alpha = 0.05) {
   # Compute the power
   power <- numeric(length(r))
   for (i in seq_along(r)) {
-    ttt <- qt(alpha / 2, df = n[i] - 2, lower.tail = FALSE)
+    ttt <- qt(alpha, df = n[i] - 2, lower.tail = FALSE)
     rc <- sqrt(ttt^2 / (ttt^2 + n[i] - 2))
     zr <- atanh(abs(r[i])) + abs(r[i]) / (2 * (n[i] - 1))
     zrc <- atanh(rc)
-    power[i] <- pnorm((zr - zrc) * sqrt(n[i] - 3)) + pnorm((-zr - zrc) * sqrt(n[i] - 3))
+    power[i] <- pnorm((zr - zrc) * sqrt(n[i] - 3))
   }
 
   return(power)
 }
+
 

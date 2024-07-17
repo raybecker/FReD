@@ -138,6 +138,13 @@ server <- function(input, output, session) {
   # Forest Plot -------------------------------------------------------------
 
 
+  plotHeight <- reactive({
+
+    df_temp <- df_temp_DT()
+
+    return(length(unique(df_temp$ref_original)) * 100)
+  })
+
   output$forestplot <- plotly::renderPlotly({
 
     df_temp <- df_temp_DT()
@@ -187,15 +194,23 @@ server <- function(input, output, session) {
       ggtitle(paste(
         "Blobbogram\n",
         sum(!is.na(df_temp$es_original)),
-        "Effect sizes selected.\n"
+        "Effect sizes selected.\nGrey dots represent original effect sizes. Black dots represent replication effect sizes."
         # , length(unique(df_temp$ref_original))
         # , "Original studies were examined in replication studies."
       ))
 
     p <- plotly::ggplotly(forest) %>%
       plotly::config(displayModeBar = FALSE) %>%
-      plotly::layout(xaxis = list(fixedrange = TRUE), yaxis = list(fixedrange = TRUE)) #  %>% layout(height = 10000, width = 1200)
+      plotly::layout(xaxis = list(fixedrange = TRUE), yaxis = list(fixedrange = TRUE), width = 1200) # , height = plotHeight
+
   })
+
+
+  output$forestplot_ui <- renderUI({
+    plotlyOutput("forestplot", height = plotHeight())
+  })
+
+
 
   outcome_colors <- reactive({
 
@@ -300,8 +315,20 @@ server <- function(input, output, session) {
 
     validate(need(nrow(df_temp) > 0, "Plot cannot be created if no studies are selected"))
 
+    # # create zcurvedata object
+    # zcurvedata_clustered <- data.frame("input" = NA, "p" = (1-pnorm(abs(df_temp$z)))*2, "id" = paste(df_temp$refonly_original, df_temp$study_original, sep = "_"))
+    # zcurvedata_clustered <- zcurvedata_clustered[!is.na(zcurvedata_clustered$p), ]
+    # zcurvedata_clustered_list <- list("precise" = zcurvedata_clustered, "censored" = data.frame("input" = as.character()
+    #                                                                                             , "p.lb" =  as.logical()
+    #                                                                                             , "p.ub" =  as.logical()
+    #                                                                                             , "p.rep" = as.logical()
+    #                                                                                             , "id" =    as.logical()))
+    # class(zcurvedata_clustered_list) <- "zcurve_data"
+    # # run z-curve analysis (clustered)
+    # zc <- zcurve::zcurve_clustered(data = zcurvedata_clustered_list, method = "w", bootstrap = FALSE) # clustered (new version), requires bootstrap
+
     # run z-curve analysis
-    zc <- zcurve::zcurve(z = df_temp$z, method = "EM", bootstrap = 0)
+    zc <- zcurve::zcurve(z = df_temp$z, method = "EM", bootstrap = 0) # non clustered (old version)
 
     orr <- round(mean(df_temp$result == "success", na.rm = TRUE), 2)
     err <- zc$coefficients[1]
@@ -328,18 +355,20 @@ server <- function(input, output, session) {
   output$dataset <- DT::renderDT(server = FALSE,
                                  DT::datatable(df_display,
     rownames = FALSE,
-    extensions = 'Buttons',
-    options = list(scrollX=TRUE, lengthMenu = c(5,10,15),
+    # extensions = 'Buttons',
+    options = list(scrollX=TRUE, lengthMenu = c(5, 10, 15),
                    paging = TRUE, searching = TRUE,
                    fixedColumns = TRUE, autoWidth = TRUE,
-                   ordering = TRUE, dom = 'Bfrtip',
-                   buttons = list(list(extend = 'copy'),
-                                  list(extend = 'excel', filename = "FReD")))
+                   ordering = TRUE
+                   # , dom = 'Bfrtip'
+                   # buttons = list(list(extend = 'copy'),
+                   #                list(extend = 'excel', filename = "FReD"))
+                   )
   ))
 
   # variables
   output$variables <- DT::renderDT(DT::datatable(dataset_variables,
-    rownames = FALSE, options = list(pageLength = 20)
+    rownames = FALSE, options = list(pageLength = 20, dom = 't')
   ))
 
 
@@ -422,6 +451,8 @@ server <- function(input, output, session) {
 
 
     red_agg$row <- 1:nrow(red_agg)
+    # red_agg$orig_journal <- tolower(red_agg$orig_journal)
+    red_agg$orig_journal <- gsub("\\b([A-Za-z])", "\\U\\1", red_agg$orig_journal, perl = TRUE)
     reprate_journal <- aggregate(row ~ orig_journal * result, data = red_agg, FUN = "length")
     names(reprate_journal) <- c("journal_orig", "Result", "k")
 
@@ -475,7 +506,8 @@ server <- function(input, output, session) {
       tdist = TRUE,
       data = es,
       mods = ~ mod - 1,
-      method = "ML"
+      method = "ML",
+      sparse = TRUE
     )
 
     message("Done estimating")
@@ -970,12 +1002,12 @@ server <- function(input, output, session) {
   # Downloadbutton ----------------------------------------------------------
 
 
-  output$reddownload <- downloadHandler(
+  output$download_data <- downloadHandler(
     filename = function() {
-      paste("df-", Sys.Date(), ".csv", sep = "")
+      paste("FReD-", Sys.Date(), ".xlsx", sep = "")
     },
-    content = function(con) {
-      write.csv(df_temp_DT(), con, fileEncoding = "WINDOWS-1252") # XXX nochmal prüfen
+    content = function(file) {
+      openxlsx::write.xlsx(df_temp_DT(), file, fileEncoding = "WINDOWS-1252")
     }
   )
 }
