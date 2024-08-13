@@ -114,8 +114,6 @@ get_dataset_changelog <- function(changelog_file = "https://osf.io/fj3xc/downloa
 
 load_fred_data <- function(data = get_param("FRED_DATA_FILE")) {
 
-  browser()
-
   read_fred() %>%
     clean_variables() %>%
     add_common_effect_sizes() %>%
