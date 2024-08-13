@@ -35,6 +35,7 @@ server <- function(input, output, session) {
     shinyjs::disable("load_retractions")
   })
 
+
   session$onSessionEnded(function() {
     if (Sys.getenv("SHINY_FRED_AUTOCLOSE") == "TRUE") {
       message("App has ended because the session was ended.")
@@ -170,8 +171,6 @@ server <- function(input, output, session) {
   outputOptions(output, "doi_display", suspendWhenHidden = FALSE)
 
 
-
-
   extract_dois_from_text <- function(text) {
 
     dois <- regmatches(text, gregexpr("\\b(10\\.\\d{4,}(?:/[a-zA-Z0-9\\.\\-\\(\\)]+)*)\\b", text, perl = TRUE))
@@ -262,7 +261,7 @@ server <- function(input, output, session) {
   })
 
   # Observe changes in selected rows
-  observeEvent(input$database_search_rows_selected, {
+  observeEvent(input$database_search_rows_selected, ignoreNULL = FALSE, {
 
     current_rows <- input$database_search_rows_selected
 
@@ -270,19 +269,37 @@ server <- function(input, output, session) {
     newly_selected_rows <- setdiff(current_rows, doi_vector$selected_rows)
     deselected_rows <- setdiff(doi_vector$selected_rows, current_rows)
 
-    # Update selected_dois based on row changes
-    if (length(newly_selected_rows) > 0) {
-      new_dois <- reactive_distinct_fred_entries()$doi_original[newly_selected_rows]
-      doi_vector$dois <- union(doi_vector$dois, new_dois)
-    }
-
+    # Handle deselection
     if (length(deselected_rows) > 0) {
       remove_dois <- reactive_distinct_fred_entries()$doi_original[deselected_rows]
+
+      # Find indices of rows with the same doi_original as deselected ones
+      duplicate_rows <- which(reactive_distinct_fred_entries()$doi_original %in% remove_dois)
+
+      # Update the list of selected rows to remove all duplicates
+      current_rows <- setdiff(current_rows, duplicate_rows)
       doi_vector$dois <- setdiff(doi_vector$dois, remove_dois)
     }
 
-    # Update the reactive values
+    if (length(newly_selected_rows) > 0) {
+      add_dois <- reactive_distinct_fred_entries()$doi_original[newly_selected_rows]
+
+      # Find indices of rows with the same doi_original as deselected ones
+      duplicate_rows <- which(reactive_distinct_fred_entries()$doi_original %in% newly_selected_rows)
+
+      # Update the list of selected rows to remove all duplicates
+      current_rows <- union(current_rows, duplicate_rows)
+      doi_vector$dois <- union(doi_vector$dois, add_dois)
+    }
+
+
+    # Update the reactive values with the cleaned list of selected rows
     doi_vector$selected_rows <- current_rows
+
+
+    # Re-select rows in the DataTable to reflect any changes
+    proxy <- dataTableProxy('database_search')
+    selectRows(proxy, current_rows)
 
   })
 
@@ -302,6 +319,8 @@ server <- function(input, output, session) {
              label = paste(in_FReD, "\n(", scales::percent(proportion, accuracy = 1), ")"))
 
     color_values = c("no" = "#FF7F7F", "yes" = "#8FBC8F")
+
+
 
     # Create the plot
     p <- df_summary %>%
