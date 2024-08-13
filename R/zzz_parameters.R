@@ -22,7 +22,9 @@ NULL
 
 .onLoad <- function(libname, pkgname) {
   parameters <- c("FRED_DATA_URL" = "https://osf.io/z5u9b/download",
-                  "FRED_DATA_FILE" = tempfile(fileext = ".xlsx"))
+                  "FRED_DATA_FILE" = tempfile(fileext = ".xlsx"),
+                  "RETRACTIONWATCH_DATA_FILE" = tempfile(fileext = ".csv"),
+                  "RETRACTIONWATCH_URL" = "https://api.labs.crossref.org/data/retractionwatch?lukas.wallrich@gmail.com")
 
     for (param in names(parameters)) {
       env_value <- Sys.getenv(param, unset = NA)
@@ -45,6 +47,15 @@ get_param <- function(param, auto_download = TRUE) {
       stop("FRED_DATA_FILE does not exist. Please set FRED_DATA_FILE to the path of the FReD dataset.")
     }
   }
-  return(getOption(param))
+  if (param == "RETRACTIONWATCH_DATA_FILE" && !file.exists(getOption("RETRACTIONWATCH_DATA_FILE"))) {
+    if (auto_download) {
+      download.file(getOption("RETRACTIONWATCH_URL"), getOption("RETRACTIONWATCH_DATA_FILE"))
+    } else {
+      stop("RETRACTIONWATCH_DATA_FILE does not exist. Please set RETRACTIONWATCH_DATA_FILE to the path of the RetractionWatch database, or pass the download URL to the function.")
+    }
+  }
+  res <- getOption(param)
+  if (is.null(res)) message("Beware: ", param, " is not set.")
+  return(res)
 }
 
