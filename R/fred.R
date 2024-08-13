@@ -16,7 +16,7 @@ NULL
 utils::globalVariables(c("."))
 
 # Dummy function calls to ensure R CMD check recognizes the usage
-# these packages are use in the Shiny apps
+# these packages are used in the Shiny apps
 dummy_function_calls <- function() {
   if (FALSE) {
     forcats::fct_relevel
@@ -113,6 +113,8 @@ get_dataset_changelog <- function(changelog_file = "https://osf.io/fj3xc/downloa
 
 
 load_fred_data <- function(data = get_param("FRED_DATA_FILE")) {
+
+  browser()
 
   read_fred() %>%
     clean_variables() %>%

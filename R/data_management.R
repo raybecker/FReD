@@ -65,7 +65,7 @@ read_fred <- function(data = get_param("FRED_DATA_FILE")) {
   as <-  safe_read_xl(data, url = get_param("FRED_DATA_URL"), sheet = "Additional Studies to be added", startRow = 2)
   as$id <- paste("uncoded_studies_", rownames(as), sep = "")
   as <- as[as$`Study.listed.in.ReD?` != "1.0", ] # exclude additional studies that are already listed in the main dataset
-  as <- as[!is.na(as$doi_original), ] # exclude studies for which doi_original is unavailable because they will not be finable in the annotator anyway
+  as <- as[!is.na(as$doi_original), ] # exclude studies for which doi_original is unavailable because they will not be findable in the annotator anyway
 
   numeric_variables <- c("n_original", "n_replication", "es_orig_value", "es_rep_value",
                          "validated", "published_rep", "same_design", "same_test",
@@ -73,8 +73,38 @@ read_fred <- function(data = get_param("FRED_DATA_FILE")) {
                          "significant_original", "significant_replication", "power",
                          "es_orig_RRR", "es_rep_RRR")
 
-  red[, numeric_variables] <- sapply(red[ , numeric_variables], as.numeric)
-  forrt[, numeric_variables] <- sapply(forrt[ , numeric_variables], as.numeric)
+  # Function to coerce to numeric and track problematic values
+  coerce_to_numeric <- function(df, numeric_vars, id_var) {
+    problematic_entries <- list()
+
+    for (var in numeric_vars) {
+      # Identify problematic values
+      problematic_rows <- which(!is.na(df[[var]]) & is.na(suppressWarnings(as.numeric(df[[var]]))))
+
+      if (length(problematic_rows) > 0) {
+        problematic_entries[[var]] <- df[problematic_rows, id_var, drop = FALSE]
+      }
+
+      # Coerce to numeric
+      df[[var]] <- suppressWarnings(as.numeric(df[[var]]))
+    }
+
+    # If there are any problematic entries, generate a warning
+    if (length(problematic_entries) > 0) {
+      warning_message <- "The following fields contain values that could not be coerced to numeric:\n"
+      for (var in names(problematic_entries)) {
+        warning_message <- paste0(warning_message, "Variable '", var, "' has issues in IDs: ",
+                                  paste(problematic_entries[[var]][[id_var]], collapse = ", "), "\n")
+      }
+      warning(warning_message)
+    }
+
+    return(df)
+  }
+
+  # Assuming 'red' and 'forrt' have a unique ID column named "id"
+  red <- coerce_to_numeric(red, numeric_variables, id_var = "id")
+  forrt <- coerce_to_numeric(forrt, numeric_variables, id_var = "id")
 
   # merge the data, aligning column types where one is character (as empty colums are imported as numeric)
   bind_rows_with_characters(red, forrt, as)
@@ -101,6 +131,8 @@ clean_variables <- function(fred_data) {
   fred_data$closeness <- NA
   fred_data$result <- ifelse(fred_data$result == "0", NA, fred_data$result)
 
+  fred_data$result
+
   # compute year the original study was published (match 1800-2099 only, and require consecutive numbers)
   fred_data$orig_year <- as.numeric(gsub(".*((18|19|20)\\d{2}).*", "\\1", fred_data$ref_original))
 
@@ -122,7 +154,7 @@ clean_variables <- function(fred_data) {
 #' Loads the RetractionWatch data from Crossref to update the FReD dataset with the most recent retraction data.
 #'
 #' @param data URL to download RetractionWatch data from - defaults to use the `RETRACTIONWATCH_DATA` parameter, which enables temporary caching of the download
-#' @internal
+#' @noRd
 
 load_retractionwatch <- function(data = get_param("RETRACTIONWATCH_DATA_FILE")) {
   read.csv(data, stringsAsFactors = FALSE)

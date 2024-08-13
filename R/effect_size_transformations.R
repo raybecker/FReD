@@ -35,20 +35,12 @@ convert_effect_sizes <- function(es_values, es_types) {
       # Construct function call dynamically based on effect size type
       es_arg <- list()
       es_arg[[estype]] <- es_values[idx]
-      #browser()
       es_values_r[idx] <- try(do.call(esc::pearsons_r, es_arg))
     }
   }
 
   if (any(is.na(es_values_r) & !is.na(es_values))) {
-    warning(sum(is.na(es_values_r) & !is.na(es_values)), " effect sizes could not be transformed")
-  }
-
-  if (any(na.omit(abs(es_values_r) > 1))) {
-    warning("Some calculated correlations are outside the range of -1 to 1. Check input IDs ", paste(which(abs(es_values_r) > 1), collapse = ", "),
-            ". They will set to -1 / + 1 respectively.")
-    es_values_r[es_values_r > 1] <- 1
-    es_values_r[es_values_r < -1] <- -1
+    message(sum(is.na(es_values_r) & !is.na(es_values)), " effect sizes could not be converted to a standardised metric.")
   }
 
   es_values_r
@@ -81,8 +73,20 @@ add_common_effect_sizes <- function(fred_data, es_value_columns = c("es_orig_val
 
     if (coalesce_values && es_common_names[i] %in% names(fred_data)) {
       prev_es <- as.numeric(fred_data[, es_common_names[i]])
-      prev_es[prev_es > 1] <- NA
-      prev_es[prev_es < -1] <- NA
+
+      if (any(!is.na(prev_es) & abs(prev_es) > 1)) {
+        warning("Some existing effect sizes are outside the range of -1 to 1. Check input IDs ", paste(unique(fred_data$id[which(prev_es > 1)]), collapse = ", "),
+                ". They will set to missing.")
+        prev_es[abs(prev_es) > 1] <- NA
+      }
+
+      if (any(!is.na(prev_es) & abs(prev_es) == 1)) {
+        message("Some existing effect sizes are entered as -1 or 1. Check input IDs ", paste(unique(fred_data$id[which(abs(prev_es) == 1)]), collapse = ", "),
+                ". They will set to .9999 / -.9999 respectively, but should be double-checked.")
+        prev_es[prev_es == 1] <- .9999
+        prev_es[prev_es == -1] <- -.9999
+      }
+
       fred_data[, es_common_names[i]] <- dplyr::coalesce(convert_effect_sizes(fred_data[, es_value_columns[i]], fred_data[, es_type_columns[i]]), prev_es)
     } else {
       fred_data[, es_common_names[i]] <- convert_effect_sizes(fred_data[, es_value_columns[i]], fred_data[, es_type_columns[i]])
@@ -259,19 +263,23 @@ add_replication_power <- function(fred_data, es_original = "es_original", N_repl
 #' p_from_r(r = c(0.5, 0.3), N = c(30, 25))
 
 p_from_r <- function(r, N) {
-  # Ensure arguments are numeric
-  if (!is.numeric(r) || !is.numeric(N)) {
+
+    if (!is.numeric(r) || !is.numeric(N)) {
     stop("Both 'r' and 'N' must be numeric")
   }
   if (length(r) != length(N)) {
     stop("Length of 'r' and 'N' must be the same")
   }
 
-  # Calculate the t-value
-  t_value <- r * sqrt((N - 2) / (1 - r^2))
+  p_value <- rep(NA, length(r))
 
-  # Calculate the p-value based on the t-distribution
-  p_value <- 2 * pt(-abs(t_value), df = N - 2)
+  # Handle valid cases (non-NA, N > 2)
+  valid_indices <- !(is.na(r) | is.na(N) | N <= 2)
+
+  if (any(valid_indices)) {
+    t_value <- r[valid_indices] * sqrt((N[valid_indices] - 2) / (1 - r[valid_indices]^2))
+    p_value[valid_indices] <- 2 * pt(-abs(t_value), df = N[valid_indices] - 2)
+  }
 
   return(p_value)
 }
@@ -324,17 +332,25 @@ augment_for_zcurve <- function(fred_data, method = c("rtoz", "r/se")) {
     stop("fred_data must contain es_original and n_original columns")
   }
 
-  if (method[1] == "rtoz") {
-    # Fisher's z transformation
-    z <- 0.5 * (log(1 + fred_data$es_original) - log(1 - fred_data$es_original))
-    fred_data$se <- 1 / sqrt(fred_data$n_original - 3)
-      fred_data$z <-  z / fred_data$se
+  # Initialize se and z as NA
+  fred_data$se <- fred_data$z <- NA
 
-  } else if (method[1] == "r/se") {
-    # Method used in current Shiny app
-    fred_data$se <- sqrt((1-abs(fred_data$es_original)^2)/(fred_data$n_original-2))
-    fred_data$z <- fred_data$es_original / fred_data$se
+  valid_indices <- !(is.na(fred_data$es_original) | is.na(fred_data$n_original) | fred_data$n_original <= 3)
+
+  if (any(valid_indices)) {
+    if (method[1] == "rtoz") {
+      # Fisher's z transformation
+      z <- 0.5 * (log(1 + fred_data$es_original[valid_indices]) - log(1 - fred_data$es_original[valid_indices]))
+      fred_data$se[valid_indices] <- 1 / sqrt(fred_data$n_original[valid_indices] - 3)
+      fred_data$z[valid_indices] <- z / fred_data$se[valid_indices]
+
+    } else if (method[1] == "r/se") {
+      # Method used in current Shiny app
+      fred_data$se[valid_indices] <- sqrt((1 - abs(fred_data$es_original[valid_indices])^2) / (fred_data$n_original[valid_indices] - 2))
+      fred_data$z[valid_indices] <- fred_data$es_original[valid_indices] / fred_data$se[valid_indices]
+    }
   }
+
   return(fred_data)
 }
 

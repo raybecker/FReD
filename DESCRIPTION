@@ -35,9 +35,14 @@ Imports:
     stringr,
     zcurve
 Suggests: 
-    rstudioapi
+    knitr,
+    rmarkdown,
+    rstudioapi,
+    testthat (>= 3.0.0)
 Remotes: 
     github::forrtproject/FReD
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.1
+Config/testthat/edition: 3
+VignetteBuilder: knitr
