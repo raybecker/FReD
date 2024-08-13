@@ -1,366 +1,283 @@
 
-# Functions to assess replication outcomes --------------------------------
+#' Compare Effect Sizes Between Original and Replication Studies
+#'
+#' This function compares and combines effect sizes between an original and a replication study
+#' using a meta-analytic approach. It calculates the combined effect sizes and evaluates heterogeneity between them.
+#'
+#' @param r1 Numeric vector. Correlation coefficients from the original study.
+#' @param n1 Integer vector. Sample sizes of the original study.
+#' @param r2 Numeric vector. Correlation coefficients from the replication study.
+#' @param n2 Integer vector. Sample sizes of the replication study.
+#'
+#' @return A list containing:
+#' \item{est}{Estimated effect sizes from the meta-analysis.}
+#' \item{ci_lb}{Lower bounds of the confidence intervals for the estimated effect sizes.}
+#' \item{QEp}{p-values for the test of heterogeneity (Q-test) between effect sizes.}
+#'
+#' @examples
+#' # Example usage:
+#' r1 <- c(0.3, 0.4)
+#' n1 <- c(100, 120)
+#' r2 <- c(0.35, 0.45)
+#' n2 <- c(110, 130)
+#' compare_effectsizes(r1, n1, r2, n2)
 
-
-
-
-### open FReD (for testing purposes)
-library(metafor)
-library(plotly)
-library(predictionInterval)
-
-## open dataset
-red_link <- "https://osf.io/z5u9b/download"
-# as <- openxlsx::read.xlsx(red_link, sheet = "Additional Studies to be added", startRow = 2) # .xlsx file
-ds <- openxlsx::read.xlsx(red_link, sheet = "Data", startRow = 1) # .xlsx file
-ds <- ds[-(1:2), ] # exclude labels and "X" column
-
-ds$es_original <- as.numeric(ds$es_original)
-ds$n_original <- as.numeric(ds$n_original)
-ds$es_replication <- as.numeric(ds$es_replication)
-ds$n_replication <- as.numeric(ds$n_replication)
-
-ds$es_original <- ifelse(ds$es_original == 1, .999999, ds$es_original)
-
-
-
-
-
-
-# Success criteria --------------------------------------------------------
-
-
-
-## choose success criterion
-success_criteria <- matrix(c(    "criterion", "name", "explanation", "use"
-                               , "significance_r", "Significance (R)", "Replication effect is significantly larger than zero", ""
-                               , "significance_or", "Significance (O+R)", "Aggregated effect of O+R is significantly larger than zero", ""
-                               , "consistency_nhst", "Consistency between O&R (NHST)", "Replication effect is not significantly different from original effect", ""
-                               , "consistency_pi", "Consistency between O&R (PI)", "Replication effect is not significantly different from original effect using prediction intervals", ""
-                               , "homogeneity", "Homogeneity" , "Effect sizes from O+R are not heterogeneous accoring to a meta-analytical model", ""
-                               , "homogeneity_significance", "Homogeneity + Significance", "Effect sizes from O+R are not heterogeneous and larger than zero accoring to a meta-analytical model", ""
-                               ), ncol = 4, byrow = TRUE
-                           )
-
-success_criteria <- as.data.frame(success_criteria[2:nrow(success_criteria), ])
-names(success_criteria) <- c("criterion", "name", "explanation", "use")
-success_criteria
-
-# input_criterion <- success_criteria[1, 1] # significance_r
-# input_criterion <- success_criteria[2, 1] # significance_or
-# rm(input_criterion)
-
-
-
-# Function for effect size comparison -------------------------------------
-
-# create function to compare effect sizes
 compare_effectsizes <- function(r1, n1, r2, n2) {
-  r.1 <- metafor::escalc(ni = n1, ri = r1, measure = "COR")
-  r.2 <- metafor::escalc(ni = n2, ri = r2, measure = "COR")
 
-  metadata <- data.frame(yi = c(r.1$yi, r.2$yi),
-                         vi = c(r.1$vi, r.2$vi),
-                         study = c("original", "replication"))
+  # Apply metafor::escalc for original and replication studies
+  r1_results <- metafor::escalc(ni = n1, ri = r1, measure = "COR")
+  r2_results <- metafor::escalc(ni = n2, ri = r2, measure = "COR")
 
-  p <- metafor::rma(yi,
-           vi,
-           data = metadata,
-           method = "FE")
+  # Combine results into a single data frame
+  metadata <- data.frame(
+    yi = c(r1_results$yi, r2_results$yi),
+    vi = c(r1_results$vi, r2_results$vi),
+    study = rep(c("original", "replication"), each = length(r1))
+  )
+
+  # Apply metafor::rma on each set of yi and vi, grouped by row index
+  p <- lapply(seq(1, nrow(metadata) / 2), function(i) {
+    if (any(is.na(c(metadata$yi[(2*i-1):(2*i)], metadata$vi[(2*i-1):(2*i)])))) return(list(beta = NA, ci.lb = NA, QEp = NA))
+    metafor::rma(yi = metadata$yi[(2*i-1):(2*i)],
+                 vi = metadata$vi[(2*i-1):(2*i)],
+                 method = "FE")
+  })
+
+  # Extract necessary values from p
+  ci_lb <- sapply(p, function(x) x$ci.lb)
+  QEp <- sapply(p, function(x) x$QEp)
+  est <- sapply(p, function(x) x$beta[1])
 
 
-  return(p)
-  # rm(list(r.1, r.2, metadata, p))
+  return(list(est = est, ci_lb = ci_lb, QEp = QEp))
 }
 
-# test
-i <- 1126
-compare_effectsizes(r1 = ds$es_original[i], n1 = ds$n_original[i], r2 = ds$es_replication[i], n2 = ds$n_replication[i])
+#' Assess Replication Outcomes Based on Various Criteria
+#'
+#' This function evaluates the outcomes of replication studies against the original studies using
+#' various statistical criteria (see below, and `vignette("success_criteria")` for more details).
+#'
+#' @param es_o Numeric. The effect size from the original study.
+#' @param n_o Integer. The sample size of the original study.
+#' @param es_r Numeric. The effect size from the replication study.
+#' @param n_r Integer. The sample size of the replication study.
+#' @param criterion Character. The criterion to use for assessing the replication outcome.
+#'        Options include: "significance_r", "significance_agg", "consistency_ci", "consistency_pi",
+#'        "homogeneity", "homogeneity_significance" and "small_telescopes".
+#'
+#' @details
+#' The function assesses the replication outcome using one of several criteria:
+#' \describe{
+#'   \item{significance_r}{Evaluates the statistical significance of the replication
+#'   effect (and whether its direction is consistent with the original effect). If
+#'   the original study was not significant, this is highlighted, as the criterion is meaningless}
+#'   \item{significance_agg}{Aggregates the effect sizes from the original and replication studies using a meta-analytic approach and
+#'   assesses whether the combined effect is significantly different from zero.}
+#'   \item{consistency_ci}{Checks whether the *original* effect size falls within the confidence interval of the *replication* effect size,
+#'   thus assessing consistency between the original and replication findings.}
+#'   \item{consistency_pi}{Evaluates whether the replication effect size falls within the prediction interval derived from the original study and
+#'   the size of the replication sample. This accounts for the expected variability in replication results.}
+#'   \item{homogeneity}{Assesses whether the effects from the original and replication studies are homogeneous (i.e., consistent)
+#'   using a heterogeneity test (Q-test).}
+#'   \item{homogeneity_significance}{Combines the assessment of homogeneity with the significance of the effect sizes.
+#'   It checks whether the two effects are homogeneous and jointly significantly different from zero.}
+#'   \item{small_telescopes}{Tests whether the replication effect size is larger than the effect size that would have given the
+#'   original study a power of 33%. Derived from Simonsohn (2015), the idea here is that replications should only count as
+#'   successful if they indicate that the original study provided evidence (rather than a lucky guess).}
+#' }
+#'
+#' @return A data frame with the outcome of the assessment based on the specified criterion, with two columns: `outcome` and `outcome_detailed`.
+#'
+#' @examples
+#' es_o <- 0.3  # Effect size from the original study
+#' n_o <- 100   # Sample size of the original study
+#' es_r <- 0.25 # Effect size from the replication study
+#' n_r <- 120   # Sample size of the replication study
+#' assess_replication_outcome(es_o, n_o, es_r, n_r, "significance_r")
+#'
+#' @export
 
-# Function for replication success ----------------------------------------
+assess_replication_outcome <- function(es_o, n_o, es_r, n_r, criterion) {
 
+  # Check that relevant arguments are numeric and not missing
+  checkmate::assert_numeric(es_o)
+  checkmate::assert_numeric(n_o)
+  checkmate::assert_numeric(es_r)
+  checkmate::assert_numeric(n_r)
+  checkmate::assert_character(criterion)
 
-assess_replication_success <- function(es_o, n_o, es_r, n_r, criterion) {
-
-  if (criterion == "significance_r") {
-
-    # test if any of the necessary values are missing
-    if (!is.na(es_o) &
-        !is.na(n_o) &
-        !is.na(es_r) &
-        !is.na(n_r)
-    ) {
-      # test if original effect is significantly larger than 0
-      if (psychometric::CIr(r = es_o, n = n_o, level = .95)[1] > 0) # used two-tailed because original finding may have been unexpected
-      {
-        # test if replication effect is significantly larger than 0
-        if (psychometric::CIr(r = es_r, n = n_r, level = .95)[1] > 0) {
-          outcome <- "+ replication effect is significantly larger than 0"
-        } else {
-          outcome <- "- replication effect is not significantly larger than 0"
-        }
-      } else { # if original effect is not significantly larger than 0
-        outcome <- "- original effect is not significant"
-      }
-    } else { # if any of the necessary values are missing
-      outcome <- "0 not coded"
-    }
-
-
-
-  } else if (criterion == "significance_or") {
-
-    # test if any of the necessary values are missing
-    if (!is.na(es_o) &
-        !is.na(n_o) &
-        !is.na(es_r) &
-        !is.na(n_r)
-    ) {
-
-      # test in meta-analytical model, whether aggregated effect is larger than zero
-      ce <- compare_effectsizes(r1 = es_o, n1 = n_o, r2 = es_r, n2 = n_r)
-
-      if (ce$ci.lb < 0) {
-        outcome <- "+ aggregated effect is larger than 0"
-      } else {
-        outcome <- "- aggregated effect is not larger than 0"
-      }
-
-    } else { # if any of the necessary values are missing
-      outcome <- "0 not coded"
-    }
-
-    rm(ce)
-
-
-
-  } else if (criterion == "consistency_nhst") {
-
-    # test if any of the necessary values are missing
-    if (!is.na(es_o) &
-        !is.na(n_o) &
-        !is.na(es_r) &
-        !is.na(n_r)
-    ) {
-
-      # get confidence intervals for replication effect
-      ci_r <- psychometric::CIr(r = es_r, n_r)
-
-      # test if original effect is in confidence interval
-      if (es_o > ci_r[1] & es_o < ci_r[2]) {
-        outcome <- "+ Original effect size is within replication's CI"
-      } else {
-        outcome <- "- Original effect size is not within replication's CI"
-      }
+  inputs <- data.frame(
+    es_o = es_o,
+    n_o = n_o,
+    es_r = es_r,
+    n_r = n_r
+  )
 
 
+  assess_rep_significance <- function(df) {
 
-    } else { # if any of the necessary values are missing
-      outcome <- "0 not coded"
-    }
+    #LR: should sig test for replication effects here be one-tailed?
+    #LR: should inconsistent direction be always included here? I'd say yes.
 
-    rm(ci_r)
-
-
-  } else if (criterion == "consistency_pi") {
-
-
-    # test if any of the necessary values are missing
-    if (!is.na(es_o) &
-        !is.na(n_o) &
-        !is.na(es_r) &
-        !is.na(n_r)
-    ) {
-
-
-      # get prediction intervals for replication effect
-      # roriginal +/- z0.975*sqrt( (1/noriginal-3) + (1/nreplication-3) ).
-      # pi_lower <- es_o - qnorm(.975)*sqrt((1/(n_o-3)) + (1/(n_r-3)) )
-      # pi_upper <- es_o + qnorm(.975)*sqrt((1/(n_o-3)) + (1/(n_r-3)) )
-
-      pi_lower <- predictionInterval::pi.r(r = es_o, n = n_o)$lower_prediction_interval
-      pi_upper <- predictionInterval::pi.r(r = es_o, n = n_o)$upper_prediction_interval
-
-
-
-      # test if replication effect size is in original effect's prediction interval
-
-      if (es_r > pi_lower & es_r < pi_upper) {
-        outcome <- "+ original study's PI overlaps with replication effect"
-      } else {
-        outcome <- "- original study's PI does not overlap with replication effect"
-      }
-
-
-
-    } else { # if any of the necessary values are missing
-      outcome <- "0 not coded"
-    }
-
-    rm(pi_lower)
-    rm(pi_upper)
-
-
-  } else if (criterion == "homogeneity") {
-
-    # test if any of the necessary values are missing
-    if (!is.na(es_o) &
-        !is.na(n_o) &
-        !is.na(es_r) &
-        !is.na(n_r)
-    ) {
-
-      # test in meta-analytical model whether there is heterogeneity (difference between effect sizes)
-      ce <- compare_effectsizes(r1 = es_o, n1 = n_o, r2 = es_r, n2 = n_r)
-
-      if (ce$QEp < .05) {
-        outcome <- "- effects are heterogeneous"
-      } else {
-        outcome <- "+ effects are not heterogeneous"
-      }
-
-
-    } else { # if any of the necessary values are missing
-      outcome <- "0 not coded"
-    }
-
-    rm(ce)
-
-
-
-
-  } else if (criterion == "homogeneity_significance") {
-
-    # test if any of the necessary values are missing
-    if (!is.na(es_o) &
-        !is.na(n_o) &
-        !is.na(es_r) &
-        !is.na(n_r)
-    ) {
-
-      # test in meta-analytical model whether there is heterogeneity (difference between effect sizes) and whether the overall effect size is larger than zero
-      ce <- compare_effectsizes(r1 = es_o, n1 = n_o, r2 = es_r, n2 = n_r)
-
-      if (ce$QEp > .05 & ce$ci.lb > 0) {
-        outcome <- "+ effect sizes are homogeneous and larger than 0"
-      } else {
-        outcome <- "- effect sizes are not homogeneous or not larger than 0"
-      }
-
-
-    } else { # if any of the necessary values are missing
-      outcome <- "0 not coded"
-    }
-
-    rm(ce)
+    df %>% dplyr::mutate(
+      outcome_detailed = dplyr::case_when(
+        p_from_r(r = .data$es_o, N = .data$n_o) >= 0.05 ~ "original effect is not significant",
+        p_from_r(r = .data$es_r, N = .data$n_r) >= 0.05 ~ "- replication effect is not significant",
+        p_from_r(r = .data$es_r, N = .data$n_r) < 0.05 & sign(.data$es_o) == sign(.data$es_r) ~ "+ replication effect is significant",
+        p_from_r(r = .data$es_r, N = .data$n_r) < 0.05 & sign(.data$es_o) != sign(.data$es_r) ~ "direction of effect is inconsistent",
+        .default = NA_character_
+      ),
+      outcome = dplyr::case_when(
+        .data$outcome_detailed == "original effect is not significant" ~ "OS not significant",
+        .data$outcome_detailed %in% c("- replication effect is not significant",
+                                "- direction of effect is inconsistent") ~ "failure",
+        .data$outcome_detailed == "+ replication effect is significant" ~ "success",
+        .default = NA_character_
+      )
+    ) %>%
+      dplyr::select(outcome, outcome_detailed)
 
   }
 
-  return(outcome)
+  assess_agg_significance <- function(df) {
 
-  rm(outcome)
+    effect_comparison <- compare_effectsizes(df$es_o, df$n_o, df$es_r, df$n_r)
 
+    df %>%
+      dplyr::mutate(
+        outcome_detailed = dplyr::case_when(
+          effect_comparison$ci_lb > 0 ~ "+ aggregated effect is larger than 0",
+          effect_comparison$ci_lb <= 0 ~ "- aggregated effect is not larger than 0",
+          .default = NA_character_
+        ),
+        outcome = dplyr::case_when(
+          .data$outcome_detailed == "+ aggregated effect is larger than 0" ~ "success",
+          .data$outcome_detailed == "- aggregated effect is not larger than 0" ~ "failure",
+          .default = NA_character_
+        )
+        ) %>%
+          dplyr::select(outcome, outcome_detailed)
+
+  }
+
+  assess_or_consistency_with_rep <- function(df) {
+
+    # we already have CIs in our processed data - so no real need to calculate them again, but can do for clarity
+    # LR: I switched to our own function as it is vectorised
+
+    cis <- compute_ci_r(df$es_r, df$n_r)
+
+    df %>%
+      dplyr::mutate(
+        outcome_detailed = dplyr::case_when(
+          es_o > cis$lower & es_o < cis$upper ~ "+ Original effect size is within replication's CI",
+          es_o <= cis$lower | es_o >= cis$upper ~ "- Original effect size is not within replication's CI",
+          .default = NA_character_
+        ),
+        outcome = dplyr::case_when(
+          .data$outcome_detailed == "+ Original effect size is within replication's CI" ~ "success",
+          .data$outcome_detailed == "- Original effect size is not within replication's CI" ~ "failure",
+          .default = NA_character_
+        )
+      ) %>%
+      dplyr::select(outcome, outcome_detailed)
+
+  }
+
+  assess_rep_consistency_with_pi <- function(df) {
+    #LR: note that the replication's N should be included here, as larger N there lead to narrower PIs
+    pred_intervals <- calculate_prediction_interval(df$es_o, df$n_o, df$n_r)
+
+    df %>%
+      dplyr::mutate(
+        outcome_detailed = dplyr::case_when(
+          es_r > pred_intervals$lower & es_r < pred_intervals$upper ~ "+ Replication effect size is within the prediction interval",
+          es_r <= pred_intervals$lower | es_r >= pred_intervals$upper ~ "- Replication effect size is not within the prediction interval",
+          .default = NA_character_
+        ),
+        outcome = dplyr::case_when(
+          .data$outcome_detailed == "+ Replication effect size is within the prediction interval" ~ "success",
+          .data$outcome_detailed == "- Replication effect size is not within the prediction interval" ~ "failure",
+      )
+      )  %>%
+      dplyr::select(outcome, outcome_detailed)
+
+  }
+
+  assess_homogeneity <- function(df) {
+    effect_comparison <- compare_effectsizes(df$es_o, df$n_o, df$es_r, df$n_r)
+
+    df %>%
+      dplyr::mutate(
+        outcome_detailed = dplyr::case_when(
+          effect_comparison$QEp < 0.05 ~ "- effects are heterogeneous",
+          effect_comparison$QEp >= 0.05 ~ "+ effects are not heterogeneous",
+          .default = NA_character_
+        ),
+        outcome = dplyr::case_when(
+          .data$outcome_detailed == "+ effects are not heterogeneous" ~ "success",
+          .data$outcome_detailed == "- effects are heterogeneous" ~ "failure",
+          .default = NA_character_
+        )
+      ) %>%
+      dplyr::select(outcome, outcome_detailed)
+  }
+
+  assess_homogeneity_and_significance <- function(df) {
+
+    # LR: should any replications were OS is not significant be shown as such? I am not sure about the success case - but
+    # consistent non-significance cannot be coded as failure? Currently all non-significant OS are coded as "OS not significant"
+
+    effect_comparison <- compare_effectsizes(df$es_o, df$n_o, df$es_r, df$n_r)
+
+    df %>%
+      dplyr::mutate(
+        outcome_detailed = dplyr::case_when(
+          effect_comparison$QEp > 0.05 & effect_comparison$ci_lb > 0 ~ "+ effect sizes are homogeneous and jointly significantly above 0",
+          effect_comparison$QEp > 0.05 & effect_comparison$ci_lb <= 0 ~ "- effect sizes are homogeneous but not significant",
+          effect_comparison$QEp <= 0.05 & effect_comparison$ci_lb > 0 ~ "- effect sizes are not homogeneous but jointly significantly above 0",
+          effect_comparison$QEp <= 0.05 & effect_comparison$ci_lb <= 0 ~ "- effect sizes are not homogeneous and not significant",
+          .default = NA_character_
+        ),
+        outcome = dplyr::case_when(
+          p_from_r(r = .data$es_o, N = .data$n_o) >= 0.05 ~ "OS not significant",
+          .data$outcome_detailed == "+ effect sizes are homogeneous and jointly significantly above 0" ~ "success",
+          .data$outcome_detailed == "- effect sizes are not homogeneous but jointly significantly above 0" ~ "failure",
+          .data$outcome_detailed == "- effect sizes are not homogeneous and not significant" ~ "failure",
+          .data$outcome_detailed == "- effect sizes are homogeneous but not significant" ~ "failure",
+          .default = NA_character_
+        )) %>%
+          dplyr::select(outcome, outcome_detailed)
+
+  }
+
+  assess_small_telescopes <- function(df) {
+    df %>%
+      dplyr::mutate(
+        es_with_33power = find_r_for_power(.33, .data$n_o),
+        outcome_detailed = dplyr::case_when(
+          df$es_r >= .data$es_with_33power ~ "+ original study had >= 33% power to detect replication effect",
+          df$es_r < .data$es_with_33power ~ "- original study had < 33% power to detect replication effect",
+          .default = NA_character_
+        ),
+        outcome = dplyr::case_when(
+          .data$outcome_detailed == "+ original study had >= 33% power to detect replication effect" ~ "success",
+          .data$outcome_detailed == "- original study had < 33% power to detect replication effect" ~ "failure",
+          .default = NA_character_
+        )
+      ) %>% dplyr::select(outcome, outcome_detailed)
+  }
+
+  switch(
+    criterion,
+    significance_r = assess_rep_significance(inputs),
+    significance_agg = assess_agg_significance(inputs),
+    consistency_ci = assess_or_consistency_with_rep(inputs),
+    consistency_pi = assess_rep_consistency_with_pi(inputs),
+    homogeneity = assess_homogeneity(inputs),
+    homogeneity_significance = assess_homogeneity_and_significance(inputs),
+    small_telescopes = assess_small_telescopes(inputs),
+    stop("Criterion not recognised")
+  )
 }
-
-# ##### testing
-# ## run function...
-# # on single datapoint
-# i <- 1126 # datareplicada
-# assess_replication_success(es_o = ds$es_original[i], n_o = ds$n_original[i], es_r = ds$es_replication[i], n_r = ds$n_replication[i], "significance_r")
-# assess_replication_success(es_o = ds$es_original[i], n_o = ds$n_original[i], es_r = ds$es_replication[i], n_r = ds$n_replication[i], "significance_or")
-# assess_replication_success(es_o = ds$es_original[i], n_o = ds$n_original[i], es_r = ds$es_replication[i], n_r = ds$n_replication[i], "consistency_nhst")
-# assess_replication_success(es_o = ds$es_original[i], n_o = ds$n_original[i], es_r = ds$es_replication[i], n_r = ds$n_replication[i], "consistency_pi")
-# assess_replication_success(es_o = ds$es_original[i], n_o = ds$n_original[i], es_r = ds$es_replication[i], n_r = ds$n_replication[i], "homogeneity")
-# assess_replication_success(es_o = ds$es_original[i], n_o = ds$n_original[i], es_r = ds$es_replication[i], n_r = ds$n_replication[i], "homogeneity_significance")
-#
-#
-# es_o = ds$es_original[i]
-# n_o = ds$n_original[i]
-# es_r = ds$es_replication[i]
-# n_r = ds$n_replication[i]
-#
-# # on entire dataset
-# input_criterion <- "significance_r"
-# mapply(FUN = function(es_o, n_o, es_r, n_r, criterion) (assess_replication_success(es_o, n_o, es_r, n_r, criterion)),
-#        es_o = ds$es_original, n_o = ds$n_original, es_r = ds$es_replication, n_r = ds$n_replication, criterion = input_criterion)
-#
-#
-# # using a for loop (I could not get mapply to work)
-# ds$outcome <- NA
-# input_criterion <- "significance_r"
-# input_criterion <- "consistency_pi"
-# for (i in 1:nrow(ds)) {
-#   ds[i, "outcome"] <- assess_replication_success(es_o = ds$es_original[i], n_o = ds$n_original[i], es_r = ds$es_replication[i], n_r = ds$n_replication[i], input_criterion)
-# }
-# table(ds$outcome, useNA = "always")
-
-
-
-# Compare criteria --------------------------------------------------------
-
-for (i in 1:nrow(ds)) {
-  ds[i, "significance_r"] <- assess_replication_success(es_o = ds$es_original[i], n_o = ds$n_original[i], es_r = ds$es_replication[i], n_r = ds$n_replication[i], "significance_r")
-  ds[i, "significance_or"] <- assess_replication_success(es_o = ds$es_original[i], n_o = ds$n_original[i], es_r = ds$es_replication[i], n_r = ds$n_replication[i], "significance_or")
-  ds[i, "consistency_nhst"] <- assess_replication_success(es_o = ds$es_original[i], n_o = ds$n_original[i], es_r = ds$es_replication[i], n_r = ds$n_replication[i], "consistency_nhst")
-  ds[i, "consistency_pi"] <- assess_replication_success(es_o = ds$es_original[i], n_o = ds$n_original[i], es_r = ds$es_replication[i], n_r = ds$n_replication[i], "consistency_pi")
-  ds[i, "homogeneity"] <- assess_replication_success(es_o = ds$es_original[i], n_o = ds$n_original[i], es_r = ds$es_replication[i], n_r = ds$n_replication[i], "homogeneity")
-  ds[i, "homogeneity_significance"] <- assess_replication_success(es_o = ds$es_original[i], n_o = ds$n_original[i], es_r = ds$es_replication[i], n_r = ds$n_replication[i], "homogeneity_significance")
-}
-
-dslong <- reshape::melt(ds[ , c("id", "ref_original", "ref_replication", "significance_r", "significance_or", "consistency_nhst", "consistency_pi", "homogeneity", "homogeneity_significance")], id = c("id", "ref_original", "ref_replication"))
-dslong_agg <- aggregate(id ~ value + variable, data = dslong, FUN = "length")
-outcome_colors <- c(  '+ aggregated effect is larger than 0' = "lightgreen"
-                    , '- aggregated effect is not larger than 0' = "red"
-                    , '+ replication effect is significantly larger than 0' = "lightgreen"
-                    , '- replication effect is not significantly larger than 0' = "red"
-                    , '+ aggregated effect is larger than 0' = "lightgreen"
-                    , '- aggregated effect is not larger than 0' = "red"
-                    , '+ Original effect size is within replication\'s CI' = "lightgreen"
-                    , '- Original effect size is not within replication\'s CI' = "red"
-                    , '+ original study\'s PI overlaps with replication effect' = "lightgreen"
-                    , '- original study\'s PI does not overlap with replication effect' = "red"
-                    , '- effects are heterogeneous' = "red"
-                    , '+ effects are not heterogeneous' = "lightgreen"
-                    , '+ effect sizes are homogeneous and larger than 0' = "lightgreen"
-                    , '- effect sizes are not homogeneous or not larger than 0' = "red"
-                    , '0 not coded' = "grey"
-                    , '0 original effect is not significant' = "black"
-                    )
-library(ggplot2)
-p <- ggplot(data = dslong_agg, aes(x = variable, y = id, fill = value)) + geom_bar(position = "stack", stat = "identity") + ylab("k") + xlab("Outcome criterion") +
-  scale_fill_manual(values = outcome_colors) + coord_flip()
-p
-# plotly::ggplotly(p)
-#
-# table(
-#  ds$significance_r
-# , ds$significance_or
-# , ds$consistency_nhst
-# , ds$consistency_pi
-# , ds$homogeneity
-# , ds$homogeneity_significance
-#  )
-#
-# table(
-#   ds$significance_r
-#   , ds$significance_or)
-#
-# table(
-#   ds$significance_r
-#   , ds$consistency_nhst)
-#
-# table(
-#   ds$significance_r
-#   , ds$homogeneity)
-
-
-
-
-# ### Comparison of PI calculations
-#
-# pi_lower <- ds$es_original[i] - qnorm(.975)*sqrt((1/(ds$n_original[i]-3)) + (1/(ds$n_original[i]-3)) )
-# pi_upper <- ds$es_original[i] + qnorm(.975)*sqrt((1/(ds$n_original[i]-3)) + (1/(ds$es_original[i]-3)) )
-#
-# predictionInterval::pi.r(r = ds$es_original[i], n = ds$n_original[i])$lower_prediction_interval
-# predictionInterval::pi.r(r = ds$es_original[i], n = ds$n_original[i])$upper_prediction_interval
 
