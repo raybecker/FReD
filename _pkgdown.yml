@@ -1,4 +1,6 @@
 url: http://forrt.org/FReD/
 template:
   bootstrap: 5
+  light-switch: true
+
 
