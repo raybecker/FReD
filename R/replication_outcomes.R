@@ -21,6 +21,7 @@
 #' r2 <- c(0.35, 0.45)
 #' n2 <- c(110, 130)
 #' compare_effectsizes(r1, n1, r2, n2)
+#' @noRd
 
 compare_effectsizes <- function(r1, n1, r2, n2) {
 
@@ -118,26 +119,24 @@ assess_replication_outcome <- function(es_o, n_o, es_r, n_r, criterion) {
 
     #LR: should sig test for replication effects here be one-tailed?
     #LR: should inconsistent direction be always included here? I'd say yes.
-
-    df %>% dplyr::mutate(
-      outcome_detailed = dplyr::case_when(
-        p_from_r(r = .data$es_o, N = .data$n_o) >= 0.05 ~ "original effect is not significant",
-        p_from_r(r = .data$es_r, N = .data$n_r) >= 0.05 ~ "- replication effect is not significant",
-        p_from_r(r = .data$es_r, N = .data$n_r) < 0.05 & sign(.data$es_o) == sign(.data$es_r) ~ "+ replication effect is significant",
-        p_from_r(r = .data$es_r, N = .data$n_r) < 0.05 & sign(.data$es_o) != sign(.data$es_r) ~ "direction of effect is inconsistent",
-        .default = NA_character_
-      ),
-      outcome = dplyr::case_when(
-        .data$outcome_detailed == "original effect is not significant" ~ "OS not significant",
-        .data$outcome_detailed %in% c("- replication effect is not significant",
-                                "- direction of effect is inconsistent") ~ "failure",
-        .data$outcome_detailed == "+ replication effect is significant" ~ "success",
-        .default = NA_character_
-      )
-    ) %>%
-      dplyr::select(outcome, outcome_detailed)
-
-  }
+      df %>%
+        dplyr::mutate(
+          outcome_detailed = dplyr::case_when(
+            p_from_r(r = .data$es_o, N = .data$n_o) >= 0.05 ~ "original effect is not significant",
+            p_from_r(r = .data$es_r, N = .data$n_r) >= 0.05 ~ "- replication effect is not significant",
+            p_from_r(r = .data$es_r, N = .data$n_r) < 0.05 & sign(.data$es_o) == sign(.data$es_r) ~ "+ replication effect is significant",
+            p_from_r(r = .data$es_r, N = .data$n_r) < 0.05 & sign(.data$es_o) != sign(.data$es_r) ~ "direction of effect is inconsistent",
+            .default = NA_character_
+          ),
+          outcome = dplyr::case_when(
+            .data$outcome_detailed == "original effect is not significant" ~ "OS not significant",
+            .data$outcome_detailed %in% c("- replication effect is not significant", "direction of effect is inconsistent") ~ "failure",
+            .data$outcome_detailed == "+ replication effect is significant" ~ "success",
+            .default = NA_character_
+          )
+        ) %>%
+        dplyr::select("outcome", "outcome_detailed")
+    }
 
   assess_agg_significance <- function(df) {
 
@@ -156,7 +155,7 @@ assess_replication_outcome <- function(es_o, n_o, es_r, n_r, criterion) {
           .default = NA_character_
         )
         ) %>%
-          dplyr::select(outcome, outcome_detailed)
+                  dplyr::select("outcome", "outcome_detailed")
 
   }
 
@@ -180,7 +179,7 @@ assess_replication_outcome <- function(es_o, n_o, es_r, n_r, criterion) {
           .default = NA_character_
         )
       ) %>%
-      dplyr::select(outcome, outcome_detailed)
+              dplyr::select("outcome", "outcome_detailed")
 
   }
 
@@ -200,7 +199,7 @@ assess_replication_outcome <- function(es_o, n_o, es_r, n_r, criterion) {
           .data$outcome_detailed == "- Replication effect size is not within the prediction interval" ~ "failure",
       )
       )  %>%
-      dplyr::select(outcome, outcome_detailed)
+              dplyr::select("outcome", "outcome_detailed")
 
   }
 
@@ -220,7 +219,7 @@ assess_replication_outcome <- function(es_o, n_o, es_r, n_r, criterion) {
           .default = NA_character_
         )
       ) %>%
-      dplyr::select(outcome, outcome_detailed)
+              dplyr::select("outcome", "outcome_detailed")
   }
 
   assess_homogeneity_and_significance <- function(df) {
@@ -247,7 +246,7 @@ assess_replication_outcome <- function(es_o, n_o, es_r, n_r, criterion) {
           .data$outcome_detailed == "- effect sizes are homogeneous but not significant" ~ "failure",
           .default = NA_character_
         )) %>%
-          dplyr::select(outcome, outcome_detailed)
+                  dplyr::select("outcome", "outcome_detailed")
 
   }
 
@@ -265,7 +264,7 @@ assess_replication_outcome <- function(es_o, n_o, es_r, n_r, criterion) {
           .data$outcome_detailed == "- original study had < 33% power to detect replication effect" ~ "failure",
           .default = NA_character_
         )
-      ) %>% dplyr::select(outcome, outcome_detailed)
+      ) %>%         dplyr::select("outcome", "outcome_detailed")
   }
 
   switch(

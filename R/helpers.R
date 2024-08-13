@@ -163,6 +163,7 @@ compute_ci_r <- function(r, n, conf.level = 0.95) {
 #' n_r <- 30  # Sample size of the replication study
 #'
 #' calculate_prediction_interval(r, n_o, n_r)
+#' @export
 
 
 calculate_prediction_interval <- function(r, n_o, n_r = n_o, confidence_level = 0.95) {
@@ -255,11 +256,11 @@ test_equivalence_r <- function(r, n, sesoi, alpha = 0.05) {
   # Determine if the result is significant
   if (p_equivalence < alpha) {
     result_sentence <- paste0("The correlation of ", round(r, 3),
-                             " is statistically equivalent to the SESOI (± ", sesoi,
+                             " is statistically equivalent to the SESOI (\u00B1 ", sesoi,
                              ") with a p-value of ", formatted_p, ".")
   } else {
     result_sentence <- paste("The correlation of ", round(r, 3),
-                             " is not statistically equivalent to the SESOI (± ", sesoi,
+                             " is not statistically equivalent to the SESOI (\u00B1 ", sesoi,
                              ") (p = ", formatted_p, ").")
   }
 

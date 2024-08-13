@@ -157,6 +157,6 @@ clean_variables <- function(fred_data) {
 #' @noRd
 
 load_retractionwatch <- function(data = get_param("RETRACTIONWATCH_DATA_FILE")) {
-  read.csv(data, stringsAsFactors = FALSE)
+  utils::read.csv(data, stringsAsFactors = FALSE)
 }
 

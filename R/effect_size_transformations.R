@@ -179,7 +179,7 @@ add_uncertainty <- function(fred_data, es_value_columns = c("es_original", "es_r
 #' @param ci_lower_replication Character. Lower bound of replication confidence interval.
 #' @param ci_upper_replication Character. Upper bound of replication confidence interval.
 #' @return Augmented FReD dataset with replication outcome columns, including `signal`
-#' @importFrom rlang sym
+#' @importFrom dplyr sym
 #' @importFrom dplyr mutate case_when
 
 code_replication_outcomes <- function(fred_data,
@@ -191,12 +191,12 @@ code_replication_outcomes <- function(fred_data,
                            es_replication = "es_replication") {
 
   # Convert column names to symbols for dplyr evaluation
-  es_original_sym <- rlang::sym(es_original)
-  p_original_sym <- rlang::sym(p_original)
-  p_replication_sym <- rlang::sym(p_replication)
-  ci_lower_replication_sym <- rlang::sym(ci_lower_replication)
-  ci_upper_replication_sym <- rlang::sym(ci_upper_replication)
-  es_replication_sym <- rlang::sym(es_replication)
+  es_original_sym <- dplyr::sym(es_original)
+  p_original_sym <- dplyr::sym(p_original)
+  p_replication_sym <- dplyr::sym(p_replication)
+  ci_lower_replication_sym <- dplyr::sym(ci_lower_replication)
+  ci_upper_replication_sym <- dplyr::sym(ci_upper_replication)
+  es_replication_sym <- dplyr::sym(es_replication)
 
   fred_data <- fred_data %>%
     dplyr::mutate(
