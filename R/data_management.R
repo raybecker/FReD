@@ -1,3 +1,23 @@
+
+#' Returns an inbuilt data item
+#'
+#' This is used then the package is set to work offline, or when the data cannot be loaded.
+#'
+#' @param item Which inbuilt item to return?
+#' @noRd
+
+return_inbuilt <- function(item = c("data", "data_description", "changelog", "citation")) {
+  assert_choice(item, c("data", "data_description", "changelog", "citation"))
+  data <- system.file("extdata", "snapshot", paste0(item, ".RDS"), package = "FReD")
+  data <- readRDS(data)
+  if (!get_param("FRED_OFFLINE")) {
+    last_updated <- format(attr(data, "last_updated"), "%d-%m-%Y %I:%M%p")
+    message("Using inbuilt ", item, " last updated on ", last_updated, ". This is likely because of an issue with your internet connection, or with the online data source. If this is unexpected and persists, please report this issue on GitHub.")
+  }
+  data
+}
+
+
 #' Load variable descriptions
 #'
 #' This reads names and variable descriptions of key variables from FReD. This can used for subsetting and describing the dataset.
@@ -8,8 +28,12 @@
 
 
 load_variable_descriptions <- function(sheet_name = "Key Variables", data = get_param("FRED_DATA_FILE")) {
-  variable_descriptions <-  safe_read_xl(data, url = get_param("FRED_DATA_URL"), sheet = sheet_name, startRow = 2)
-  return(variable_descriptions)
+  if (get_param("FRED_OFFLINE")) return(return_inbuilt("data_description"))
+  tryCatch({
+    safe_read_xl(data, url = get_param("FRED_DATA_URL"), sheet = sheet_name, startRow = 2)
+  }, error = function(e) {
+    return_inbuilt("data_description")
+  })
 }
 
 #' Bind Rows with Character Columns
@@ -50,65 +74,76 @@ bind_rows_with_characters <- function(..., .id = NULL) {
 #'
 #' This function loads the FReD dataset into R. It merges the data from the different sheets into one data frame.
 #'
-#' @param data Path to the FReD dataset (defaults to current FReD data on OSF)
+#' @param data Path to the FReD dataset (defaults to current FReD data on OSF), unless the package is in offline mode (`use_FReD_offline()`)
 #' @return A data frame with the FReD dataset
 
 read_fred <- function(data = get_param("FRED_DATA_FILE")) {
 
-  red <- safe_read_xl(data, url = get_param("FRED_DATA_URL"), sheet = "Data") # .xlsx file
-  red <- red[-(1:2), ] # exclude labels and "X" column
-  forrt  <- safe_read_xl(data, url = get_param("FRED_DATA_URL"), sheet = "FORRT R&R (editable)", startRow = 1)
-  forrt <- forrt[-(1:2), ] # exclude labels and "X" column
-  forrt <- forrt[!(forrt$doi_original %in% red$doi_original), ] # exclude forrt entries of original study that already appear in FReD (based on DOIs)
+  if (get_param("FRED_OFFLINE")) return(return_inbuilt("data"))
 
-  # additional studies
-  as <-  safe_read_xl(data, url = get_param("FRED_DATA_URL"), sheet = "Additional Studies to be added", startRow = 2)
-  as$id <- paste("uncoded_studies_", rownames(as), sep = "")
-  as <- as[as$`Study.listed.in.ReD?` != "1.0", ] # exclude additional studies that are already listed in the main dataset
-  as <- as[!is.na(as$doi_original), ] # exclude studies for which doi_original is unavailable because they will not be findable in the annotator anyway
+  tryCatch({
 
-  numeric_variables <- c("n_original", "n_replication", "es_orig_value", "es_rep_value",
-                         "validated", "published_rep", "same_design", "same_test",
-                         "original_authors",
-                         "significant_original", "significant_replication", "power",
-                         "es_orig_RRR", "es_rep_RRR")
+    red <- safe_read_xl(data, url = get_param("FRED_DATA_URL"), sheet = "Data") # .xlsx file
+    red <- red[-(1:2), ] # exclude labels and "X" column
+    forrt  <- safe_read_xl(data, url = get_param("FRED_DATA_URL"), sheet = "FORRT R&R (editable)", startRow = 1)
+    forrt <- forrt[-(1:2), ] # exclude labels and "X" column
+    forrt <- forrt[!(forrt$doi_original %in% red$doi_original), ] # exclude forrt entries of original study that already appear in FReD (based on DOIs)
 
-  # Function to coerce to numeric and track problematic values
-  coerce_to_numeric <- function(df, numeric_vars, id_var) {
-    problematic_entries <- list()
+    # additional studies
+    as <-  safe_read_xl(data, url = get_param("FRED_DATA_URL"), sheet = "Additional Studies to be added", startRow = 2)
+    as$id <- paste("uncoded_studies_", rownames(as), sep = "")
+    as <- as[as$`Study.listed.in.ReD?` != "1.0", ] # exclude additional studies that are already listed in the main dataset
+    as <- as[!is.na(as$doi_original), ] # exclude studies for which doi_original is unavailable because they will not be findable in the annotator anyway
 
-    for (var in numeric_vars) {
-      # Identify problematic values
-      problematic_rows <- which(!is.na(df[[var]]) & is.na(suppressWarnings(as.numeric(df[[var]]))))
+    numeric_variables <- c("n_original", "n_replication", "es_orig_value", "es_rep_value",
+                           "validated", "published_rep", "same_design", "same_test",
+                           "original_authors",
+                           "significant_original", "significant_replication", "power",
+                           "es_orig_RRR", "es_rep_RRR")
 
-      if (length(problematic_rows) > 0) {
-        problematic_entries[[var]] <- df[problematic_rows, id_var, drop = FALSE]
+    # Function to coerce to numeric and track problematic values
+    coerce_to_numeric <- function(df, numeric_vars, id_var) {
+      problematic_entries <- list()
+
+      for (var in numeric_vars) {
+        # Identify problematic values
+        problematic_rows <- which(!is.na(df[[var]]) & is.na(suppressWarnings(as.numeric(df[[var]]))))
+
+        if (length(problematic_rows) > 0) {
+          problematic_entries[[var]] <- df[problematic_rows, id_var, drop = FALSE]
+        }
+
+        # Coerce to numeric
+        df[[var]] <- suppressWarnings(as.numeric(df[[var]]))
       }
 
-      # Coerce to numeric
-      df[[var]] <- suppressWarnings(as.numeric(df[[var]]))
-    }
-
-    # If there are any problematic entries, generate a warning
-    if (length(problematic_entries) > 0) {
-      warning_message <- "The following fields contain values that could not be coerced to numeric:\n"
-      for (var in names(problematic_entries)) {
-        warning_message <- paste0(warning_message, "Variable '", var, "' has issues in IDs: ",
-                                  paste(problematic_entries[[var]][[id_var]], collapse = ", "), "\n")
+      # If there are any problematic entries, generate a warning
+      if (length(problematic_entries) > 0) {
+        warning_message <- "The following fields contain values that could not be coerced to numeric:\n"
+        for (var in names(problematic_entries)) {
+          warning_message <- paste0(warning_message, "Variable '", var, "' has issues in IDs: ",
+                                    paste(problematic_entries[[var]][[id_var]], collapse = ", "), "\n")
+        }
+        warning(warning_message)
       }
-      warning(warning_message)
-    }
 
-    return(df)
-  }
+      df
+
+    }
 
   # Assuming 'red' and 'forrt' have a unique ID column named "id"
   red <- coerce_to_numeric(red, numeric_variables, id_var = "id")
   forrt <- coerce_to_numeric(forrt, numeric_variables, id_var = "id")
 
   # merge the data, aligning column types where one is character (as empty colums are imported as numeric)
-  bind_rows_with_characters(red, forrt, as)
+  return(bind_rows_with_characters(red, forrt, as))
+
+    }, error = function(e) {
+      return(return_inbuilt())
+    })
+
 }
+
 
 #' Clean variables
 #' Perform some specific operations (e.g., recoding some NA as "") required to get the Shiny apps to work.
@@ -160,3 +195,53 @@ load_retractionwatch <- function(data = get_param("RETRACTIONWATCH_DATA_FILE")) 
   utils::read.csv(data, stringsAsFactors = FALSE)
 }
 
+' Update inbuilt data
+#'
+#' If you set the package to work offline (`use_FReD_offline(TRUE)`) or if any
+#' downloads fail, FReD will use offline data stored in the package. Use this
+#' function if you want to update the data to the current state. (NB: you can also use this
+#' if you want to work persistently with your own version of the dataset).
+#'
+#' @param data_file Path to FReD data file.
+#' @param items Vector of items to update - defaults to all necessary items.
+#'
+#' @export
+
+update_offline_data <- function(data_file = get_param("FRED_DATA_FILE"), items = c("data", "data_description", "data_changelog", "citation")) {
+  offline_param <- get_param("FRED_OFFLINE")
+  if (offline_param) use_FReD_offline(FALSE)
+  success_items <- c()
+  failed_items <- c()
+
+  update_item <- function(item) {
+    tryCatch({
+      if (item == "data") {
+        data <- read_fred(data_file)
+      } else if (item == "data_description") {
+        data <- load_variable_descriptions(data = data_file)
+      } else if (item == "changelog") {
+        data <- get_dataset_changelog()
+      } else if (item == "citation") {
+        data <- create_citation(data_file)
+      }
+      attr(data, "last_updated") <- Sys.time()
+      file_path <- system.file("extdata", "snapshot", paste0(item, ".RDS"), package = "FReD")
+      saveRDS(data, file_path)
+      success_items <<- c(success_items, item)
+    }, error = function(e) {
+      failed_items <<- c(failed_items, item)
+    })
+  }
+
+  lapply(items, update_item)
+
+  if (length(success_items) > 0) {
+    message("The following items were updated successfully: ", paste(success_items, collapse = ", "))
+  }
+
+  if (length(failed_items) > 0) {
+    message("The following items failed to update: ", paste(failed_items, collapse = ", "))
+  }
+
+  if (offline_param) use_FReD_offline(TRUE)
+}
