@@ -17,7 +17,8 @@ can be set (before loading the package):
 }
 }
 \examples{
+## Not run:
 Sys.setenv(FRED_DATA_URL = "http://your_url")
 options(FRED_DATA_URL = "http://your_url")
-
+## End(Not run)
 }
