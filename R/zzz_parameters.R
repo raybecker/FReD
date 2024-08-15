@@ -13,9 +13,10 @@
 #' - `FRED_DATA_FILE`: The path to the .xlsx file, if you have downloaded it already (or want it to be saved to a particular location). If the file exists, it will be used - otherwise, the file will be downloaded and saved there.
 #'
 #' @examples
+#' ## Not run:
 #' Sys.setenv(FRED_DATA_URL = "http://your_url")
 #' options(FRED_DATA_URL = "http://your_url")
-#'
+#' ## End(Not run)
 #' @name setting-parameters
 NULL
 
@@ -54,7 +55,9 @@ get_param <- function(param, auto_download = TRUE) {
       stop("RETRACTIONWATCH_DATA_FILE does not exist. Please set RETRACTIONWATCH_DATA_FILE to the path of the RetractionWatch database, or pass the download URL to the function.")
     }
   }
+
   res <- getOption(param)
+
   if (is.null(res)) message("Beware: ", param, " is not set.")
   return(res)
 }
