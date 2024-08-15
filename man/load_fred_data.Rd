@@ -7,7 +7,7 @@
 load_fred_data(data = get_param("FRED_DATA_FILE"))
 }
 \arguments{
-\item{data}{Path to the FReD dataset (defaults to current FReD data on OSF)}
+\item{data}{Path to the FReD dataset (defaults to current FReD data on OSF), unless the package is in offline mode (\code{use_FReD_offline()})}
 }
 \value{
 A data frame with the processed FReD dataset
