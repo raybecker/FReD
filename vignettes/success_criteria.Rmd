@@ -14,7 +14,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r setup}
+```{r setup, message=FALSE}
 library(FReD)
 library(dplyr)
 library(ggplot2)
@@ -39,7 +39,8 @@ However, there are some limitations:
 To assess replication success in that way, use `criterion = "significance_r"` in `assess_replication_outcome()`.
 
 ```{r}
-assess_replication_outcome(es_o = .5, n_o = 50, es_r = .1, n_r = 1000, criterion = "significance_r")
+assess_replication_outcome(es_o = .5, n_o = 50, es_r = .1, n_r = 1000,
+                           criterion = "significance_r")
 ```
 
 ## Aggregated Significance
@@ -51,7 +52,8 @@ However, it assumes that the quality of evidence from both studies is comparable
 To use this criterion, set `criterion = "significance_agg"` in `assess_replication_outcome()`:
 
 ```{r}
-assess_replication_outcome(es_o = .5, n_o = 50, es_r = .1, n_r = 50, criterion = "significance_agg")
+assess_replication_outcome(es_o = .5, n_o = 50, es_r = .1, n_r = 50,
+                           criterion = "significance_agg")
 ```
 
 ## Consistency with Replication Confidence Interval
@@ -64,8 +66,10 @@ This method is beneficial because it directly compares the two studies, emphasiz
 To assess this, use `criterion = "consistency_ci"`.
 
 ```{r}
-assess_replication_outcome(es_o = .5, n_o = 50, es_r = .3, n_r = 50, criterion = "consistency_ci")
-assess_replication_outcome(es_o = .5, n_o = 50, es_r = .4, n_r = 500, criterion = "consistency_ci")
+assess_replication_outcome(es_o = .5, n_o = 50, es_r = .3, n_r = 50,
+                           criterion = "consistency_ci")
+assess_replication_outcome(es_o = .5, n_o = 50, es_r = .4, n_r = 500,
+                           criterion = "consistency_ci")
 ```
 
 ## Prediction Intervals
@@ -76,7 +80,8 @@ This method is beneficial because it considers the uncertainty in both the origi
 
 To use this method, set `criterion = "consistency_pi"`
 ```{r}
-assess_replication_outcome(es_o = .5, n_o = 50, es_r = .3, n_r = 500, criterion = "consistency_pi")
+assess_replication_outcome(es_o = .5, n_o = 50, es_r = .3, n_r = 500,
+                           criterion = "consistency_pi")
 ```
 
 ## Homogeneity of Effects
@@ -88,7 +93,8 @@ However, this test generally has low power, again making replication failures fo
 To assess replication success using this approach, use `criterion = "homogeneity"`:
 
 ```{r}
-assess_replication_outcome(es_o = .2, n_o = 100, es_r = 0, n_r = 500, criterion = "homogeneity")
+assess_replication_outcome(es_o = .2, n_o = 100, es_r = 0, n_r = 500,
+                           criterion = "homogeneity")
 ```
 
 ## Homogeneity and Significance
@@ -98,7 +104,8 @@ This criterion combines the assessment of homogeneity with the significance of t
 To apply this, set `criterion = "homogeneity_significance"`:
 
 ```{r}
-assess_replication_outcome(es_o = .2, n_o = 100, es_r = 0, n_r = 500, criterion = "homogeneity_significance")
+assess_replication_outcome(es_o = .2, n_o = 100, es_r = 0, n_r = 500,
+                           criterion = "homogeneity_significance")
 ```
 
 ## Small Telescopes
@@ -108,14 +115,17 @@ Derived from Simonsohn (2015), the small telescopes approach tests whether the r
 To use this method, set `criterion = "small_telescopes"`:
 
 ```{r}
-assess_replication_outcome(es_o = .5, n_o = 50, es_r = .2, n_r = 100, criterion = "small_telescopes")
-assess_replication_outcome(es_o = .5, n_o = 30, es_r = .2, n_r = 100, criterion = "small_telescopes")
+assess_replication_outcome(es_o = .5, n_o = 50, es_r = .2, n_r = 100,
+                           criterion = "small_telescopes")
+
+assess_replication_outcome(es_o = .5, n_o = 30, es_r = .2, n_r = 100,
+                           criterion = "small_telescopes")
 ```
 # Comparing different criteria for replication success
 
 To compare the different criteria, we plot the aggregate outcomes based on the FReD dataset. For this, we ignore studies that have not been coded.
 
-```{r fig.width=15}
+```{r fig.width = 12, fig.height = 6, warning=FALSE}
 df <- load_fred_data() %>% 
   filter(!is.na(es_replication) & !is.na(es_original)) 
 
@@ -137,7 +147,6 @@ results <- lapply(criteria$criterion, function(criterion) {
     mutate(criterion = criterion)
 })
 
-
 results <- results %>%
   bind_rows() %>%
   left_join(criteria, by = "criterion") %>%
@@ -150,11 +159,6 @@ success_shares <- results %>%
   summarise(success_share = sum(n[!is.na(outcome) & outcome == "success"]) / sum(n),
             success_count = sum(n[!is.na(outcome) & outcome == "success"])) %>% 
   mutate(outcome = "success")
-
-
-
-
-
 
 p <- results %>%
   ggplot(aes(criterion, n, fill = outcome, text = outcome_detailed)) +
