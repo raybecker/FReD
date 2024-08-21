@@ -325,7 +325,7 @@ add_sampling_variances <- function(fred_data, es_value_columns = c("es_original"
 #'   `se` for the standard error, and `z` for the z-score.
 #' @noRd
 
-augment_for_zcurve <- function(fred_data, method = c("rtoz", "r/se")) {
+augment_for_zcurve <- function(fred_data) {
 
   # Ensure fred_data has required columns
   if (!all(c("es_original", "n_original") %in% names(fred_data))) {
@@ -338,17 +338,10 @@ augment_for_zcurve <- function(fred_data, method = c("rtoz", "r/se")) {
   valid_indices <- !(is.na(fred_data$es_original) | is.na(fred_data$n_original) | fred_data$n_original <= 3)
 
   if (any(valid_indices)) {
-    if (method[1] == "rtoz") {
-      # Fisher's z transformation
-      z <- 0.5 * (log(1 + fred_data$es_original[valid_indices]) - log(1 - fred_data$es_original[valid_indices]))
-      fred_data$se[valid_indices] <- 1 / sqrt(fred_data$n_original[valid_indices] - 3)
-      fred_data$z[valid_indices] <- z / fred_data$se[valid_indices]
-
-    } else if (method[1] == "r/se") {
-      # Method used in current Shiny app
-      fred_data$se[valid_indices] <- sqrt((1 - abs(fred_data$es_original[valid_indices])^2) / (fred_data$n_original[valid_indices] - 2))
-      fred_data$z[valid_indices] <- fred_data$es_original[valid_indices] / fred_data$se[valid_indices]
-    }
+    # Fisher's z transformation
+    z <- 0.5 * (log(1 + fred_data$es_original[valid_indices]) - log(1 - fred_data$es_original[valid_indices]))
+    fred_data$se[valid_indices] <- 1 / sqrt(fred_data$n_original[valid_indices] - 3)
+    fred_data$z[valid_indices] <- z / fred_data$se[valid_indices]
   }
 
   return(fred_data)
