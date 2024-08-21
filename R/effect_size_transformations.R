@@ -319,8 +319,6 @@ add_sampling_variances <- function(fred_data, es_value_columns = c("es_original"
 #' @param fred_data A dataframe containing `es_original`
 #'   for the effect size of the original study, and `n_original` for the
 #'   sample size of the original study.
-#' @param method A character vector indicating the method to calculate the z-score.
-#'   Options are `"rtoz"` for Fisher's z transformation, or `"r/se"` for the method used in the current Shiny app. Default is `c("rtoz", "r/se")`.
 #' @return A dataframe with the original `fred_data` and two additional columns:
 #'   `se` for the standard error, and `z` for the z-score.
 #' @noRd
