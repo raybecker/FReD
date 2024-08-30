@@ -10,11 +10,11 @@ library(shinycssloaders)
 large_scale_project_choices <- list(
   "All studies" = "All studies",
   "Individual submissions" = "Individual submissions",
-  "FORRT Replications and Reversals" = "FORRT",
   "Boyce et al., 2023 (student replications)" = "Boyce_etal2023",
   "CORE (Feldman JDM Replications)" = "CORE",
   "CRSP special issue",
   "Data Replicada" = "datareplicada",
+  "FORRT Replications and Reversals" = "FORRT",
   "Many Labs 1" = "ML1",
   "Many Labs 2" = "ML2",
   "Many Labs 3" = "ML3",
@@ -27,6 +27,7 @@ large_scale_project_choices <- list(
   "RRR4 (ego depletion)" = "RRR4",
   "RRR8 (professor priming)" = "RRR8",
   "RRR9 (hostility priming)" = "RRR9",
+  "RRR Inclusive Language" = "RRR Inclusive Language",
   "Soto (Big5 Correlations)" = "Soto",
   "SSRP (Camerer et al., 2018)" = "SSRP"
 )
