@@ -41,8 +41,8 @@ welcome_title <- HTML("Welcome to the FORRT Replication Database!")
 welcome_text <- HTML("<br /><p style=\'color:black;\'>The FReD is a collection of crowdsourced findings from replication studies (i.e., studies that investigated one or more previously tested hypotheses using new data). The aims of this project are:
 </br>(1) to document replication attempts across many areas of science and make replications findable and
 </br>(2) to provide meta-scientists with a database for research on replicability.
-</br></br>This is the FReD <b>Explorer</b>. You can browse, search, and summarize replication results of the coded FReD entries.
-</br></br>We advise researchers to carefully investigate replication findings before making judgments about the robustness of research findings. Note that to allow be able to present effect sizes from hundreds of different studies and designs in one common metric, several assumptions are made about the dataset some of which are wrong. How effect sizes are handled is described in depth in the <a href=https://osf.io/preprints/metaarxiv/me2ub>FReD dataset pre-print</a>.
+</br></br>This is the FReD <b>Explorer</b>. You can browse, search, and summarize replication results of the coded FReD entries. You can go to the online version of the FReD <b>Annotator</b> <a href=https://forrt-replications.shinyapps.io/fred_annotator/>here</a>.
+</br></br>We advise researchers to carefully investigate replication findings before making judgments about the robustness of research findings. Note that to allow be able to present effect sizes from hundreds of different studies and designs in one common metric, several assumptions are made about the dataset some of which are wrong. How effect sizes are handled is described in depth in the <a href=https://doi.org/10.5334/jopd.101>FReD dataset publication</a>.
                      </br></br>You can find more information on the overarching project at the <a href=https://forrt.org/replication-hub>FORRT Replication Hub</a>. If you would like to contribute replication findings, please check out our <a href=https://osf.io/f3w26>call for results</a> or send us an e-mail.</p><br/>")
 
 
