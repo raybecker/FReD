@@ -8,7 +8,8 @@ This version history contains noteworthy changes. For a full history of changes,
 
 ## Enhancements
 - Further expansion of the dataset
+- The package automatically draws on the most recent data, but has an offline mode (`use_FReD_offline()`) that works with a data version included in the package.
 
 ## Bug Fixes
-- 
+- Change user defaults from options to environment variables, so that they are respected in background apps.
 
