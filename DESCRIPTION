@@ -5,7 +5,11 @@ Authors@R: c(
     person("Lukas", "Röseler", , "lukas.roeseler@uni-muenster.de", role = "aut",
            comment = c(ORCID = "0000-0002-6446-1901")),
     person("Lukas", "Wallrich", , "l.wallrich@bbk.ac.uk", role = c("aut", "cre"),
-           comment = c(ORCID = "0000-0003-2121-5177"))
+           comment = c(ORCID = "0000-0003-2121-5177")),
+    person("Helena", "Hartmann", , "Helena.Hartmann@uk-essen.de", role = c("aut"),
+           comment = c(ORCID = "0000-0002-1331-6683")),
+    person("Flavio", "Azevedo", , "f.a.azevedo@uu.nl", role = c("aut"),
+           comment = c(ORCID = "0000-0001-9000-8513"))
   )
 Description: FORRT's Replication Database collects replication studies
     across the social and behavioural sciences. This package offers two
