@@ -11,7 +11,17 @@ sidebar_contents <- sidebar(
   uiOutput("button_area"),
   checkboxInput("validated", "Use validated database entries only", value = FALSE),
   actionButton("load_retractions", "Load Retraction Database", icon = icon("database")),
-  selectInput("success_criterion", "Success criterion", choices = c(Significance = "significance", Consistency = "consistency"), selected = "significance"),
+  selectInput("success_criterion", "Success criterion",
+              choices = c("Significance of Replication" = "significance_r",
+                          "Aggregated Significance" = "significance_agg",
+                          "Consistency with CI" = "consistency_ci",
+                          "Consistency with PI" = "consistency_pi",
+                          "Homogeneity" = "homogeneity",
+                          "Homogeneity & Significance" = "homogeneity_significance",
+                          "Small Telescopes" = "small_telescopes"),
+              selected = "significance_r"),
+             tags$div(style = c("display:inline-block;", "display:inline-block;"), title = c("test"), icon(c("info-circle")))
+              ,
   conditionalPanel(
     condition = "output.showToggle",  # This JavaScript condition reacts to Shiny output
     tags$a(id = "toggle_link", "Show/Hide DOIs >", href = "#", class = "btn btn-link"),
@@ -60,6 +70,8 @@ report_content <- nav_panel(
   div(
     style = "max-width: 1000px; margin: auto;",
     plotly::plotlyOutput("references_barplot", height = 150),
+    br(),
+    uiOutput("success_note"),
     plotly::plotlyOutput("outcomes_barplot"),
     br(),
     plotly::plotlyOutput("replicability_plot", height = "600px"),
@@ -68,7 +80,7 @@ report_content <- nav_panel(
   div(
     style = "max-width: 450px; margin: auto; display: flex; gap: 10px; align-items: center; !important",
     downloadButton("downloadWord", "Download annotated Word file"),
-    downloadButton("downloadPdf", "Download annotated PDF")
+    # downloadButton("downloadPdf", "Download annotated PDF")
   ),
   shinycssloaders::withSpinner(uiOutput("refs_annotated"))
 )

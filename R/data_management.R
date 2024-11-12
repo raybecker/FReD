@@ -6,8 +6,8 @@
 #' @param item Which inbuilt item to return?
 #' @noRd
 
-return_inbuilt <- function(item = c("data", "data_description", "changelog", "citation")) {
-  assert_choice(item, c("data", "data_description", "changelog", "citation"))
+return_inbuilt <- function(item) {
+  assert_choice(item, c("data", "data_description", "data_changelog", "citation"))
   data <- system.file("extdata", "snapshot", paste0(item, ".RDS"), package = "FReD")
   data <- readRDS(data)
   if (!get_param("FRED_OFFLINE")) {
@@ -139,7 +139,7 @@ read_fred <- function(data = get_param("FRED_DATA_FILE")) {
   return(bind_rows_with_characters(red, forrt, as))
 
     }, error = function(e) {
-      return(return_inbuilt())
+      return(return_inbuilt("data"))
     })
 
 }

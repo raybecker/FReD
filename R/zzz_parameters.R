@@ -1,13 +1,9 @@
-# Set cache for package, to avoid repeated function calls
-.cache <- new.env()
-
 #' Setting Parameters for the FReD Package
 #'
 #' Generally, the FReD package is designed to work with the latest FReD dataset.
 #' However, you might want to use an older version, or even your own. For such advanced
-#' use, you can set parameters, by setting `options(FRED_DATA_URL = "http://your_url")`,
-#' manually or in your `.RProfile` file. The following parameters
-#' can be set (before loading the package):
+#' use, you can set parameters by setting environment variables manually or in your `.Renviron` file.
+#' The following environment variables can be set (before loading the package):
 #'
 #' - `FRED_DATA_URL`: The URL of the FReD dataset, needs to return the .xlsx file.
 #' - `FRED_DATA_FILE`: The path to the .xlsx file, if you have downloaded it already (or want it to be saved to a particular location). If the file exists, it will be used - otherwise, the file will be downloaded and saved there.
@@ -17,7 +13,7 @@
 #'
 #' @examples
 #' ## Not run:
-#' options(FRED_DATA_URL = "http://your_url")
+#' Sys.setenv(FRED_DATA_URL = "http://your_url")
 #' ## End(Not run)
 #' @name setting-parameters
 NULL
@@ -33,12 +29,12 @@ NULL
   )
 
   for (param in names(parameters)) {
-    option_value <- getOption(param, default = NULL)
+    env_value <- Sys.getenv(param, unset = NA)
 
-    if (!is.null(option_value)) {
+    if (!is.na(env_value)) {
       next
     } else {
-      options(stats::setNames(list(parameters[[param]]), param))
+      do.call(Sys.setenv, stats::setNames(list(as.character(parameters[[param]])), param))
     }
   }
 }
@@ -46,24 +42,24 @@ NULL
 # Function to get the current parameters
 # Will also download FRED_DATA_FILE from FRED_DATA_URL if it does not exist
 get_param <- function(param, auto_download = TRUE) {
-  if (param == "FRED_DATA_FILE" && !file.exists(getOption("FRED_DATA_FILE"))) {
+  if (param == "FRED_DATA_FILE" && !file.exists(Sys.getenv("FRED_DATA_FILE"))) {
     if (auto_download) {
-      download.file(getOption("FRED_DATA_URL"), getOption("FRED_DATA_FILE"))
+      download.file(Sys.getenv("FRED_DATA_URL"), Sys.getenv("FRED_DATA_FILE"))
     } else {
       stop("FRED_DATA_FILE does not exist. Please set FRED_DATA_FILE to the path of the FReD dataset.")
     }
   }
-  if (param == "RETRACTIONWATCH_DATA_FILE" && !file.exists(getOption("RETRACTIONWATCH_DATA_FILE"))) {
+  if (param == "RETRACTIONWATCH_DATA_FILE" && !file.exists(Sys.getenv("RETRACTIONWATCH_DATA_FILE"))) {
     if (auto_download) {
-      download.file(getOption("RETRACTIONWATCH_URL"), getOption("RETRACTIONWATCH_DATA_FILE"))
+      download.file(Sys.getenv("RETRACTIONWATCH_URL"), Sys.getenv("RETRACTIONWATCH_DATA_FILE"))
     } else {
       stop("RETRACTIONWATCH_DATA_FILE does not exist. Please set RETRACTIONWATCH_DATA_FILE to the path of the RetractionWatch database, or pass the download URL to the function.")
     }
   }
 
-  res <- getOption(param)
-
-  if (is.null(res)) message("Beware: ", param, " is not set.")
+  res <- Sys.getenv(param)
+  if (res %in% c("TRUE", "FALSE")) res <- as.logical(res)
+  if (res == "") message("Beware: ", param, " is not set.")
   return(res)
 }
 
@@ -72,8 +68,8 @@ get_param <- function(param, auto_download = TRUE) {
 #' By default, FReD loads the latest data and meta-data every time it is loaded.
 #' If you work offline, or don't need the latest data, you may prefer to work from
 #' cached data. For that, you can call 'use_FReD_offline()'. If you want this to
-#' persist even when FReD is reloaded, you can use `options(FRED_OFFLINE = TRUE)`
-#' (or FALSE) as needed, and include it in your `.Rprofile` file to persist across
+#' persist even when FReD is reloaded, you can use `Sys.setenv(FRED_OFFLINE = TRUE)`
+#' (or FALSE) as needed, and include it in your `.Renviron` file to persist across
 #' sessions.
 #'
 #' @param state Should FReD work offline (TRUE) or online (FALSE)
@@ -81,5 +77,5 @@ get_param <- function(param, auto_download = TRUE) {
 
 use_FReD_offline <- function(state = TRUE) {
   assert_logical(state)
-  options(FRED_OFFLINE = state)
+  Sys.setenv(FRED_OFFLINE = as.character(state))
 }

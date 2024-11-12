@@ -46,7 +46,7 @@ run_app <- function(offer_install = interactive(), app = "fred_explorer", in_bac
       Sys.sleep(.5)
     }
     sp$finish()
-    stop("App did not become ready within the timeout period. Please have a look at the background job output to see why and report any errors.")
+    stop("App did not become ready within the timeout period. Please have a look at the background job output to see why and report any errors. If you are on a slow internet connection, consider using the dataset included with the package by running `use_FReD_offline()`")
   }
 
   if (check_port(port)) {

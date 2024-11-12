@@ -15,6 +15,9 @@ NULL
 
 utils::globalVariables(c("."))
 
+# Add cache
+.cache <- rlang::new_environment()
+
 # Dummy function calls to ensure R CMD check recognizes the usage
 # these packages are used in the Shiny apps
 dummy_function_calls <- function() {
@@ -133,7 +136,6 @@ get_dataset_changelog <- function(changelog_file = "https://osf.io/fj3xc/downloa
 #' @inheritParams read_fred
 #' @return A data frame with the processed FReD dataset
 #' @export
-
 
 load_fred_data <- function(data = get_param("FRED_DATA_FILE")) {
 

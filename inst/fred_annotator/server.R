@@ -5,36 +5,6 @@ server <- function(input, output, session) {
   doi_vector <- reactiveValues(dois = c(), selected_rows = NULL)
   retracted_dois <- reactiveVal(NULL)
 
-  observeEvent(input$load_retractions, {
-    showModal(modalDialog(
-      title = "Loading Retraction Database",
-      "Please wait while the retraction database is being loaded.",
-      easyClose = FALSE
-    ))
-    retracted_dois(load_retractionwatch() %>%
-                     dplyr::filter(RetractionNature == "Retraction") %>%
-                    dplyr::select(OriginalPaperDOI))
-    reactive_df() <- reactive_df() %>%
-      dplyr::left_join(retracted_dois() %>% mutate(retracted_replication = TRUE), retraction_data(),
-                       by = c("doi_replication" = "OriginalPaperDOI"), na_matches = "never") %>%
-      dplyr::mutate(retracted_replication = dplyr::coalesce(retracted_replication, FALSE),
-                    retracted_original = dplyr::coalesce(retracted_original, FALSE),
-                    ref_original = ifelse(
-                      grepl("^RETRACTED", ref_original, ignore.case = TRUE),
-                      ref_original,
-                      paste("RETRACTED:", ref_original)
-                    ),
-                    ref_replication = ifelse(
-                      grepl("^RETRACTED", ref_replication, ignore.case = TRUE),
-                      ref_replication,
-                      paste("RETRACTED:", ref_replication)
-                    ))
-    browser()
-    removeModal()
-    showNotification("Retraction database loaded successfully.")
-    shinyjs::disable("load_retractions")
-  })
-
 
   session$onSessionEnded(function() {
     if (Sys.getenv("SHINY_FRED_AUTOCLOSE") == "TRUE") {
@@ -52,13 +22,48 @@ server <- function(input, output, session) {
     easyClose = TRUE
   ))
 
+  reactive_data <- reactiveVal(df)
+
   reactive_df <- reactive({
-    df <- df %>% arrange(ref_original)
+    df <- reactive_data() %>% arrange(ref_original)
     if (input$validated == "TRUE") {
       df %>% filter(validated == 1)
     } else {
       df
     }
+  })
+
+  observeEvent(input$load_retractions, {
+    showModal(modalDialog(
+      title = "Loading Retraction Database",
+      "Please wait while the retraction database is being loaded.",
+      easyClose = FALSE
+    ))
+    retracted_dois(load_retractionwatch() %>%
+                     dplyr::filter(RetractionNature == "Retraction") %>%
+                     dplyr::select(OriginalPaperDOI))
+    updated_df <- reactive_data() %>%
+      dplyr::left_join(retracted_dois() %>% mutate(retracted_replication = TRUE), retraction_data(),
+                       by = c("doi_replication" = "OriginalPaperDOI"), na_matches = "never") %>%
+      dplyr::left_join(retracted_dois() %>% mutate(retracted_original = TRUE), retraction_data(),
+                       by = c("doi_original" = "OriginalPaperDOI"), na_matches = "never") %>%
+      dplyr::mutate(retracted_replication = dplyr::coalesce(retracted_replication, FALSE),
+                    retracted_original = dplyr::coalesce(retracted_original, FALSE),
+                    ref_original = ifelse(
+                      retracted_original & !grepl("^RETRACTED", ref_original, ignore.case = TRUE),
+                      paste("RETRACTED:", ref_original),
+                      ref_original
+                    ),
+                    ref_replication = ifelse(
+                      retracted_replication & !grepl("^RETRACTED", ref_replication, ignore.case = TRUE),
+                      paste("RETRACTED:", ref_replication),
+                      ref_replication
+                    ))
+    reactive_data(updated_df)
+    removeModal()
+    showNotification(shiny::HTML(paste("<b>Retraction database loaded successfully.</b><br> FReD contains ", sum(updated_df$retracted_original),
+                           " retracted original studies and ", sum(updated_df$retracted_replication), " retracted replication studies.")))
+    shinyjs::disable("load_retractions")
   })
 
   reactive_distinct_fred_entries <- reactive({
@@ -342,27 +347,51 @@ server <- function(input, output, session) {
   output$outcomes_barplot <- plotly::renderPlotly({
 
     df <- reactive_df() %>%
-      filter(doi_original %in% doi_vector$dois)
+      dplyr::filter(doi_original %in% doi_vector$dois)
+
+    if (any(df$retracted_replication)) {
+      message("any")
+      count_retracted_replications <- sum(df$retracted_replication)
+      df <- df %>% dplyr::filter(!retracted_replication)
+    } else {
+      message("none")
+      count_retracted_replications <- 0
+    }
+
+    message(count_retracted_replications)
 
     validate(
       need(nrow(df) > 0, "", label = "No replications found")
     )
 
-    if (input$success_criterion == "consistency") {
-      df <- df %>% mutate(result = assess_success(consistency, success_criterion = "consistency"))
-      outcome_colors <- c("Inconsistent replication" = "#FF7F7F", "Consistent replication" = "#8FBC8F", "Replication (of n.s. finding)" = "#F0F0F0")
+    df <- df %>% mutate(result = assess_success(df, input$success_criterion))
+    criterion_colors <- success_criteria_colors %>%
+      dplyr::filter(criterion == input$success_criterion)
 
-    } else if (input$success_criterion == "significance") {
-      df <- df %>% mutate(result = assess_success(result, success_criterion = "significance"))
-      outcome_colors <- c("Non-significant replication" = "#FF7F7F", "Significant replication" = "#8FBC8F", "Replication (of n.s. finding)" = "#F0F0F0")
-    }
+    outcome_colors <- setNames(criterion_colors$color, criterion_colors$label)
+    outcome_colors <- c(outcome_colors, "not coded" = "#C8C8C8")
+
+    # Apply the label mappings to the result column for plotting
+    # Needed?
+    #df <- df %>% mutate(result = factor(result, levels = names(outcome_colors), labels = names(outcome_colors)))
+
+    retraction_note <- ifelse(
+      count_retracted_replications > 0,
+      paste0(
+        "Note: ", count_retracted_replications,
+        " retracted replication stud",
+        ifelse(count_retracted_replications == 1, "y was", "ies were"),
+        " excluded from the plot."
+      ),
+      ""
+    )
 
     p <- df %>%
       mutate(result = result %>% forcats::fct_na_value_to_level("not coded")) %>%
       ggplot(aes(y = result, fill = result)) +
       geom_bar() +
       theme_minimal() +
-      labs(y = "", x = "Count", title = "Outcomes of replication attempts") +
+      labs(y = "", x = "Count", title = "Outcomes of replication attempts", caption = retraction_note) +
       scale_fill_manual(values = outcome_colors)
 
     plotly::ggplotly(p, tooltip = NULL) %>%
@@ -372,58 +401,26 @@ server <- function(input, output, session) {
   })
 
   # Functions to generate markdown
-  assess_success <- function(result, success_criterion = c("consistency", "significance")) {
-    if (success_criterion[[1]] == "consistency") {
-      case_when(
-        result == "OS not significant" ~ "Replication (of n.s. finding)",
-        result == "consistent" ~ "Consistent replication",
-        result %in% c("inconsistent", "inconsistent, smaller") ~ "Inconsistent replication"
-        )
-
-    } else if (success_criterion[[1]] == "significance") {
-      case_when(
-        result == "successful replication" ~ "Significant replication",
-        result == "failed replication" ~ "Non-significant replication",
-        result == "OS not significant" ~ "Replication (of n.s. finding)",
-        TRUE ~ NA_character_
-      )
-    } else {
-      stop("Invalid type argument. Must be 'consistent'.")
-    }
+  assess_success <- function(result, success_criterion) {
+    assess_replication_outcome(result$es_original, result$n_original, result$es_replication, result$n_replication,
+                               criterion = success_criterion)$outcome_report
   }
 
+  assess_outcome <- function(replications, ..., success_criterion = c("consistency", "significance_r"), return_html = TRUE) {
 
-  assess_outcome <- function(replications, ..., success_criterion = c("consistency", "significance"), return_html = TRUE) {
-
-    if (success_criterion[[1]] == "consistency") {
-      replications %>%
-        mutate(replication_outcome = assess_success(consistency, success_criterion = "consistency"),
-        result = consistency) %>%
-        summarise(
-          replications = paste0("  - **", replication_outcome, ":** ", ref_replication, collapse = "\n"),
+    replications %>%
+      mutate(assess_replication_outcome(.data$es_original, .data$n_original, .data$es_replication,
+                                        .data$n_replication, criterion = success_criterion),
+             outcome_to_report = paste0(outcome, " (", outcome_detailed, ")") %>% stringr::str_to_title()) %>%
+      summarise(
+          replications = paste0("  - **", stringr::str_to_title(outcome_report), ":** ", ref_replication, collapse = "\n"),
           overall_outcome = case_when(
-            all(replication_outcome == "Consistent replication") ~ if (return_html) "<span style='color: darkgreen;'>&#x2714;</span>" else "[Re]", # ✔️
-            all(replication_outcome == "Inconsistent replication") ~ if (return_html) "<span style='color: darkred;'>&#x2716;</span>" else "[¬Re]", #✖️
-            all(replication_outcome == "Replication (of n.s. finding)") ~ if (return_html) "&#x1F6AB;" else "[NA]", # 🚫
-            TRUE ~ if (return_html) "&#x2753;" else "[?Re]" #❓
+            all(outcome == "success") ~ if (return_html) "<span style='color: darkgreen;'>&#x2714;</span>" else "[Re]", # ✔️
+            all(outcome == "failure") ~ if (return_html) "<span style='color: darkred;'>&#x2716;</span>" else "[¬Re]", #✖️
+            all(outcome == "OS not significant") ~ if (return_html) "&#x1F6AB;" else "[NA]", # 🚫
+            .default = if (return_html) "&#x2753;" else "[?Re]" #❓
           )
-        )
-    } else if (success_criterion[[1]] == "significance") {
-      replications %>%
-        mutate(replication_outcome = assess_success(result, success_criterion = "significance")) %>%
-        summarise(
-          replications = paste0("  - **", replication_outcome, ":** ", ref_replication, collapse = "\n"),
-          overall_outcome = case_when(
-            all(replication_outcome == "Significant replication") ~ if (return_html) "<span style='color: darkgreen;'>&#x2714;</span>" else "[Re]", # ✔️
-            all(replication_outcome == "Non-significant replication") ~ if (return_html) "<span style='color: darkred;'>&#x2716;</span>" else "[¬Re]", #✖️
-            all(replication_outcome == "Replication (of n.s. finding)") ~ if (return_html) "&#x1F6AB;" else "[NA]", # 🚫
-            TRUE ~ if (return_html) "&#x2753;" else "[?Re]" #❓
-          )
-        )
-
-    } else {
-      stop("Invalid type argument. Must be 'consistent'.")
-    }
+      )
   }
 
   generate_markdown <- function(df_filtered, ...) {
@@ -459,8 +456,14 @@ server <- function(input, output, session) {
       ) %>%
       pull(markdown) %>%
       paste(collapse = "\n") %>%
-      paste0("## Replication Outcomes\n\n", .)
+      paste0("## Replication Outcomes\n\n", ., "\n\n\n*Note:* ", success_criterion_note[input$success_criterion])
   }
+
+  output$success_note <- renderUI({
+    tags$div(
+      HTML(markdown::markdownToHTML(text = paste0("*Note:* ", success_criterion_note[input$success_criterion]), fragment.only = TRUE))
+    )
+  })
 
   output$refs_annotated <- renderUI({
 
@@ -582,15 +585,13 @@ server <- function(input, output, session) {
       need(nrow(df) > 0, "", label = "No replications found")
     )
 
-    if (input$success_criterion == "consistency") {
-      df <- df %>% mutate(result = assess_success(consistency, success_criterion = "consistency"))
-      outcome_colors <- c("Inconsistent replication" = "#FF7F7F", "Consistent replication" = "#8FBC8F", "Replication (of n.s. finding)" = "#F0F0F0")
+    df <- df %>% mutate(result = assess_success(df, input$success_criterion))
 
-    } else if (input$success_criterion == "significance") {
-      df <- df %>% mutate(result = assess_success(result, success_criterion = "significance"))
-      outcome_colors <- c("Non-significant replication" = "#FF7F7F", "Significant replication" = "#8FBC8F", "Replication (of n.s. finding)" = "#F0F0F0")
+    criterion_colors <- success_criteria_colors %>%
+      dplyr::filter(criterion == input$success_criterion)
 
-    }
+    outcome_colors <- setNames(criterion_colors$color, criterion_colors$label)
+    outcome_colors <- c(outcome_colors, "not coded" = "#C8C8C8")
 
     df$significant_original <- c("Not significant", "Significant")[(df$p_value_original < .05) + 1] %>% factor()
     df$significant_replication <- c("Not significant", "Significant")[(df$p_value_replication < .05) + 1] %>% factor()

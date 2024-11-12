@@ -10,6 +10,7 @@ if (FALSE) library(FReD)
 options(shiny.maxRequestSize = 20 * 1024^2)
 
 if (!exists("create_citation")) {
+  message("Attaching FReD namespace.")
   attach(getNamespace("FReD")) # To enable use of un-exported functions
 }
 
@@ -30,7 +31,7 @@ df$ref_original <- gsub("(.{70,}?)\\s", "\\1\n", df$ref_original) # line breaks
 
 source("website_text.R", local = TRUE) # Evaluate in calling environment, otherwise fails on app start
 
-
+source("../shared_shiny_resources/replication_outcome_styles.R", local = TRUE) # Evaluate in calling environment, otherwise fails on app start
 
 ## Add custom theme (formatting)
 custom_css <- ("
