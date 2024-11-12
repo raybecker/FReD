@@ -13,7 +13,7 @@ use_FReD_offline(state = TRUE)
 By default, FReD loads the latest data and meta-data every time it is loaded.
 If you work offline, or don't need the latest data, you may prefer to work from
 cached data. For that, you can call 'use_FReD_offline()'. If you want this to
-persist even when FReD is reloaded, you can use \code{options(FRED_OFFLINE = TRUE)}
-(or FALSE) as needed, and include it in your \code{.Rprofile} file to persist across
+persist even when FReD is reloaded, you can use \code{Sys.setenv(FRED_OFFLINE = TRUE)}
+(or FALSE) as needed, and include it in your \code{.Renviron} file to persist across
 sessions.
 }

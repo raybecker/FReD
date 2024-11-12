@@ -6,9 +6,8 @@
 \description{
 Generally, the FReD package is designed to work with the latest FReD dataset.
 However, you might want to use an older version, or even your own. For such advanced
-use, you can set parameters, by setting \code{options(FRED_DATA_URL = "http://your_url")},
-manually or in your \code{.RProfile} file. The following parameters
-can be set (before loading the package):
+use, you can set parameters by setting environment variables manually or in your \code{.Renviron} file.
+The following environment variables can be set (before loading the package):
 }
 \details{
 \itemize{
@@ -21,6 +20,6 @@ can be set (before loading the package):
 }
 \examples{
 ## Not run:
-options(FRED_DATA_URL = "http://your_url")
+Sys.setenv(FRED_DATA_URL = "http://your_url")
 ## End(Not run)
 }

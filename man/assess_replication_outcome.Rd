@@ -20,7 +20,9 @@ Options include: "significance_r", "significance_agg", "consistency_ci", "consis
 "homogeneity", "homogeneity_significance" and "small_telescopes".}
 }
 \value{
-A data frame with the outcome of the assessment based on the specified criterion, with two columns: \code{outcome} and \code{outcome_detailed}.
+A data frame with the outcome of the assessment based on the specified criterion, with three columns:
+\code{outcome} (success, failure or 'OS not significant'), \code{outcome_detailed} (a specific description of the criterion) and
+\code{outcome_report} (usually the same as outcome, but further broken out where there are distinct reasons for failure).
 }
 \description{
 This function evaluates the outcomes of replication studies against the original studies using
