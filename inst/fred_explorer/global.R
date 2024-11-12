@@ -28,6 +28,7 @@ forestplotheight <- "28000px"
 # WEBSITE TEXT --------------------------------------------------------------
 
 source("website_text.R", local = TRUE) # Evaluate in calling environment, otherwise fails on app start
+source("../shared_shiny_resources/replication_outcome_styles.R", local = TRUE) # Evaluate in calling environment, otherwise fails on app start
 
 
 ## Add custom theme (formatting)

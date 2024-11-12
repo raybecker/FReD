@@ -95,7 +95,7 @@ scatterplot_title <- HTML(paste("
                                 , sep = ""))
 
 scatterplot_explanation <- HTML(paste("
-                                 <h5><i>Note. </i>This plot is based on the code used for the main plot of Open Science Collaboration (2015). Here you can see for each replication study the original effect and the replication effect. Significant replication effects (p < .05) are highlighted in blue. If all studies were perfectly replicable, the dots would be on the solid grey line. If no study was replicable, the dots would be at the dashed line (= null effects). Hover over the plot to see the exact effect sizes and the study. Clicking on rows in the table above this plot will highlight the eslected studies. If there are registered replication reports (RRRs) among the selected study, you will see 'columns' of effect sizes because all studies from a RRR have the same 'original effect size' but replication effect sizes vary."
+                                 <h5><i>Note. </i>This plot is based on the code used for the main plot of Open Science Collaboration (2015). Here you can see for each replication study the original effect and the replication effect. Significant replication effects (p < .05) are highlighted in blue. If all studies were perfectly replicable, the dots would be on the solid grey line. If no study was replicable, the dots would be at the dashed line (= null effects). Hover over the plot to see the exact effect sizes and the study. Clicking on rows in the table above this plot will highlight the selected studies. If there are registered replication reports (RRRs) among the selected study, you will see 'columns' of effect sizes because all studies from a RRR have the same 'original effect size' but replication effect sizes vary."
                                       , "<br/><br/>"
                                       , sep = ""))
 
@@ -110,7 +110,7 @@ barplot2_explanation <- HTML(paste("
                                    , sep = ""))
 
 zcurve_title <- HTML(paste("
-                                 <h4><br/><br/><b>Z-Curve Analysis (via ReD)</b><br/> "
+                                 <h4><br/><br/><b>Z-Curve Analysis</b><br/> "
                            , "<br/><br/>"
                            , sep = ""))
 

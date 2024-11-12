@@ -125,7 +125,7 @@ assess_replication_outcome(es_o = .5, n_o = 30, es_r = .2, n_r = 100,
 
 To compare the different criteria, we plot the aggregate outcomes based on the FReD dataset. For this, we ignore studies that have not been coded.
 
-```{r fig.width = 12, fig.height = 6, warning=FALSE}
+```{r fig.width = 12, fig.height = 6, warning=FALSE, message=FALSE}
 df <- load_fred_data() %>% 
   filter(!is.na(es_replication) & !is.na(es_original)) 
 

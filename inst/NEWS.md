@@ -5,6 +5,7 @@ This version history contains noteworthy changes. For a full history of changes,
 ## New features
 - The Replication Database has merged with the FORRT Reversals & Replications project to become FReD
 - The FReD R package now wraps the shiny apps, to facilitate installation and maintenance
+- The Shiny apps now offer the choice between many methods to assess replication success, detailled in a vignette
 
 ## Enhancements
 - Further expansion of the dataset

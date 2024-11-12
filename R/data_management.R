@@ -219,7 +219,7 @@ update_offline_data <- function(data_file = get_param("FRED_DATA_FILE"), items =
         data <- read_fred(data_file)
       } else if (item == "data_description") {
         data <- load_variable_descriptions(data = data_file)
-      } else if (item == "changelog") {
+      } else if (item == "data_changelog") {
         data <- get_dataset_changelog()
       } else if (item == "citation") {
         data <- create_citation(data_file)

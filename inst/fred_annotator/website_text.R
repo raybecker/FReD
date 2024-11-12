@@ -4,7 +4,7 @@ about_page <- glue::glue("
 
 ## FORRT Replication Database Annotator {packageVersion('FReD')}
 
-**Last Update:** {get_last_modified('fred_annotator')}
+**Last Code Update:** {get_last_modified('fred_annotator')}
 
 **Data citation:** {create_citation()}
 

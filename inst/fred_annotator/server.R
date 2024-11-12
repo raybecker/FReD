@@ -22,16 +22,46 @@ server <- function(input, output, session) {
     easyClose = TRUE
   ))
 
-  reactive_data <- reactiveVal(df)
+  reactive_df <- reactiveVal(df)
+  selected_refs <- reactiveVal()
 
-  reactive_df <- reactive({
-    df <- reactive_data() %>% arrange(ref_original)
-    if (input$validated == "TRUE") {
-      df %>% filter(validated == 1)
-    } else {
-      df
-    }
+  observe({
+    selected_refs(
+      reactive_df() %>%
+        filter(doi_original %in% doi_vector$dois)
+    )
   })
+
+  # Recalculate replication success based on criterion
+  assess_success <- function(result, success_criterion) {
+    assess_replication_outcome(result$es_original, result$n_original, result$es_replication, result$n_replication,
+                               criterion = success_criterion)$outcome_report
+  }
+
+  observeEvent({input$success_criterion; selected_refs()}, {
+    if (nrow(selected_refs()) > 1) {
+      updated_df <- selected_refs() %>%
+        arrange(ref_original) %>%
+        filter(if (input$validated == "TRUE") validated == 1 else TRUE) %>%
+        mutate(
+          result = assess_success(., input$success_criterion),
+          result = factor(
+            result,
+            levels = rev(c(
+              "not coded",
+              unique(result[grepl("success", result, ignore.case = TRUE)]),
+              unique(result[grepl("failure", result, ignore.case = TRUE)]),
+              unique(result[!(result %in% c("not coded", "OS not significant")) &
+                              !grepl("success|failure", result, ignore.case = TRUE)]),
+              "OS not significant"
+            ))
+          )
+        )
+
+      selected_refs(updated_df)
+    }
+  }, ignoreNULL = TRUE)
+
 
   observeEvent(input$load_retractions, {
     showModal(modalDialog(
@@ -42,7 +72,7 @@ server <- function(input, output, session) {
     retracted_dois(load_retractionwatch() %>%
                      dplyr::filter(RetractionNature == "Retraction") %>%
                      dplyr::select(OriginalPaperDOI))
-    updated_df <- reactive_data() %>%
+    updated_df <- reactive_df() %>%
       dplyr::left_join(retracted_dois() %>% mutate(retracted_replication = TRUE), retraction_data(),
                        by = c("doi_replication" = "OriginalPaperDOI"), na_matches = "never") %>%
       dplyr::left_join(retracted_dois() %>% mutate(retracted_original = TRUE), retraction_data(),
@@ -59,7 +89,7 @@ server <- function(input, output, session) {
                       paste("RETRACTED:", ref_replication),
                       ref_replication
                     ))
-    reactive_data(updated_df)
+    reactive_df(updated_df)
     removeModal()
     showNotification(shiny::HTML(paste("<b>Retraction database loaded successfully.</b><br> FReD contains ", sum(updated_df$retracted_original),
                            " retracted original studies and ", sum(updated_df$retracted_replication), " retracted replication studies.")))
@@ -67,10 +97,13 @@ server <- function(input, output, session) {
   })
 
   reactive_distinct_fred_entries <- reactive({
-    reactive_df() %>%
-      select(doi_original, ref_original, description) %>%
-      distinct() %>%
-      arrange(is.na(doi_original), ref_original)
+    df <- reactive_df() %>%
+      arrange(desc(validated == 1)) %>%
+      select(doi_original, ref_original)
+    dplyr::bind_rows(
+      df %>% dplyr::filter(!is.na(doi_original)) %>% dplyr::group_by(doi_original) %>% dplyr::slice(1) %>% dplyr::ungroup(),
+      df %>% dplyr::filter(is.na(doi_original))
+    )
   })
 
   output$button_area <- renderUI({
@@ -265,8 +298,9 @@ server <- function(input, output, session) {
     doi_vector$selected_rows <- selected_rows
   })
 
-  # Observe changes in selected rows
-  observeEvent(input$database_search_rows_selected, ignoreNULL = FALSE, {
+  # Observe changes in selected rows - with debounce to avoid loops
+  debounced_rows_selected <- debounce(reactive(input$database_search_rows_selected), 250)
+  observeEvent(debounced_rows_selected(), ignoreNULL = FALSE, {
 
     current_rows <- input$database_search_rows_selected
 
@@ -346,8 +380,7 @@ server <- function(input, output, session) {
 
   output$outcomes_barplot <- plotly::renderPlotly({
 
-    df <- reactive_df() %>%
-      dplyr::filter(doi_original %in% doi_vector$dois)
+    df <- selected_refs()
 
     if (any(df$retracted_replication)) {
       message("any")
@@ -364,7 +397,6 @@ server <- function(input, output, session) {
       need(nrow(df) > 0, "", label = "No replications found")
     )
 
-    df <- df %>% mutate(result = assess_success(df, input$success_criterion))
     criterion_colors <- success_criteria_colors %>%
       dplyr::filter(criterion == input$success_criterion)
 
@@ -401,10 +433,7 @@ server <- function(input, output, session) {
   })
 
   # Functions to generate markdown
-  assess_success <- function(result, success_criterion) {
-    assess_replication_outcome(result$es_original, result$n_original, result$es_replication, result$n_replication,
-                               criterion = success_criterion)$outcome_report
-  }
+
 
   assess_outcome <- function(replications, ..., success_criterion = c("consistency", "significance_r"), return_html = TRUE) {
 
@@ -467,8 +496,7 @@ server <- function(input, output, session) {
 
   output$refs_annotated <- renderUI({
 
-    df <- reactive_df() %>%
-      filter(doi_original %in% doi_vector$dois)
+    df <- selected_refs()
 
     validate(
       need(nrow(df) > 0, "", label = "No replications found")
@@ -531,8 +559,7 @@ server <- function(input, output, session) {
     content = function(file) {
       tempReport <- tempfile(fileext = ".Rmd")
 
-      df <- reactive_df() %>%
-        filter(doi_original %in% doi_vector$dois)
+      df <- selected_refs()
 
       markdown_output <- generate_markdown(df, return_html = TRUE)
 
@@ -578,14 +605,11 @@ server <- function(input, output, session) {
 
   output$replicability_plot <- plotly::renderPlotly({
 
-    df <- reactive_df() %>%
-      filter(doi_original %in% doi_vector$dois)
+    df <- selected_refs()
 
     validate(
       need(nrow(df) > 0, "", label = "No replications found")
     )
-
-    df <- df %>% mutate(result = assess_success(df, input$success_criterion))
 
     criterion_colors <- success_criteria_colors %>%
       dplyr::filter(criterion == input$success_criterion)
@@ -636,413 +660,3 @@ server <- function(input, output, session) {
   })
 
 }
-
-#   output$replicability_plot <- renderPlotly({
-#
-#     df <- reactive_df() %>%
-#       filter(doi_original %in% doi_vector$dois) %>%
-#       mutate(significant = case_when(significant_replication == 0 ~ "Not Significant",
-#                                      significant_replication == 1 ~ "Significant",
-#                                      TRUE ~ NA_character_)) %>%
-#       filter(!is.na(es_replication))
-#
-#     browser()
-#
-#     subplot(
-#       plot_ly(data = df, x = ~es_original, type = 'histogram',
-#               alpha =.5, showlegend = FALSE) ,
-#       ggplot(),
-#       plot_ly(data = df, x = ~es_original, y = ~es_replication, type = 'scatter', size = ~power_r, fill = ~'',
-#               mode = 'markers', color = ~significant, alpha = .5, colors = c("Not Significant" = "red", "Significant" = "darkgreen"),
-#               text = ~sprintf("Original (%s): %.2f\nReplication (%s): %.2f\nPower of replication: %.2f",
-#                               doi_original, es_original, doi_replication, es_replication, power_r),
-#               hoverinfo = "text",  showlegend = TRUE) %>%
-#         layout(xaxis = list(title = 'Original Effect Size', zeroline = TRUE, showline = TRUE),
-#                yaxis = list(title = 'Replication Effect Size', zeroline = TRUE, showline = TRUE)
-#               ),
-#       plot_ly(data = df, y = ~es_replication, type = 'histogram',
-#               alpha = .5, showlegend = FALSE),
-#       nrows = 2, heights = c(.2, .8), widths = c(.8,.2), margin = 0,
-#       shareX = TRUE, shareY = TRUE, titleX = TRUE, titleY = TRUE) %>%
-#       layout(title = "Comparison of original and replication findings")
-#
-#
-#   })
-#
-#
-#
-#
-# }
-
-
-#
-#   # CHECKER / SUMMARIZER -----------------------------------------------------------------
-#
-#
-#   # Checkertable ------------------------------------------------------------
-#
-#
-#   output$checkertable <- DT::renderDT(server = FALSE, {
-#     # combine coded and uncoded studies
-#     df[is.na(df$result), "result"] <- "not coded yet"
-#
-#     ## apply filters
-#     df_temp <- df
-#     df_temp <- df_temp[rev(row.names(df_temp)), ]
-#
-#     # exclude NAs
-#     df_temp <- df_temp[!is.na(df_temp$result), ]
-#
-#     # exclude non-validated entries
-#     df_temp <- df_temp[!is.na(df_temp$validated), ]
-#
-#
-#     # df_temp_filtered <- df_temp[, c("description", "n_original", "n_replication", "power", "result")]
-#     # df_temp_filtered <- df_temp[, c("description", "tags", "contributors", "result", "ref_original", "ref_replication")]
-#
-#     DT::datatable(
-#       df_temp[, c("description", "tags", "result", "ref_original", "ref_replication")],
-#       extensions = "Buttons",
-#       options = list(
-#         scrollX = TRUE,
-#         dom = "Bfrtip",
-#         buttons = c("copy", "csv", "excel"),
-#         pageLength = 5
-#         # , lengthMenu = c(5, 10, 100) # XXX not working yet
-#       ), rownames = FALSE
-#     )
-#   })
-#
-#
-#
-#   # # Checker Violin Plot -----------------------------------------------------
-#   #
-#   #
-#   #
-#   #   output$checker_violin <- plotly::renderPlotly({
-#   #
-#   #     # # combine coded and uncoded studies
-#   #     # df <- plyr::rbind.fill(df, as)
-#   #     # df <- plyr::rbind.fill(df, forrt)
-#   #     # df[is.na(df$result), "result"] <- "not coded yet"
-#   #
-#   #     # this plot is based on the filtered entries from the checkertable
-#   #     df_temp <- df
-#   #     df_temp <- df_temp[rev(row.names(df_temp)), ]
-#   #
-#   #     # exclude non-validated entries
-#   #     df_temp <- df_temp[!is.na(df_temp$validated), ]
-#   #
-#   #     # use only filtered studies
-#   #     s1 <- input$checkertable_rows_current  # rows on the current page
-#   #     s2 <- input$checkertable_rows_all      # rows on all pages (after being filtered)
-#   #     s3 <- input$checkertable_rows_selected # selected rows
-#   #
-#   #     df_temp <- df_temp[s2, ]
-#   #
-#   #     # exclude NAs
-#   #     df_temp <- df_temp[!is.na(df_temp$result), ]
-#   #
-#   #     # compute se
-#   #     df_temp$se_original <- sqrt((1-abs(as.numeric(df_temp$es_original))^2)/(as.numeric(df_temp$n_original)-2))
-#   #     df_temp$se_replication <- sqrt((1-abs(as.numeric(df_temp$es_replication))^2)/(as.numeric(df_temp$n_replication)-2))
-#   #
-#   #     redlong_original <- df_temp[, c("es_original", "ref_original", "n_original", "se_original")]
-#   #     redlong_original$type = "Original"
-#   #     names(redlong_original) <- c("es", "ref", "n", "se", "type")
-#   #     redlong_original <- redlong_original[!duplicated(redlong_original), ]
-#   #
-#   #     redlong_replication <- df_temp[ , c("es_replication", "ref_replication", "n_replication", "se_replication")]
-#   #     redlong_replication$type = "Replication"
-#   #     names(redlong_replication) <- c("es", "ref", "n", "se", "type")
-#   #
-#   #     redlong <- rbind(redlong_original, redlong_replication)
-#   #     checker_gg <- ggplot(redlong, aes(x = type, y = as.numeric(es), text = ref)) + # , text = ref
-#   #       # geom_violin(draw_quantiles =  .5) +
-#   #       geom_jitter(width = .1, height = 0) +
-#   #       xlab("Study Type") + ylab("r") +
-#   #       geom_abline(h = 0, slope = 0, lty = 2) +
-#   #       theme_bw()
-#   #
-#   #     checker_plotly <- plotly::ggplotly(checker_gg, tooltip = "text") %>% #
-#   #       plotly::config(displayModeBar = FALSE) %>%
-#   #       layout(xaxis = list(fixedrange = TRUE), yaxis = list(fixedrange = TRUE))
-#   #
-#   #     checker_plotly
-#   #
-#   #   })
-#
-#
-#   # # Checker MA Plot ---------------------------------------------------------
-#   #
-#   #   output$checker_maplot <- plotly::renderPlotly({
-#   #
-#   #     # this plot is based on the filtered entries from the checkertable
-#   #     df_temp <- df
-#   #     df_temp <- df_temp[rev(row.names(df_temp)), ]
-#   #
-#   #     # exclude non-validated entries
-#   #     df_temp <- df_temp[!is.na(df_temp$validated), ]
-#   #
-#   #     # use only filtered studies
-#   #     s1 <- input$checkertable_rows_current  # rows on the current page
-#   #     s2 <- input$checkertable_rows_all      # rows on all pages (after being filtered)
-#   #     s3 <- input$checkertable_rows_selected # selected rows
-#   #
-#   #     df_temp <- df_temp[s2, ]
-#   #
-#   #     # exclude NAs
-#   #     df_temp <- df_temp[!is.na(df_temp$result), ]
-#   #
-#   #     # compute se
-#   #     df_temp$se_original <- sqrt((1-abs(as.numeric(df_temp$es_original))^2)/(as.numeric(df_temp$n_original)-2))
-#   #     df_temp$se_replication <- sqrt((1-abs(as.numeric(df_temp$es_replication))^2)/(as.numeric(df_temp$n_replication)-2))
-#   #
-#   #     redlong_original <- df_temp[, c("es_original", "ref_original", "n_original", "se_original")]
-#   #     redlong_original$type = "Original"
-#   #     names(redlong_original) <- c("es", "ref", "n", "se", "type")
-#   #     redlong_original <- redlong_original[!duplicated(redlong_original), ]
-#   #
-#   #     redlong_replication <- df_temp[ , c("es_replication", "ref_replication", "n_replication", "se_replication")]
-#   #     redlong_replication$type = "Replication"
-#   #     names(redlong_replication) <- c("es", "ref", "n", "se", "type")
-#   #
-#   #     # remova missing values
-#   #     redlong <- rbind(redlong_original, redlong_replication)
-#   #
-#   #
-#   #     redlong <- redlong[!is.na(redlong$ref),]
-#   #
-#   #     model <- metafor::rma.mv(yi = as.numeric(es)
-#   #                              , V = se^2
-#   #                              , random = ~1 | ref
-#   #                              , tdist = TRUE
-#   #                              , data = redlong
-#   #                              , mods = ~ as.factor(type) - 1
-#   #                              , method = "ML")
-#   #
-#   #
-#   #     summary(model)
-#   #
-#   #     ma_table <- data.frame("study_type" = as.character(c("Original", "Replication"))
-#   #                            , "mean_r" =   round(as.numeric(model$beta), 3)
-#   #                            , "se" =       round(as.numeric(model$se), 3)
-#   #                            , "lower_ci" = round(as.numeric(model$ci.lb), 3)
-#   #                            , "upper_ci" = round(as.numeric(model$ci.ub), 3)
-#   #                            , "n" = c(sum(redlong$type == "Original")
-#   #                                      , sum(redlong$type == "Replication"))
-#   #     )
-#   #
-#   #     checker_maplot <- ggplot(ma_table, aes(x = study_type, y = mean_r, ymin = lower_ci, ymax = upper_ci)) +
-#   #       geom_point() +
-#   #       geom_errorbar() +
-#   #       theme_bw() +
-#   #       geom_abline(slope = 0, lty = 2) +
-#   #       ylim(c(-.1, round(max(as.numeric(model$ci.ub)), 1)+.1)) +
-#   #       xlab("Study Type") + ylab("Mean Effect Size Estimate (r)")
-#   #
-#   #     checker_maplotly <- plotly::ggplotly(checker_maplot) %>% # , tooltip = "text"
-#   #       plotly::config(displayModeBar = FALSE) %>%
-#   #       layout(xaxis = list(fixedrange = TRUE), yaxis = list(fixedrange = TRUE))
-#   #
-#   #     checker_maplotly
-#   #   })
-#
-#
-#   # Checker Barplot ---------------------------------------------------------
-#
-#   output$checker_bar <- plotly::renderPlotly({
-#     # this plot is based on the filtered entries from the checkertable
-#     df_temp <- df
-#     df_temp <- df_temp[rev(row.names(df_temp)), ]
-#
-#     # exclude non-validated entries
-#     df_temp <- df_temp[!is.na(df_temp$validated), ]
-#
-#     # use only filtered studies
-#     s1 <- input$checkertable_rows_current # rows on the current page
-#     s2 <- input$checkertable_rows_all # rows on all pages (after being filtered)
-#     s3 <- input$checkertable_rows_selected # selected rows
-#
-#     df_temp <- df_temp[s2, ]
-#
-#     # exclude NAs
-#     df_temp <- df_temp[!is.na(df_temp$result), ]
-#
-#     ## Exclude NAs
-#     df_temp <- df_temp[!is.na(df_temp$result), ]
-#
-#     bardata <- as.data.frame(base::table(df_temp$result, useNA = "always") / nrow(df_temp))
-#     names(bardata) <- c("Result", "Proportion")
-#     bardata$Proportion <- round(bardata$Proportion, 4) * 100
-#
-#     bardata$description <- paste(bardata$Result, ": ", bardata$Proportion, "%", sep = "")
-#
-#     barchart <- ggplot(bardata, aes(x = "", fill = Result, y = Proportion, text = description)) +
-#       geom_bar(position = "fill", stat = "identity") +
-#       theme_bw() +
-#       ylab("Percentage") +
-#       xlab("") +
-#       coord_flip() +
-#       scale_fill_manual("Result", values = c(
-#         "success" = "#30c25a",
-#         "informative failure to replicate" = "#f0473e",
-#         "practical failure to replicate" = "#f2bbb8",
-#         "inconclusive" = "#60bef7"
-#       )) + # , NA = "grey"
-#       ggtitle(paste(nrow(df_temp), "of", nrow(df), "studies selected."))
-#     p <- plotly::ggplotly(barchart, tooltip = "text") %>%
-#       plotly::config(displayModeBar = FALSE) %>%
-#       plotly::layout(xaxis = list(fixedrange = TRUE), yaxis = list(fixedrange = TRUE)) #  %>% layout(height = 10000, width = 1200)
-#
-#     p
-#   })
-#
-#   # Checker MA Table --------------------------------------------------------
-#
-#
-#   output$flexiblecheckertable <- DT::renderDT({
-#     # this plot is based on the filtered entries from the checkertable
-#     df_temp <- df
-#     df_temp <- df_temp[rev(row.names(df_temp)), ]
-#
-#     # exclude non-validated entries
-#     df_temp <- df_temp[!is.na(df_temp$validated), ]
-#
-#     # use only filtered studies
-#     s1 <- input$checkertable_rows_current # rows on the current page
-#     s2 <- input$checkertable_rows_all # rows on all pages (after being filtered)
-#     s3 <- input$checkertable_rows_selected # selected rows
-#
-#     df_temp <- df_temp[s2, ]
-#
-#     # exclude NAs
-#     df_temp <- df_temp[!is.na(df_temp$result), ]
-#
-#     # compute se
-#     df_temp$se_original <- sqrt((1 - abs(as.numeric(df_temp$es_original))^2) / (as.numeric(df_temp$n_original) - 2))
-#     df_temp$se_replication <- sqrt((1 - abs(as.numeric(df_temp$es_replication))^2) / (as.numeric(df_temp$n_replication) - 2))
-#
-#     redlong_original <- df_temp[, c("es_original", "ref_original", "n_original", "se_original")]
-#     redlong_original$type <- "Original"
-#     names(redlong_original) <- c("es", "ref", "n", "se", "type")
-#     redlong_original <- redlong_original[!duplicated(redlong_original), ]
-#
-#     redlong_replication <- df_temp[, c("es_replication", "ref_replication", "n_replication", "se_replication")]
-#     redlong_replication$type <- "Replication"
-#     names(redlong_replication) <- c("es", "ref", "n", "se", "type")
-#
-#     # remova missing values
-#     redlong <- rbind(redlong_original, redlong_replication)
-#
-#
-#     redlong <- redlong[!is.na(redlong$ref), ]
-#
-#     model <- metafor::rma.mv(
-#       yi = as.numeric(es),
-#       V = se^2,
-#       random = ~ 1 | ref,
-#       tdist = TRUE,
-#       data = redlong,
-#       mods = ~ as.factor(type) - 1,
-#       method = "ML"
-#     )
-#
-#
-#     summary(model)
-#
-#     ma_table <- data.frame(
-#       "study_type" = as.character(c("Original", "Replication")),
-#       "mean_r" = round(as.numeric(model$beta), 3),
-#       "se" = round(as.numeric(model$se), 3),
-#       "lower_ci" = round(as.numeric(model$ci.lb), 3),
-#       "upper_ci" = round(as.numeric(model$ci.ub), 3),
-#       "n" = c(
-#         sum(redlong$type == "Original"),
-#         sum(redlong$type == "Replication")
-#       )
-#     )
-#
-#     # print table
-#     DT::datatable(ma_table,
-#       options = list(options = list(pageLength = 200, dom = "t")),
-#       rownames = FALSE
-#     )
-#   })
-#
-#
-#   # Checker MA Text ------------------------------------------------------------
-#
-#   output$flexiblesummarizertext <- shiny::renderText({
-#     # this plot is based on the filtered entries from the checkertable
-#     df_temp <- df
-#     df_temp <- df_temp[rev(row.names(df_temp)), ]
-#
-#     # exclude non-validated entries
-#     df_temp <- df_temp[!is.na(df_temp$validated), ]
-#
-#     # use only filtered studies
-#     s1 <- input$checkertable_rows_current # rows on the current page
-#     s2 <- input$checkertable_rows_all # rows on all pages (after being filtered)
-#     s3 <- input$checkertable_rows_selected # selected rows
-#
-#     df_temp <- df_temp[s2, ]
-#
-#     # exclude NAs
-#     df_temp <- df_temp[!is.na(df_temp$result), ]
-#
-#     # compute se
-#     df_temp$se_original <- sqrt((1 - abs(as.numeric(df_temp$es_original))^2) / (as.numeric(df_temp$n_original) - 2))
-#     df_temp$se_replication <- sqrt((1 - abs(as.numeric(df_temp$es_replication))^2) / (as.numeric(df_temp$n_replication) - 2))
-#
-#     redlong_original <- df_temp[, c("es_original", "ref_original", "n_original", "se_original")]
-#     redlong_original$type <- "Original"
-#     names(redlong_original) <- c("es", "ref", "n", "se", "type")
-#     redlong_original <- redlong_original[!duplicated(redlong_original), ]
-#
-#     redlong_replication <- df_temp[, c("es_replication", "ref_replication", "n_replication", "se_replication")]
-#     redlong_replication$type <- "Replication"
-#     names(redlong_replication) <- c("es", "ref", "n", "se", "type")
-#
-#     # remova missing values
-#     redlong <- rbind(redlong_original, redlong_replication)
-#
-#
-#     redlong <- redlong[!is.na(redlong$ref), ]
-#
-#     model <- metafor::rma.mv(
-#       yi = as.numeric(es),
-#       V = se^2,
-#       random = ~ 1 | ref,
-#       tdist = TRUE,
-#       data = redlong,
-#       mods = ~ as.factor(type) - 1,
-#       method = "ML"
-#     )
-#
-#     HTML(ma_text <- paste("<br><br><h5>On average and using a random-effects meta-analysis, original effect sizes were ",
-#       ifelse(model$pval[1] < .05, "", "not "),
-#       "significant. Average replication effect sizes were ",
-#       ifelse(model$pval[2] < .05, "", "not "),
-#       "significant and ",
-#       ifelse(model$ci.ub[2] < model$b[1] & model$ci.lb[1] > model$b[2], "", "not "),
-#       "significantly smaller than original effect sizes. ",
-#       "<h6>",
-#       sep = ""
-#     ))
-#   })
-#
-#
-#   # Downloadbutton ----------------------------------------------------------
-#
-#
-#   output$reddownload <- downloadHandler(
-#     filename = function() {
-#       paste("df-", Sys.Date(), ".csv", sep = "")
-#     },
-#     content = function(con) {
-#       write.csv(df, con, fileEncoding = "WINDOWS-1252") # XXX nochmal prüfen
-#     }
-#   )
-# }
-#

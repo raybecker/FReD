@@ -22,8 +22,10 @@ server <- function(input, output, session) {
 
   # Overview Table ----------------------------------------------------------
 
-  df_temp <- reactive({
+  df_temp <- reactiveVal()
 
+  # Update df_temp based on filters
+  observe({
     df_temp <- df[rev(row.names(df)), ]
 
     # source
@@ -42,8 +44,52 @@ server <- function(input, output, session) {
     if (input$codedentries == TRUE) {
       df_temp <- df_temp[!is.na(df_temp$result), ]
     }
-    df_temp
+    df_temp(df_temp)
   })
+
+  outcome_colors <- reactive({
+    criterion_colors <- success_criteria_colors %>%
+      dplyr::filter(criterion == input$success_criterion)
+
+    outcome_colors <- setNames(criterion_colors$color, criterion_colors$label %>%
+                                 {
+                                   paste0(toupper(substr(., 1, 1)), substr(., 2, nchar(.)))
+                                 })
+    c(outcome_colors, "Not coded" = "#C8C8C8")
+  })
+
+  # Recalculate replication success based on criterion
+  assess_success <- function(result, success_criterion) {
+    assess_replication_outcome(result$es_original, result$n_original, result$es_replication, result$n_replication,
+                               criterion = success_criterion)$outcome_report
+  }
+
+  observeEvent({input$success_criterion; df_temp()}, {
+    if (nrow(df_temp()) > 1) {
+      updated_df <- df_temp() %>%
+        arrange(ref_original) %>%
+        filter(if (input$validated == "TRUE") validated == 1 else TRUE) %>%
+        mutate(
+          result = assess_success(., input$success_criterion) %>% {
+            paste0(toupper(substr(., 1, 1)), substr(., 2, nchar(.)))
+          },
+          result = factor(
+            result,
+            levels = rev(c(
+              "Not coded",
+              unique(result[grepl("Success", result, ignore.case = TRUE)]),
+              unique(result[grepl("Failure", result, ignore.case = TRUE)]),
+              unique(result[!(result %in% c("Not coded", "OS not significant")) &
+                              !grepl("Success|Failure", result, ignore.case = TRUE)]),
+              "OS not significant"
+            ))
+          )
+        )
+
+      df_temp(updated_df)
+    }
+  }, ignoreNULL = TRUE)
+
 
   df_temp_DT <- reactive({
     df_temp()[input$table_rows_all, ] # rows on all pages (after being filtered)
@@ -54,7 +100,9 @@ server <- function(input, output, session) {
     ## apply filters
     df_temp <- df_temp()
 
-    df_temp[is.na(df_temp$result), "result"] <- "not coded"
+    df_temp[is.na(df_temp$result), "result"] <- "Not coded"
+
+    df_temp <- df_temp %>% dplyr::rename("LeBel result" = result2)
 
     # df_temp_filtered <- df_temp[, c("description", "n_original", "n_replication", "power", "result")]
     df_temp_filtered <- df_temp[, c(
@@ -82,6 +130,12 @@ server <- function(input, output, session) {
 
   # Overview Plot -----------------------------------------------------------
 
+  output$success_note <- renderUI({
+    tags$div(
+      HTML(markdown::markdownToHTML(text = paste0("*Note:* ", success_criterion_note[input$success_criterion]), fragment.only = TRUE))
+    )
+  })
+
   output$overviewplot <- plotly::renderPlotly({
     ## apply filters
     df_temp <- df_temp_DT()
@@ -95,6 +149,8 @@ server <- function(input, output, session) {
       sep = ""
     )
 
+
+
     pointsize <- ifelse(nrow(df_temp) < 10, 5, ifelse(nrow(df_temp) < 100, 4, 3))
 
     s3 <- input$table_rows_selected
@@ -106,29 +162,34 @@ server <- function(input, output, session) {
       ggplot(df_temp, aes(x = es_original, y = es_replication, text = scatterplotdescription)) +
       geom_hline(aes(yintercept = 0), linetype = 2) +
       geom_abline(intercept = 0, slope = 1, color = "Grey60") +
-      geom_point(aes(fill = significant_replication), color = "Grey30", shape = 21, alpha = .8) +
-      # geom_point(aes(size = power, fill=significant_replication), color = "Grey30", shape = 21,alpha = .8) +
-      geom_point(aes(fill = significant_replication), size = pointsize, color = "Grey30", shape = 21, alpha = .8) +
-
+      geom_point(aes(fill = result), size = pointsize, color = "Grey30", shape = 21, alpha = .8) +
+      scale_fill_manual(values = outcome_colors()) +
       # highlighted studies
       # geom_point(data = df_temp[s3, ], mapping = aes(size = power), fill= "Grey30",color="Grey30",shape=4) +
       geom_point(data = df_temp[s3, ], fill = "#0077d9", color = "#f2ef1b", shape = 4) +
-      geom_rug(aes(color = significant_original), linewidth = 1, sides = "b", alpha = .6) +
-      geom_rug(aes(color = significant_replication), linewidth = 1, sides = "l", alpha = .6) +
+      # Rugs colored manually as plotly legend turns messy otherwise
+      geom_rug(data = subset(df_temp, significant_original == "Significant"),
+               color = "#4DCCD0", linewidth = 1, sides = "b", alpha = .6) +
+      geom_rug(data = subset(df_temp, significant_original == "Not significant"),
+               color = "#FA948C", linewidth = 1, sides = "b", alpha = .6) +
+      geom_rug(data = subset(df_temp, significant_replication == "Significant"),
+               color = "#4DCCD0", linewidth = 1, sides = "l", alpha = .6) +
+      geom_rug(data = subset(df_temp, significant_replication == "Not significant"),
+               color = "#FA948C", linewidth = 1, sides = "l", alpha = .6) +
       scale_x_continuous(name = "Original Effect Size", limits = c(0, 1), breaks = c(0, .25, .5, .75, 1)) +
       scale_y_continuous(name = "Replication Effect Size", limits = c(-.5, 1), breaks = c(-.5, -.25, 0, .25, .5, .75, 1)) +
       # ggtitle("") + #xlab("") + ylab("") +
       # scale_size_continuous(name="Power",range=c(.5,3.5)) +
-      scale_color_discrete(guide = "none") +
-      scale_fill_discrete(guide = "none") +
       theme_bw() +
       # theme(legend.position=c(.9,.6), plot.margin = unit(c(-2,-1.5,2,2), "lines")) +
-      theme(legend.position = "none")
+      theme(legend.position = "top") +
+      labs(fill = "Outcome")
 
 
     plotly::ggplotly(scatterplot, tooltip = "text") %>%
       plotly::config(displayModeBar = FALSE) %>%
-      plotly::layout(xaxis = list(fixedrange = TRUE), yaxis = list(fixedrange = TRUE))
+      plotly::layout(xaxis = list(fixedrange = TRUE), yaxis = list(fixedrange = TRUE)) %>%
+      plotly::style(., ., showLegend = FALSE, trace = 5:6)
   }) # , height = 800
 
 
@@ -211,29 +272,13 @@ server <- function(input, output, session) {
   })
 
 
-
-  outcome_colors <- reactive({
-
-    # Only "result" currently implemented - others taken from annotator, to be pursued later
-
-    if (input$result_var == "result") {
-      outcome_colors <- c("failed replication" = "#FF7F7F", "successful replication" = "#8FBC8F", "OS not significant" = "#F0F0F0")
-    } else if (input$success_criterion == "consistency") {
-        outcome_colors <- c("Inconsistent replication" = "#FF7F7F", "Consistent replication" = "#8FBC8F", "Replication (of n.s. finding)" = "#F0F0F0")
-      } else if (input$success_criterion == "significance") {
-        outcome_colors <- c("Non-significant replication" = "#FF7F7F", "Significant replication" = "#8FBC8F", "Replication (of n.s. finding)" = "#F0F0F0")
-      }
-
-  })
-
-
   # Bar Plot -------------------------------------------------------------
 
   output$barplot <- plotly::renderPlotly({
 
     df_temp <- df_temp_DT()
 
-    df_temp[is.na(df_temp$result), "result"] <- "not coded"
+    df_temp[is.na(df_temp$result), "result"] <- "Not coded"
 
     validate(need(nrow(df_temp) > 0, "Plot cannot be created if no studies are selected"))
 
@@ -259,48 +304,48 @@ server <- function(input, output, session) {
       plotly::layout(xaxis = list(fixedrange = TRUE), yaxis = list(fixedrange = TRUE))
   })
 
-  # Barplot Result2 ---------------------------------------------------------
-
-  output$barplot2 <- plotly::renderPlotly({
-    ## apply filters
-    df_temp <- df_temp_DT()
-
-    ## Exclude NAs
-    df_temp <- df_temp[!is.na(df_temp$result2), ]
-
-    validate(need(nrow(df_temp) > 0, "Plot cannot be created if no studies are selected"))
-
-    df_summary <- df_temp %>%
-      group_by(result2) %>%
-      summarise(count = n()) %>%
-      mutate(Proportion = count / sum(count),
-             text = paste(result2, ": ", round(Proportion * 100, 1), "%"))
-
-    # Create the barchart with tooltip text
-    barchart <- ggplot(df_summary, aes(x = "", fill = result2, y = Proportion, text = text)) +
-      geom_bar(stat = "identity", position = "dodge") +
-      theme_bw() +
-      ylab("Percentage") +
-      xlab("") +
-      coord_flip() +
-      scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
-      scale_fill_manual("Result", values = c(
-        "no signal - inconsistent" = "#9c0505",
-        "signal - consistent" = "#05e361",
-        "no signal - OS n.s." = "grey",
-        "NA - OS n.s." = "grey",
-        "signal - inconsistent, smaller" = "#a4d11b",
-        "signal - inconsistent, larger" = "#77bd06",
-        "signal - OS n.s." = "grey",
-        "no signal - consistent" = "#b4d4a5",
-        "not coded" = "grey"
-      )) +
-      ggtitle(paste(nrow(df_temp), "of", nrow(df_temp_DT()), "studies selected."))
-
-    plotly::ggplotly(barchart, tooltip = "text") %>%
-      plotly::config(displayModeBar = FALSE) %>%
-      plotly::layout(xaxis = list(fixedrange = TRUE), yaxis = list(fixedrange = TRUE))
-  })
+  # # Barplot Result2 ---------------------------------------------------------
+  #
+  # output$barplot2 <- plotly::renderPlotly({
+  #   ## apply filters
+  #   df_temp <- df_temp_DT()
+  #
+  #   ## Exclude NAs
+  #   df_temp <- df_temp[!is.na(df_temp$result2), ]
+  #
+  #   validate(need(nrow(df_temp) > 0, "Plot cannot be created if no studies are selected"))
+  #
+  #   df_summary <- df_temp %>%
+  #     group_by(result2) %>%
+  #     summarise(count = n()) %>%
+  #     mutate(Proportion = count / sum(count),
+  #            text = paste(result2, ": ", round(Proportion * 100, 1), "%"))
+  #
+  #   # Create the barchart with tooltip text
+  #   barchart <- ggplot(df_summary, aes(x = "", fill = result2, y = Proportion, text = text)) +
+  #     geom_bar(stat = "identity", position = "dodge") +
+  #     theme_bw() +
+  #     ylab("Percentage") +
+  #     xlab("") +
+  #     coord_flip() +
+  #     scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  #     scale_fill_manual("Result", values = c(
+  #       "no signal - inconsistent" = "#9c0505",
+  #       "signal - consistent" = "#05e361",
+  #       "no signal - OS n.s." = "grey",
+  #       "NA - OS n.s." = "grey",
+  #       "signal - inconsistent, smaller" = "#a4d11b",
+  #       "signal - inconsistent, larger" = "#77bd06",
+  #       "signal - OS n.s." = "grey",
+  #       "no signal - consistent" = "#b4d4a5",
+  #       "not coded" = "grey"
+  #     )) +
+  #     ggtitle(paste(nrow(df_temp), "of", nrow(df_temp_DT()), "studies selected."))
+  #
+  #   plotly::ggplotly(barchart, tooltip = "text") %>%
+  #     plotly::config(displayModeBar = FALSE) %>%
+  #     plotly::layout(xaxis = list(fixedrange = TRUE), yaxis = list(fixedrange = TRUE))
+  # })
 
 
 
@@ -378,19 +423,20 @@ server <- function(input, output, session) {
 
   library(dplyr)
   library(rlang)
+  #LW to check: is this needed?
 
-  aggregate_results <- function(df, ..., result = NULL, mixed_text = "mixed", NA_text = "not coded yet") {
-    # Dynamically determining the column to operate on
-    result_sym <- if (is.null(result)) {
-
-       if (is.null(input$result_var)) {
-        stop("Input for 'result' is required when 'result' argument is NULL.")
-      } else {
-        sym(input$result_var)
-      }
-    } else {
-      ensym(result)
-    }
+  aggregate_results <- function(df, ..., result = "result", mixed_text = "mixed", NA_text = "not coded yet") {
+    # # Dynamically determining the column to operate on
+    # result_sym <- if (is.null(result)) {
+    #
+    #    if (is.null(input$result_var)) {
+    #     stop("Input for 'result' is required when 'result' argument is NULL.")
+    #   } else {
+    #     sym(input$result_var)
+    #   }
+    # } else {
+    result_sym <- ensym(result)
+    # }
 
     # Replace NA values in the chosen result column with NA_text
     df <- df %>%
@@ -612,7 +658,7 @@ server <- function(input, output, session) {
     dois <- tolower(stringr::str_extract(entries, "10.\\d{4,9}/[-._;()/:a-z0-9A-Z]+"))
 
     # combine coded and uncoded studies
-    df[is.na(df$result), "result"] <- "not coded yet"
+    df[is.na(df$result), "result"] <- "Not coded yet"
 
     # Check which entries  exist in the df
     intersection <- dois[dois %in% df$doi_original]
@@ -650,7 +696,7 @@ server <- function(input, output, session) {
     dois <- tolower(stringr::str_extract(entries, "10.\\d{4,9}/[-._;()/:a-z0-9A-Z]+"))
 
     # combine coded and uncoded studies
-    df[is.na(df$result), "result"] <- "not coded yet"
+    df[is.na(df$result), "result"] <- "Not coded yet"
 
     # Check which entries  exist in the df
     intersection <- dois[dois %in% df$doi_original]

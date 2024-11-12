@@ -11,7 +11,17 @@ sidebar_contents <- sidebar(
   uiOutput("button_area"),
   checkboxInput("validated", "Use validated database entries only", value = FALSE),
   actionButton("load_retractions", "Load Retraction Database", icon = icon("database")),
-  selectInput("success_criterion", "Success criterion",
+  hr(),
+  radioButtons("success_criterion",
+               label = popover(
+                 trigger = list(
+                   "Success criterion",
+                   icon(c("info-circle"))
+                 ),
+                 "Check our ",
+                 a("vignette", href = "https://forrt.org/FReD/articles/success_criteria.html", target = "_blank"),
+                 "for details on the different success criteria."
+               ),
               choices = c("Significance of Replication" = "significance_r",
                           "Aggregated Significance" = "significance_agg",
                           "Consistency with CI" = "consistency_ci",
@@ -20,8 +30,6 @@ sidebar_contents <- sidebar(
                           "Homogeneity & Significance" = "homogeneity_significance",
                           "Small Telescopes" = "small_telescopes"),
               selected = "significance_r"),
-             tags$div(style = c("display:inline-block;", "display:inline-block;"), title = c("test"), icon(c("info-circle")))
-              ,
   conditionalPanel(
     condition = "output.showToggle",  # This JavaScript condition reacts to Shiny output
     tags$a(id = "toggle_link", "Show/Hide DOIs >", href = "#", class = "btn btn-link"),
@@ -41,8 +49,6 @@ sidebar_contents <- sidebar(
     }
   "))
   )
-
-
 
 
 # Define content for each panel

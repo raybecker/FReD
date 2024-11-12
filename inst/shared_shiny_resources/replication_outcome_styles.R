@@ -30,6 +30,7 @@ success_criteria_colors <- tibble::tribble(
   "homogeneity_significance", "failure (not homogeneous but jointly significantly above 0)", "#FF7F7F",
   "homogeneity_significance", "failure (effects are not homogeneous and not significant)", "#FF7F7F",
   "homogeneity_significance", "failure (homogeneous but not significant)",           "#FF7F7F",
+  "homogeneity_significance", "failure (not homogeneous and not significant)",           "#FF7F7F",
 
   # small_telescopes outcome_report labels
   "small_telescopes",         "success",                                   "#8FBC8F",

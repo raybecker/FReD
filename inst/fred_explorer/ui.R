@@ -55,23 +55,42 @@ sidebar_contents <- sidebar(
               display: none;
             }
           ")), # Remove this to actually use the result_var input
-  selectInput("result_var", label = "Success criterion", choices = c("result"), selected = "result"),
   checkboxInput("validated", "Show validated entries only", value = TRUE),
-  checkboxInput("codedentries", "Show coded entries only", value = TRUE)
+  checkboxInput("codedentries", "Show coded entries only", value = TRUE),
+  hr(),
+  radioButtons("success_criterion",
+               label = popover(
+                 trigger = list(
+                   "Success criterion",
+                   icon(c("info-circle"))
+                 ),
+                 "Check our ",
+                 a("vignette", href = "https://forrt.org/FReD/articles/success_criteria.html", target = "_blank"),
+                 "for details on the different success criteria."
+               ),
+               choices = c("Significance of Replication" = "significance_r",
+                           "Aggregated Significance" = "significance_agg",
+                           "Consistency with CI" = "consistency_ci",
+                           "Consistency with PI" = "consistency_pi",
+                           "Homogeneity" = "homogeneity",
+                           "Homogeneity & Significance" = "homogeneity_significance",
+                           "Small Telescopes" = "small_telescopes"),
+               selected = "significance_r"),
 )
 
 # Define content for each panel
 replicability_tracker_content <- nav_panel(
   "Replicability Tracker",
       dataset_info,
+      uiOutput("success_note"),
       shinycssloaders::withSpinner(plotly::plotlyOutput("barplot", width = "100%", height = "250px")),
       shinycssloaders::withSpinner(DT::DTOutput("table")),
       scatterplot_title,
       shinycssloaders::withSpinner(plotly::plotlyOutput("overviewplot", width = "100%", height = 800)),
       scatterplot_explanation,
-      barplot2_title,
-      shinycssloaders::withSpinner(plotly::plotlyOutput("barplot2", width = "100%", height = "250px")),
-      barplot2_explanation,
+      #barplot2_title,
+      #shinycssloaders::withSpinner(plotly::plotlyOutput("barplot2", width = "100%", height = "250px")),
+      #barplot2_explanation,
       breaks,
       zcurve_title, breaks,
       shinycssloaders::withSpinner(shiny::plotOutput("zcurve_plot")),
@@ -177,7 +196,7 @@ ui <- tagList(
     if (event.name === 'navbar') {
         var tabsWithoutSidebar = ['Dataset', 'References-Checker [alpha]', 'References', 'FAQ', 'About'];  // Tabs where sidebar should be disabled
       if (tabsWithoutSidebar.includes(event.value)) {
-        $('#sidebar .shiny-input-container').addClass('disabled');
+        $('#sidebar .shiny-input-container').not('#success_criterion').addClass('disabled');
         $('#sidebar-note').show();
       } else {
         $('#sidebar .shiny-input-container').removeClass('disabled');
