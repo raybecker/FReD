@@ -52,7 +52,7 @@ jobs:
           GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
         run: |
           R -e "
-            remotes::install_local(force = TRUE);
+            remotes::install_github('${{ github.repository }}', ref = '${{ github.ref_name }}', force = TRUE);
             rsconnect::setAccountInfo(name='forrt-replications', token=${{secrets.SHINYAPPS_TOKEN}}, secret=${{secrets.SHINYAPPS_SECRET}});
             rsconnect::deployApp(appName = 'fred_annotator', appDir = './inst/fred_annotator', forceUpdate = TRUE)";
             rsconnect::deployApp(appName = 'fred_explorer', appDir = './inst/fred_explorer', forceUpdate = TRUE)";
