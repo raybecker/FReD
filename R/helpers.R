@@ -285,3 +285,14 @@ print.fred_equivalence_test_result <- function(x, ...) {
   cat(attr(x, "result_sentence"), "\n")
   invisible(x)
 }
+
+cap_first_letter <- function(text) {
+  text[is.na(text)] <- NA
+  text[!is.na(text)] <-   paste(toupper(substr(text[!is.na(text)], 1, 1)), substr(text[!is.na(text)], 2, nchar(text[!is.na(text)])), sep = "")
+  text
+}
+
+str_trim_base <- function(x) {
+  gsub("^\\s+|\\s+$", "", x)
+}
+

@@ -54,7 +54,7 @@ jobs:
           R -e "
             remotes::install_github('${{ github.repository }}', ref = '${{ github.ref_name }}', force = TRUE);
             rsconnect::setAccountInfo(name='forrt-replications', token=${{secrets.SHINYAPPS_TOKEN}}, secret=${{secrets.SHINYAPPS_SECRET}});
-            rsconnect::deployApp(appName = 'fred_annotator', appDir = './inst/fred_annotator', forceUpdate = TRUE)";
+            rsconnect::deployApp(appName = 'fred_annotator', appDir = './inst/fred_annotator', forceUpdate = TRUE);
             rsconnect::deployApp(appName = 'fred_explorer', appDir = './inst/fred_explorer', forceUpdate = TRUE)";
           "
 
@@ -62,9 +62,7 @@ jobs:
         if: github.event_name == 'release' && github.event.release.tag_name != '*test*'
         run: |
           R -e "
-              appDir <- system.file('fred_explorer', package = 'FReD');
               rsconnect::deployApp(appName = 'fred_explorer_release', appDir = './inst/fred_explorer', forceUpdate = TRUE);
-              appDir <- system.file('fred_annotator', package = 'FReD');
               rsconnect::deployApp(appName = 'fred_annotator_release', appDir = './inst/fred_annotator', forceUpdate = TRUE);
           "
 

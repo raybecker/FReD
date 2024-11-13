@@ -44,7 +44,7 @@ server <- function(input, output, session) {
         arrange(ref_original) %>%
         filter(if (input$validated == "TRUE") validated == 1 else TRUE) %>%
         mutate(
-          result = assess_success(., input$success_criterion),
+          result = assess_success(., input$success_criterion) %>% cap_first_letter(),
           result = factor(
             result,
             levels = rev(c(
@@ -62,6 +62,15 @@ server <- function(input, output, session) {
     }
   }, ignoreNULL = TRUE)
 
+
+
+  outcome_colors <- reactive({
+    criterion_colors <- success_criteria_colors %>%
+      dplyr::filter(criterion == input$success_criterion)
+
+    outcome_colors <- setNames(criterion_colors$color, criterion_colors$label %>% cap_first_letter())
+    c(outcome_colors, "Not coded" = "#C8C8C8")
+  })
 
   observeEvent(input$load_retractions, {
     showModal(modalDialog(
@@ -397,16 +406,6 @@ server <- function(input, output, session) {
       need(nrow(df) > 0, "", label = "No replications found")
     )
 
-    criterion_colors <- success_criteria_colors %>%
-      dplyr::filter(criterion == input$success_criterion)
-
-    outcome_colors <- setNames(criterion_colors$color, criterion_colors$label)
-    outcome_colors <- c(outcome_colors, "not coded" = "#C8C8C8")
-
-    # Apply the label mappings to the result column for plotting
-    # Needed?
-    #df <- df %>% mutate(result = factor(result, levels = names(outcome_colors), labels = names(outcome_colors)))
-
     retraction_note <- ifelse(
       count_retracted_replications > 0,
       paste0(
@@ -424,7 +423,7 @@ server <- function(input, output, session) {
       geom_bar() +
       theme_minimal() +
       labs(y = "", x = "Count", title = "Outcomes of replication attempts", caption = retraction_note) +
-      scale_fill_manual(values = outcome_colors)
+      scale_fill_manual(values = outcome_colors())
 
     plotly::ggplotly(p, tooltip = NULL) %>%
       plotly::config(displayModeBar = FALSE) %>%
@@ -437,22 +436,42 @@ server <- function(input, output, session) {
 
   assess_outcome <- function(replications, ..., success_criterion = c("consistency", "significance_r"), return_html = TRUE) {
 
+    ref_original <- replications$ref_original[1]
+
     replications %>%
       mutate(assess_replication_outcome(.data$es_original, .data$n_original, .data$es_replication,
-                                        .data$n_replication, criterion = success_criterion),
-             outcome_to_report = paste0(outcome, " (", outcome_detailed, ")") %>% stringr::str_to_title()) %>%
+                                        .data$n_replication, criterion = success_criterion)) %>%
+      # Remove uncoded duplicates
+      arrange(desc(validated == 1), is.na(outcome_report)) %>%
+      filter(!(!is.na(doi_replication) & duplicated(doi_replication) & is.na(outcome_report))) %>%
+      filter(!(duplicated(ref_replication) & is.na(outcome_report))) %>%
+      group_by(ref_replication) %>%
       summarise(
-          replications = paste0("  - **", stringr::str_to_title(outcome_report), ":** ", ref_replication, collapse = "\n"),
+        outcome_report = if(length(unique(outcome_report)) == 1) unique(outcome_report) else paste(outcome_report, collapse = ", "),
+        outcome = case_when(
+                  all(outcome == "success") ~ "success",
+                  all(outcome == "failure") ~ "failure",
+                  all(outcome == "OS not significant") ~ "OS not significant",
+                  .default = "mixed"),
+        ref_original = first(ref_original)
+        ) %>%
+      ungroup() %>%
+      summarise(
+          replications = paste0("  - **", cap_first_letter(dplyr::coalesce(outcome_report, "not coded")), ":** ", ref_replication, collapse = "\n"),
           overall_outcome = case_when(
             all(outcome == "success") ~ if (return_html) "<span style='color: darkgreen;'>&#x2714;</span>" else "[Re]", # ✔️
             all(outcome == "failure") ~ if (return_html) "<span style='color: darkred;'>&#x2716;</span>" else "[¬Re]", #✖️
             all(outcome == "OS not significant") ~ if (return_html) "&#x1F6AB;" else "[NA]", # 🚫
             .default = if (return_html) "&#x2753;" else "[?Re]" #❓
           )
-      )
+      ) %>%
+      mutate(ref_original = ref_original)
+
   }
 
   generate_markdown <- function(df_filtered, ...) {
+
+
     extra_args <- list(...)
     extra_args["success_criterion"] <- input$success_criterion
     df_filtered %>%
@@ -472,9 +491,10 @@ server <- function(input, output, session) {
         # Append doi_urls to ref_replication if not already present
         ref_replication = ifelse(stringr::str_detect(ref_replication, stringr::fixed("doi.org")),
                                  ref_replication,
-                                 paste0(ref_replication, " [", doi_urls, "](", doi_urls, ")"))
+                                 paste0(ref_replication, " [", doi_urls, "](", doi_urls, ")")),
+        id_original = coalesce(doi_original, ref_original)
       )  %>%
-      group_by(ref_original) %>%
+      group_by(id_original) %>%
       group_modify(~do.call(assess_outcome, c(list(.x), extra_args))) %>%
       ungroup() %>%
       mutate(
@@ -611,12 +631,6 @@ server <- function(input, output, session) {
       need(nrow(df) > 0, "", label = "No replications found")
     )
 
-    criterion_colors <- success_criteria_colors %>%
-      dplyr::filter(criterion == input$success_criterion)
-
-    outcome_colors <- setNames(criterion_colors$color, criterion_colors$label)
-    outcome_colors <- c(outcome_colors, "not coded" = "#C8C8C8")
-
     df$significant_original <- c("Not significant", "Significant")[(df$p_value_original < .05) + 1] %>% factor()
     df$significant_replication <- c("Not significant", "Significant")[(df$p_value_replication < .05) + 1] %>% factor()
 
@@ -648,7 +662,7 @@ server <- function(input, output, session) {
       # ggtitle("") + #xlab("") + ylab("") +
       # scale_size_continuous(name="Power",range=c(.5,3.5)) +
       #scale_color_discrete(guide = "none") +
-      scale_fill_manual(values = outcome_colors) +
+      scale_fill_manual(values = outcome_colors()) +
       theme_bw() +
       labs(fill = "Replication Outcome", color = "Significance")
       #theme(legend.position = "inside", plot.margin = unit(c(-2,-1.5,2,2), "lines"))

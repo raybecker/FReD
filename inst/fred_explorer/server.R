@@ -51,10 +51,7 @@ server <- function(input, output, session) {
     criterion_colors <- success_criteria_colors %>%
       dplyr::filter(criterion == input$success_criterion)
 
-    outcome_colors <- setNames(criterion_colors$color, criterion_colors$label %>%
-                                 {
-                                   paste0(toupper(substr(., 1, 1)), substr(., 2, nchar(.)))
-                                 })
+    outcome_colors <- setNames(criterion_colors$color, criterion_colors$label %>% cap_first_letter())
     c(outcome_colors, "Not coded" = "#C8C8C8")
   })
 
@@ -70,9 +67,7 @@ server <- function(input, output, session) {
         arrange(ref_original) %>%
         filter(if (input$validated == "TRUE") validated == 1 else TRUE) %>%
         mutate(
-          result = assess_success(., input$success_criterion) %>% {
-            paste0(toupper(substr(., 1, 1)), substr(., 2, nchar(.)))
-          },
+          result = assess_success(., input$success_criterion) %>% cap_first_letter(),
           result = factor(
             result,
             levels = rev(c(

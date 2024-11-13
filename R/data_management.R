@@ -181,6 +181,10 @@ clean_variables <- function(fred_data) {
   # Collapse validated categories (# 2: error detected and corrected)
   fred_data$validated <- ifelse(fred_data$validated == 1 | fred_data$validated == 2, 1, fred_data$validated)
 
+  # Strip DOIs by removing everything before 10.
+  fred_data$doi_original <- gsub(".*10\\.", "10.", fred_data$doi_original) %>% str_trim_base()
+  fred_data$doi_replication <- gsub(".*10\\.", "10.", fred_data$doi_replication) %>% str_trim_base()
+
   fred_data
 }
 
