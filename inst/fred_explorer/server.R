@@ -35,6 +35,13 @@ server <- function(input, output, session) {
       df_temp <- df_temp[df_temp$source == input$source, ]
     }
 
+    # # minpower
+    # if (input$minpower == .05) {
+    #   df_temp <- df_temp
+    # } else {
+    #   df_temp <- df_temp[df_temp$power >= input$source, ]
+    # }
+
     # validated
     if (input$validated == TRUE) {
       df_temp <- df_temp[!is.na(df_temp$validated), ]
