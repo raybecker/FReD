@@ -286,11 +286,27 @@ print.fred_equivalence_test_result <- function(x, ...) {
   invisible(x)
 }
 
+#' Capitalise first letter
+#'
+#' Capitalise first letter.
+#'
+#' @param text Text to capitalise.
+#' @return Formatted text
+#' @noRd
+
 cap_first_letter <- function(text) {
   text[is.na(text)] <- NA
   text[!is.na(text)] <-   paste(toupper(substr(text[!is.na(text)], 1, 1)), substr(text[!is.na(text)], 2, nchar(text[!is.na(text)])), sep = "")
   text
 }
+
+#' str_trim with base-R
+#'
+#' str_trim with base
+#'
+#' @param x Text to trim
+#' @return Trimmed text
+#' @noRd
 
 str_trim_base <- function(x) {
   gsub("^\\s+|\\s+$", "", x)
