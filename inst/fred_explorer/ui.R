@@ -45,7 +45,15 @@ sidebar_contents <- sidebar(
   padding = 10,
   width = 300,
   div(id = "sidebar-note", style = "color: red; font-weight: bold; display: none;", "Filtering is disabled for this view, as the full dataset is used."),
-  # sliderInput("minpower", "Minimum Power", min = .05, max = .999, value = .05),
+  sliderInput("minpower",
+              label = popover(
+                trigger = list(
+                  "Minimum Power",
+                  icon(c("info-circle"))
+                ),
+                "Power is computed based on the original effect size and the replication sample size under the assumption that this is a correlation test. Studies are not filtered for power when this slider is at 5%."
+              )
+              , min = .05, max = .999, value = .05),
   selectInput("source", "Browse Large-Scale Projects:",
               choices = large_scale_project_choices,
               selected = "All studies"

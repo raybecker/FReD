@@ -35,12 +35,12 @@ server <- function(input, output, session) {
       df_temp <- df_temp[df_temp$source == input$source, ]
     }
 
-    # # minpower
-    # if (input$minpower == .05) {
-    #   df_temp <- df_temp
-    # } else {
-    #   df_temp <- df_temp[df_temp$power >= input$source, ]
-    # }
+    # minpower
+    if (input$minpower == .05) {
+      df_temp <- df_temp
+    } else {
+      df_temp <- df_temp[df_temp$power >= input$minpower, ]
+    }
 
     # validated
     if (input$validated == TRUE) {
@@ -190,8 +190,7 @@ server <- function(input, output, session) {
 
     plotly::ggplotly(scatterplot, tooltip = "text") %>%
       plotly::config(displayModeBar = FALSE) %>%
-      plotly::layout(xaxis = list(fixedrange = TRUE), yaxis = list(fixedrange = TRUE)) %>%
-      plotly::style(., ., showLegend = FALSE, trace = 5:6)
+      plotly::layout(xaxis = list(fixedrange = TRUE), yaxis = list(fixedrange = TRUE))
   }) # , height = 800
 
 
