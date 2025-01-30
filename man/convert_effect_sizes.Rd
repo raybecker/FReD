@@ -16,4 +16,6 @@ Numeric vector of effect sizes in common metric (r)
 }
 \description{
 Takes vectors of effect sizes and their types and converts them to a common metric (r).
+It also converts test statistics, specifically \emph{t} and \emph{F} with 1 degree of in the numerator, to \emph{r}.
+Other test statistics cannot be consistently converted, so are returned as \code{NA}.
 }
