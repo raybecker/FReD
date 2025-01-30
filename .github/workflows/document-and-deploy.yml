@@ -71,8 +71,8 @@ jobs:
           GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
         run: |
           R -e "
-            if (!require(FReD) remotes::install_local(force = TRUE);
-            options(pkgdown.internet = TRUE)
+            if (!require(FReD)) remotes::install_local(force = TRUE);
+            options(pkgdown.internet = TRUE);
             pkgdown::build_site_github_pages(new_process = FALSE)
           "
 
