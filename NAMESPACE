@@ -3,6 +3,7 @@
 S3method(print,fred_equivalence_test_result)
 export(assess_replication_outcome)
 export(calculate_prediction_interval)
+export(convert_effect_sizes)
 export(load_fred_data)
 export(run_annotator)
 export(run_explorer)

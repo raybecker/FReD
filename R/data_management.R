@@ -26,7 +26,6 @@ return_inbuilt <- function(item) {
 #' @param data Path to the FReD dataset (defaults to current FReD data on OSF)
 #' @return A data frame with variable names (`Variable`) and descriptions (`Description`)
 
-
 load_variable_descriptions <- function(sheet_name = "Key Variables", data = get_param("FRED_DATA_FILE")) {
   if (get_param("FRED_OFFLINE")) return(return_inbuilt("data_description"))
   tryCatch({
@@ -75,9 +74,10 @@ bind_rows_with_characters <- function(..., .id = NULL) {
 #' This function loads the FReD dataset into R. It merges the data from the different sheets into one data frame.
 #'
 #' @param data Path to the FReD dataset (defaults to current FReD data on OSF), unless the package is in offline mode (`use_FReD_offline()`)
+#' @param retain_es_as_character Should effect sizes be retained as character? Defaults to TRUE, so that coded test statistics with df can be converted to common metric.
 #' @return A data frame with the FReD dataset
 
-read_fred <- function(data = get_param("FRED_DATA_FILE")) {
+read_fred <- function(data = get_param("FRED_DATA_FILE"), retain_es_as_character = TRUE) {
 
   if (get_param("FRED_OFFLINE")) return(return_inbuilt("data"))
 
@@ -98,8 +98,12 @@ read_fred <- function(data = get_param("FRED_DATA_FILE")) {
     numeric_variables <- c("n_original", "n_replication", "es_orig_value", "es_rep_value",
                            "validated", "published_rep", "same_design", "same_test",
                            "original_authors",
-                           "significant_original", "significant_replication", "power",
-                           "es_orig_RRR", "es_rep_RRR")
+                           "significant_original", "significant_replication", "power")
+
+
+    if (!retain_es_as_character) {
+      numeric_variables <- c(numeric_variables, "es_orig_RRR", "es_rep_RRR")
+    }
 
     # Function to coerce to numeric and track problematic values
     coerce_to_numeric <- function(df, numeric_vars, id_var) {

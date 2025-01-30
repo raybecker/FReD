@@ -1,44 +1,92 @@
 #' Convert effect sizes to common metric (r)
 #'
 #' Takes vectors of effect sizes and their types and converts them to a common metric (r).
+#' It also converts test statistics, specifically *t* and *F* with 1 degree of in the numerator, to *r*.
+#' Other test statistics cannot be consistently converted, so are returned as `NA`.
 #'
 #' @param es_values Numeric vector of effect sizes
 #' @param es_types Character vector of effect size types (types/wordings that are not supported are flagged in warning)
 #' @return Numeric vector of effect sizes in common metric (r)
+#' @export
 
 convert_effect_sizes <- function(es_values, es_types) {
   es_types <- tolower(es_types)
 
   # TK: dataset has a lot of different ways to refer to the same effect size type
   # TK: should be cleaned up there eventually
-  estype_map <- c("or" = "or", "odds ratio" = "or", "odds ratio (study 3)" = "or",
-                  "d" = "d", "cohen's d" = "d", "hedges' g" = "d", "hedges'g" = "d", "hedge's g" = "d", "hedges g" = "d", "smd" = "d",
-                  "etasq" = "eta", "etaq" = "eta", "\u03B7\u00B2" = "eta", #η²
-                  "f" = "f",
-                  "r" = "r", "phi" = "r", "\u03C6" = "r", #φ
-                  "r2" = "r2", "r\u00B2" = "r2") #r²
+  estype_map <- c(
+    "or" = "or", "odds ratio" = "or", "odds ratio (study 3)" = "or",
+    "d" = "d", "cohen's d" = "d", "hedges' g" = "d", "hedges'g" = "d", "hedge's g" = "d", "hedges g" = "d", "smd" = "d",
+    "etasq" = "eta", "etaq" = "eta", "\u03B7\u00B2" = "eta", # η²
+    "f" = "f",
+    "r" = "r", "phi" = "r", "\u03C6" = "r", # φ
+    "r2" = "r2", "r\u00B2" = "r2", # r²
+    "test statistic" = "test-stat" # New category for test statistics
+  )
 
   es_values_r <- rep(NA, length(es_values))
 
-  if (length(setdiff(na.omit(unique(es_types)), names(estype_map))) > 0) {
-    warning("Unknown effect size types: ", paste(setdiff(na.omit(unique(es_types)), names(estype_map)), collapse = ", "))
+  # Warn if there are unknown effect size types
+  unknown_types <- setdiff(na.omit(unique(es_types)), names(estype_map))
+  if (length(unknown_types) > 0) {
+    warning("Unknown effect size types: ", paste(unknown_types, collapse = ", "))
   }
 
-  for (estype in names(estype_map)) {
-    idx <- !is.na(es_types) & es_types == estype
-    estype <- estype_map[estype]
+  for (original_type in names(estype_map)) {
+    idx <- !is.na(es_types) & es_types == original_type
+    estype <- estype_map[original_type]
+
     if (estype == "r") {
-      es_values_r[idx] <- es_values[idx]
+      # Directly assign r values
+      es_values_r[idx] <- as.numeric(es_values[idx])
     } else if (estype == "r2") {
-      es_values_r[idx] <- sqrt(es_values[idx])
+      # Convert r² to r
+      es_values_r[idx] <- sqrt(as.numeric(es_values[idx]))
+    } else if (estype == "test-stat") {
+
+      # Convert test statistics formatted in APA style to r
+      vals <- es_values[idx]
+      converted <- vapply(vals, FUN.VALUE = 1.5, function(x) {
+        x <- trimws(x)
+
+        # Match APA formatted test statistics
+        # t(df) = value
+        t_match <- grepl("^t\\(\\d+\\)\\s*=\\s*-?\\d+\\.?\\d*$", x)
+        # F(df1, df2) = value
+        f_match <- grepl("^f\\(\\d+\\s*,\\s*\\d+\\)\\s*=\\s*\\d+\\.?\\d*$", x, ignore.case = TRUE)
+
+        if (t_match) {
+          # Extract df and t-value
+          df <- as.numeric(sub(".*t\\((\\d+)\\).*", "\\1", x))
+          tval <- as.numeric(sub(".*=\\s*(-?\\d+\\.?\\d*).*", "\\1", x))
+          return(tval / sqrt(tval^2 + df)) # Convert t to r
+        } else if (f_match) {
+          # Extract df1, df2, and F-value
+          df1 <- as.numeric(sub(".*f\\((\\d+)\\s*,.*", "\\1", x, ignore.case = TRUE))
+          df2 <- as.numeric(sub(".*f\\(\\d+\\s*,\\s*(\\d+)\\).*", "\\1", x, ignore.case = TRUE))
+          fval <- as.numeric(sub(".*=\\s*(\\d+\\.?\\d*).*", "\\1", x, ignore.case = TRUE))
+
+          if (df1 == 1) {
+            # Convert F to t and then to r if df1 == 1
+            tval <- sqrt(fval)
+            return(tval / sqrt(tval^2 + df2))
+          } else {
+            return(NA) # Not convertible
+          }
+        } else {
+          return(NA) # Not a valid test statistic format
+        }
+      })
+      es_values_r[idx] <- converted
     } else {
       # Construct function call dynamically based on effect size type
       es_arg <- list()
-      es_arg[[estype]] <- es_values[idx]
+      es_arg[[estype]] <- as.numeric(es_values[idx])
       es_values_r[idx] <- try(do.call(esc::pearsons_r, es_arg))
     }
   }
 
+  # Notify if any effect sizes could not be converted
   if (any(is.na(es_values_r) & !is.na(es_values))) {
     message(sum(is.na(es_values_r) & !is.na(es_values)), " effect sizes could not be converted to a standardised metric.")
   }

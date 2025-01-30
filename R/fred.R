@@ -71,6 +71,7 @@ create_citation <- function(data_file = get_param("FRED_DATA_FILE"), cache = TRU
   if (get_param("FRED_OFFLINE")) {
     return(return_inbuilt("citation"))
   }
+
   tryCatch(
     {
       if (cache && exists("citation", .cache, inherits = FALSE)) {
