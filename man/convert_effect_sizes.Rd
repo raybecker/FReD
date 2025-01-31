@@ -4,12 +4,15 @@
 \alias{convert_effect_sizes}
 \title{Convert effect sizes to common metric (r)}
 \usage{
-convert_effect_sizes(es_values, es_types)
+convert_effect_sizes(es_values, es_types, quiet = FALSE)
 }
 \arguments{
 \item{es_values}{Numeric vector of effect sizes}
 
 \item{es_types}{Character vector of effect size types (types/wordings that are not supported are flagged in warning)}
+
+\item{quiet}{Logical. Should dataset warnings (unknown effect sizes and values not convertible to numeric)
+and status messages be suppressed?}
 }
 \value{
 Numeric vector of effect sizes in common metric (r)
