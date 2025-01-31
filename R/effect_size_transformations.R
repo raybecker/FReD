@@ -6,10 +6,12 @@
 #'
 #' @param es_values Numeric vector of effect sizes
 #' @param es_types Character vector of effect size types (types/wordings that are not supported are flagged in warning)
+#' @param quiet Logical. Should dataset warnings (unknown effect sizes and values not convertible to numeric)
+#' and status messages be suppressed?
 #' @return Numeric vector of effect sizes in common metric (r)
 #' @export
 
-convert_effect_sizes <- function(es_values, es_types) {
+convert_effect_sizes <- function(es_values, es_types, quiet = FALSE) {
   es_types <- tolower(es_types)
 
   # TK: dataset has a lot of different ways to refer to the same effect size type
@@ -56,10 +58,10 @@ convert_effect_sizes <- function(es_values, es_types) {
 
     if (estype == "r") {
       # Directly assign r values
-      es_values_r[idx] <- as.numeric(es_values[idx])
+      es_values_r[idx] <- as_numeric_verbose(es_values[idx], quiet = quiet)
     } else if (estype == "r2") {
       # Convert r² to r
-      es_values_r[idx] <- sqrt(as.numeric(es_values[idx]))
+      es_values_r[idx] <- sqrt(as_numeric_verbose(es_values[idx], quiet = quiet))
     } else if (estype == "test-stat") {
       # Convert test statistics formatted in APA style to r
       vals <- es_values[idx]
@@ -74,14 +76,14 @@ convert_effect_sizes <- function(es_values, es_types) {
 
         if (t_match) {
           # Extract df and t-value
-          df <- as.numeric(sub(".*t\\((\\d+)\\).*", "\\1", x))
-          tval <- as.numeric(sub(".*=\\s*(-?\\d+\\.?\\d*).*", "\\1", x))
+          df <- as_numeric_verbose(sub(".*t\\((\\d+)\\).*", "\\1", x), quiet = quiet)
+          tval <- as_numeric_verbose(sub(".*=\\s*(-?\\d+\\.?\\d*).*", "\\1", x), quiet = quiet)
           return(tval / sqrt(tval^2 + df)) # Convert t to r
         } else if (f_match) {
           # Extract df1, df2, and F-value
-          df1 <- as.numeric(sub(".*f\\((\\d+)\\s*,.*", "\\1", x, ignore.case = TRUE))
-          df2 <- as.numeric(sub(".*f\\(\\d+\\s*,\\s*(\\d+)\\).*", "\\1", x, ignore.case = TRUE))
-          fval <- as.numeric(sub(".*=\\s*(\\d+\\.?\\d*).*", "\\1", x, ignore.case = TRUE))
+          df1 <- as_numeric_verbose(sub(".*f\\((\\d+)\\s*,.*", "\\1", x, ignore.case = TRUE), quiet = quiet)
+          df2 <- as_numeric_verbose(sub(".*f\\(\\d+\\s*,\\s*(\\d+)\\).*", "\\1", x, ignore.case = TRUE), quiet = quiet)
+          fval <- as_numeric_verbose(sub(".*=\\s*(\\d+\\.?\\d*).*", "\\1", x, ignore.case = TRUE), quiet = quiet)
 
           if (df1 == 1) {
             # Convert F to t and then to r if df1 == 1
@@ -98,7 +100,7 @@ convert_effect_sizes <- function(es_values, es_types) {
     } else {
       # Construct function call dynamically based on effect size type
       es_arg <- list()
-      es_arg[[estype]] <- as.numeric(es_values[idx])
+      es_arg[[estype]] <- as_numeric_verbose(es_values[idx], quiet = quiet)
 
       # Attempt conversion using esc::pearsons_r, handle potential errors
       converted_values <- try(do.call(esc::pearsons_r, es_arg), silent = TRUE)
@@ -119,16 +121,37 @@ convert_effect_sizes <- function(es_values, es_types) {
   }
 
   if (length(could_not_convert) > 0) {
-    message(length(could_not_convert), " effect sizes used cannot be converted into a common metric:\n  - ",
+    message("\n", length(could_not_convert), " effect sizes used cannot be converted into a common metric:\n  - ",
             paste(could_not_convert, collapse = "\n  - "))
   }
 
   if (missing_count > 0) {
-    message(missing_count, " effect sizes were missing.")
+    message("\n", missing_count, " effect sizes were missing.")
   }
 
   es_values_r
 }
+
+as_numeric_verbose <- function(x, quiet = FALSE) {
+  numeric_x <- suppressWarnings(as.numeric(x))
+  failed_indices <- which(is.na(numeric_x) & !is.na(x))
+
+  if (!quiet) {
+  if (length(failed_indices) > 0) {
+    failed_values <- unique(x[failed_indices])
+
+    if (length(failed_values) < 10) {
+      message("These values could not be converted to numeric: ", paste(failed_values, collapse = ", "))
+    } else {
+      message("These values could not be converted to numeric: ",
+              paste(head(failed_values, 5), collapse = ", "),
+              " ... and ", length(failed_values) - 5, " more")
+    }
+  }
+  }
+  return(numeric_x)
+}
+
 
 
 #' Add common effect size columns to FReD dataset
