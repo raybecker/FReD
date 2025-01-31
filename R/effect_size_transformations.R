@@ -17,8 +17,8 @@ convert_effect_sizes <- function(es_values, es_types) {
   estype_map <- c(
     "or" = "or", "odds ratio" = "or", "odds ratio (study 3)" = "or",
     "d" = "d", "cohen's d" = "d", "hedges' g" = "d", "hedges'g" = "d", "hedge's g" = "d", "hedges g" = "d", "smd" = "d",
-    "etasq" = "eta", "etaq" = "eta", "\u03B7\u00B2" = "eta", # η²
-    "f" = "f",
+    "etasq" = "eta", "etaq" = "eta", "\u03B7\u00B2" = "eta", "partial etasq" = "eta", "etasq (partial)" = eta, # η²
+    "f" = "f", "cohen's f" = "f", # f
     "r" = "r", "phi" = "r", "\u03C6" = "r", # φ
     "r2" = "r2", "r\u00B2" = "r2", # r²
     "test statistic" = "test-stat" # New category for test statistics
