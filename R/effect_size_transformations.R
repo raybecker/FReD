@@ -14,27 +14,44 @@ convert_effect_sizes <- function(es_values, es_types) {
 
   # TK: dataset has a lot of different ways to refer to the same effect size type
   # TK: should be cleaned up there eventually
+
+  # Define effect sizes that cannot be converted
+  cannot_convert <- c("beta (std)", "partial etasq", "χ2", "b (unstd)",
+                      "b", "etasq (partial)", "cohen's f^2", "cohen's f",
+                      "cramer's v", "cramer’s v", "dz", "hazards ratio", "beta", "b",
+                      "percentage", "squared seminpartial correlation (sr2)",
+                      "regression coefficient", "unstandardized coefficient",
+                      "cohen's h", "h")
+
   estype_map <- c(
     "or" = "or", "odds ratio" = "or", "odds ratio (study 3)" = "or",
-    "d" = "d", "cohen's d" = "d", "hedges' g" = "d", "hedges'g" = "d", "hedge's g" = "d", "hedges g" = "d", "smd" = "d",
+    "d" = "d", "cohen's d" = "d", "hedges' g" = "d", "hedges'g" = "d",
+    "hedge's g" = "d", "hedges g" = "d", "smd" = "d",
     "etasq" = "eta", "etaq" = "eta", "\u03B7\u00B2" = "eta", # η²
-    # "partial etasq" = "eta", "etasq (partial)" = eta, # η²p -> commented out because converting partial effects can lead to inflated estimates
     "f" = "f", "cohen's f" = "f", # f
     "r" = "r", "phi" = "r", "\u03C6" = "r", # φ
     "r2" = "r2", "r\u00B2" = "r2", # r²
-    "test statistic" = "test-stat", "test statistics" = "test-stat" # New category for test statistics
+    "test statistic" = "test-stat", "test statistics" = "test-stat" # Test statistics
   )
 
   es_values_r <- rep(NA, length(es_values))
 
+  # Identify non-convertible effect sizes present in the data
+  non_convertible_present <- unique(es_types[es_types %in% tolower(cannot_convert)])
+
+  # Identify missing effect sizes
+  missing_count <- sum(is.na(es_values) | is.na(es_types))
+
   # Warn if there are unknown effect size types
-  unknown_types <- setdiff(na.omit(unique(es_types)), names(estype_map))
-  if (length(unknown_types) > 0) {
-    warning("Unknown effect size types: ", paste(unknown_types, collapse = ", "))
-  }
+  known_convertible <- names(estype_map)
+  unknown_types <- setdiff(na.omit(unique(es_types)), c(cannot_convert, known_convertible))
+
+  # Identify which effect sizes are convertible
+  convertible <- !(es_types %in% tolower(cannot_convert))
 
   for (original_type in names(estype_map)) {
-    idx <- !is.na(es_types) & es_types == original_type
+    # Only process convertible effect sizes
+    idx <- !is.na(es_types) & es_types == original_type & convertible
     estype <- estype_map[original_type]
 
     if (estype == "r") {
@@ -44,7 +61,6 @@ convert_effect_sizes <- function(es_values, es_types) {
       # Convert r² to r
       es_values_r[idx] <- sqrt(as.numeric(es_values[idx]))
     } else if (estype == "test-stat") {
-
       # Convert test statistics formatted in APA style to r
       vals <- es_values[idx]
       converted <- vapply(vals, FUN.VALUE = 1.5, function(x) {
@@ -83,17 +99,37 @@ convert_effect_sizes <- function(es_values, es_types) {
       # Construct function call dynamically based on effect size type
       es_arg <- list()
       es_arg[[estype]] <- as.numeric(es_values[idx])
-      es_values_r[idx] <- try(do.call(esc::pearsons_r, es_arg))
+
+      # Attempt conversion using esc::pearsons_r, handle potential errors
+      converted_values <- try(do.call(esc::pearsons_r, es_arg), silent = TRUE)
+      if (inherits(converted_values, "try-error")) {
+        es_values_r[idx] <- NA
+      } else {
+        es_values_r[idx] <- converted_values
+      }
     }
   }
 
-  # Notify if any effect sizes could not be converted
-  if (any(is.na(es_values_r) & !is.na(es_values))) {
-    message(sum(is.na(es_values_r) & !is.na(es_values)), " effect sizes could not be converted to a standardised metric.")
+  # Identify effect sizes that could not be converted
+  could_not_convert <- unique(es_types[!convertible & !is.na(es_types)])
+
+  # Output messages in a clean format
+  if (length(unknown_types) > 0) {
+    warning("Unknown effect size types detected:\n  - ", paste(unknown_types, collapse = "\n  - "))
+  }
+
+  if (length(could_not_convert) > 0) {
+    message(length(could_not_convert), " effect sizes used cannot be converted into a common metric:\n  - ",
+            paste(could_not_convert, collapse = "\n  - "))
+  }
+
+  if (missing_count > 0) {
+    message(missing_count, " effect sizes were missing.")
   }
 
   es_values_r
 }
+
 
 #' Add common effect size columns to FReD dataset
 #'
