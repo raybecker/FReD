@@ -126,7 +126,7 @@ convert_effect_sizes <- function(es_values, es_types, quiet = FALSE) {
   }
 
   if (missing_count > 0) {
-    message("\n", missing_count, " effect sizes were missing.")
+    message("\n", missing_count, " effect sizes were missing.\n")
   }
 
   es_values_r
