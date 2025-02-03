@@ -18,7 +18,8 @@ convert_effect_sizes <- function(es_values, es_types, quiet = FALSE) {
   # TK: should be cleaned up there eventually
 
   # Define effect sizes that cannot be converted
-  cannot_convert <- c("beta (std)", "partial etasq", "χ2", "b (unstd)",
+  cannot_convert <- c("beta (std)", "partial etasq", "\u03C72", # χ2
+                      "b (unstd)",
                       "b", "etasq (partial)", "cohen's f^2", "cohen's f",
                       "cramer's v", "cramer’s v", "dz", "hazards ratio", "beta", "b",
                       "percentage", "squared seminpartial correlation (sr2)",
@@ -132,6 +133,13 @@ convert_effect_sizes <- function(es_values, es_types, quiet = FALSE) {
   es_values_r
 }
 
+#' @title Convert to Numeric with Warnings
+#' Converts input to numeric, reporting non-convertible values (for debugging) or transparency.
+#' @param x Input vector.
+#' @param quiet Logical; if FALSE, prints non-convertible values.
+#' @return A numeric vector.
+#' @keywords internal
+
 as_numeric_verbose <- function(x, quiet = FALSE) {
   numeric_x <- suppressWarnings(as.numeric(x))
   failed_indices <- which(is.na(numeric_x) & !is.na(x))
@@ -144,7 +152,7 @@ as_numeric_verbose <- function(x, quiet = FALSE) {
       message("These values could not be converted to numeric: ", paste(failed_values, collapse = ", "))
     } else {
       message("These values could not be converted to numeric: ",
-              paste(head(failed_values, 5), collapse = ", "),
+              paste(utils::head(failed_values, 5), collapse = ", "),
               " ... and ", length(failed_values) - 5, " more")
     }
   }
