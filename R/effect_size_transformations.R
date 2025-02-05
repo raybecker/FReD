@@ -17,11 +17,14 @@ convert_effect_sizes <- function(es_values, es_types, quiet = FALSE) {
   # TK: dataset has a lot of different ways to refer to the same effect size type
   # TK: should be cleaned up there eventually
 
+  # Replace any round apostrophes (’) with straight apostrophes (')
+  es_types <- gsub("\u2019", "'", es_types)
+
   # Define effect sizes that cannot be converted
   cannot_convert <- c("beta (std)", "partial etasq", "\u03C72", # χ2
                       "b (unstd)",
                       "b", "etasq (partial)", "cohen's f^2", "cohen's f",
-                      "cramer's v", "cramer’s v", "dz", "hazards ratio", "beta", "b",
+                      "cramer's v", "dz", "hazards ratio", "beta", "b",
                       "percentage", "squared seminpartial correlation (sr2)",
                       "regression coefficient", "unstandardized coefficient",
                       "cohen's h", "h")
