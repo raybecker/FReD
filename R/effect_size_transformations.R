@@ -74,6 +74,8 @@ convert_effect_sizes <- function(es_values, es_types, quiet = FALSE) {
         t_match <- grepl("^t\\(\\d+\\)\\s*=\\s*-?\\d+\\.?\\d*$", x)
         # F(df1, df2) = value
         f_match <- grepl("^f\\(\\d+\\s*,\\s*\\d+\\)\\s*=\\s*\\d+\\.?\\d*$", x, ignore.case = TRUE)
+        # z = value, N = value
+        z_match <- grepl("^z\\s*=\\s*-?\\d+\\.?\\d*\\s*,\\s*n\\s*=\\s*\\d+$", x, ignore.case = TRUE)
 
         if (t_match) {
           # Extract df and t-value
@@ -84,7 +86,7 @@ convert_effect_sizes <- function(es_values, es_types, quiet = FALSE) {
           # Extract df1, df2, and F-value
           df1 <- as_numeric_verbose(sub(".*f\\((\\d+)\\s*,.*", "\\1", x, ignore.case = TRUE), quiet = quiet)
           df2 <- as_numeric_verbose(sub(".*f\\(\\d+\\s*,\\s*(\\d+)\\).*", "\\1", x, ignore.case = TRUE), quiet = quiet)
-          fval <- as_numeric_verbose(sub(".*=\\s*(\\d+\\.?\\d*).*", "\\1", x, ignore.case = TRUE), quiet = quiet)
+          fval <- as_numeric_verbose(sub(".*=\\s*(\\d+\\.?\\d*).*", "\\1", x, ignore.case = TRUE))
 
           if (df1 == 1) {
             # Convert F to t and then to r if df1 == 1
@@ -93,6 +95,11 @@ convert_effect_sizes <- function(es_values, es_types, quiet = FALSE) {
           } else {
             return(NA) # Not convertible
           }
+        } else if (z_match) {
+          # Extract z-value and N
+          zval <- as_numeric_verbose(sub(".*z\\s*=\\s*(-?\\d+\\.?\\d*).*", "\\1", x, ignore.case = TRUE), quiet = quiet)
+          nval <- as_numeric_verbose(sub(".*n\\s*=\\s*(\\d+).*", "\\1", x, ignore.case = TRUE), quiet = quiet)
+          return(zval / sqrt(zval^2 + nval)) # Convert z to r
         } else {
           return(NA) # Not a valid test statistic format
         }

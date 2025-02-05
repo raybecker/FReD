@@ -28,9 +28,9 @@ test_that("convert_effect_sizes correctly converts F(df1=1, df2) to r", {
   expect_equal(result, expected_r, tolerance = 1e-6)
 })
 
-test_that("convert_effect_sizes returns NA for F(df1 > 1, df2)", {
-  es_values <- c("F(2, 15) = 3.2", "F(3, 40) = 5.1")
-  es_types <- c("test statistic", "test statistic")
+test_that("convert_effect_sizes returns NA for F(df1 > 1, df2) and F < 1", {
+  es_values <- c("F(2, 15) = 3.2", "F(3, 40) = 5.1", "F < 1")
+  es_types <- c("test statistic", "test statistic", "test statistic")
 
   result <- convert_effect_sizes(es_values, es_types)
   expect_true(all(is.na(result)))  # Should return NA for non-convertible F-tests
@@ -42,4 +42,17 @@ test_that("convert_effect_sizes returns NA for invalid test statistic formats", 
 
   result <- convert_effect_sizes(es_values, es_types)
   expect_true(all(is.na(result)))  # All should fail conversion
+})
+
+test_that("convert_effect_sizes converts z-scores with N", {
+  es_values <- c(" z = 2.81, N = 34", "z = 3.1, N = 68")
+  es_types <- c("test statistic", "test statistic")
+
+  expected_r <- c(
+    2.81 / sqrt(2.81^2 + 34), # Matches output from effectsize::z_to_r(2.81, 34)
+    3.1 / sqrt(3.1^2 + 68)
+  )
+
+  result <- convert_effect_sizes(es_values, es_types)
+  expect_equal(result, expected_r, tolerance = 1e-6)
 })
