@@ -13,4 +13,5 @@ This version history contains noteworthy changes. For a full history of changes,
 
 ## Bug Fixes
 - Change user defaults from options to environment variables, so that they are respected in background apps.
+- Effect size conversions now retain the sign of the original effect size (and introduce it for ORs)
 

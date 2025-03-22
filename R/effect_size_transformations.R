@@ -23,7 +23,7 @@ convert_effect_sizes <- function(es_values, es_types, quiet = FALSE) {
   # Define effect sizes that cannot be converted
   cannot_convert <- c("beta (std)", "partial etasq", "\u03C72", # χ2
                       "b (unstd)",
-                      "b", "etasq (partial)", "cohen's f^2", "cohen's f",
+                      "b", "etasq (partial)", "cohen's f^2",
                       "cramer's v", "dz", "hazards ratio", "beta", "b",
                       "percentage", "squared seminpartial correlation (sr2)",
                       "regression coefficient", "unstandardized coefficient",
@@ -36,9 +36,11 @@ convert_effect_sizes <- function(es_values, es_types, quiet = FALSE) {
     "etasq" = "eta", "etaq" = "eta", "\u03B7\u00B2" = "eta", # η²
     "f" = "f", "cohen's f" = "f", # f
     "r" = "r", "phi" = "r", "\u03C6" = "r", # φ
-    "r2" = "r2", "r\u00B2" = "r2", # r²
-    "test statistic" = "test-stat", "test statistics" = "test-stat" # Test statistics
+    "r2" = "r2", "r\u00B2" = "r2", "r-square" = "r2", # r²
+    "test statistic" = "test-stat", "test statistics" = "test-stat", "test" = "test-stat", # Test statistics
+    "__NA__" = "__NA__" # to handle missing effect sizes in if clauses
   )
+
 
   es_values_r <- rep(NA, length(es_values))
 
@@ -47,25 +49,51 @@ convert_effect_sizes <- function(es_values, es_types, quiet = FALSE) {
 
   # Identify missing effect sizes
   missing_count <- sum(is.na(es_values) | is.na(es_types))
+  es_types[is.na(es_types)] <- "__NA__"
 
   # Warn if there are unknown effect size types
   known_convertible <- names(estype_map)
-  unknown_types <- setdiff(na.omit(unique(es_types)), c(cannot_convert, known_convertible))
+  unknown_types <- setdiff(na.omit(unique(es_types)), c(cannot_convert, known_convertible, "__NA__"))
 
   # Identify which effect sizes are convertible
   convertible <- !(es_types %in% tolower(cannot_convert))
+
+  estype_map <- na.omit(estype_map[unique(es_types)])
+
+
+  if (any(!is.na(estype_map))) {
 
   for (original_type in names(estype_map)) {
     # Only process convertible effect sizes
     idx <- !is.na(es_types) & es_types == original_type & convertible
     estype <- estype_map[original_type]
-
-    if (estype == "r") {
+    if (estype == "__NA__") {
+      es_values_r[idx] <- NA
+    } else if (estype == "r") {
       # Directly assign r values
       es_values_r[idx] <- as_numeric_verbose(es_values[idx], quiet = quiet)
     } else if (estype == "r2") {
       # Convert r² to r
       es_values_r[idx] <- sqrt(as_numeric_verbose(es_values[idx], quiet = quiet))
+    }else if (estype == "r2") {
+      # Convert r² to r
+      es_values_r[idx] <- sqrt(as_numeric_verbose(es_values[idx], quiet = quiet))
+    } else if (estype == "d") {
+      ds <- as_numeric_verbose(es_values[idx], quiet = quiet)
+      es_values_r[idx] <- ds / sqrt(ds^2 + 4)
+    } else if (estype == "or") {
+      ors <- as_numeric_verbose(es_values[idx], quiet = quiet)
+      # per Sánchez-Meca, J., Marín-Martínez, F., & Chacón-Moscoso, S. (2003). Effect-size indices for dichotomized outcomes in meta-analysis. Psychological Methods, 8(4), 448-467.
+      ds <- log(ors)*sqrt(3)/pi
+      es_values_r[idx] <- ds / sqrt(ds^2 + 4)
+    } else if (estype == "eta") {
+      etas <- as_numeric_verbose(es_values[idx], quiet = quiet)
+      ds <- 2 * (sqrt(etas/(1 - etas))) # from esc package
+      es_values_r[idx] <-ds / sqrt(ds^2 + 4)
+    } else if (estype == "f") {
+      fs <- as_numeric_verbose(es_values[idx], quiet = quiet)
+      ds <- 2 * fs # from esc package
+      es_values_r[idx] <- ds / sqrt(ds^2 + 4)
     } else if (estype == "test-stat") {
       # Convert test statistics formatted in APA style to r
       vals <- es_values[idx]
@@ -109,18 +137,10 @@ convert_effect_sizes <- function(es_values, es_types, quiet = FALSE) {
       })
       es_values_r[idx] <- converted
     } else {
-      # Construct function call dynamically based on effect size type
-      es_arg <- list()
-      es_arg[[estype]] <- as_numeric_verbose(es_values[idx], quiet = quiet)
-
-      # Attempt conversion using esc::pearsons_r, handle potential errors
-      converted_values <- try(do.call(esc::pearsons_r, es_arg), silent = TRUE)
-      if (inherits(converted_values, "try-error")) {
-        es_values_r[idx] <- NA
-      } else {
-        es_values_r[idx] <- converted_values
-      }
+      warning("Effect size type ", estype, " not recognized. Setting to missing.")
+      es_values_r[idx] <- NA
     }
+  }
   }
 
   # Identify effect sizes that could not be converted
@@ -137,10 +157,15 @@ convert_effect_sizes <- function(es_values, es_types, quiet = FALSE) {
   }
 
   if (missing_count > 0) {
-    message("\n", missing_count, " effect sizes were missing.\n")
+    message("\n", missing_count, " rows had missing effect sizes or effect size types.\n")
   }
 
   es_values_r
+}
+
+
+signed_d_to_r <- function(d) {
+  sign(d) * sqrt(d^2 / (d^2 + 4))
 }
 
 #' @title Convert to Numeric with Warnings
@@ -470,10 +495,3 @@ augment_for_zcurve <- function(fred_data) {
 
   return(fred_data)
 }
-
-# Example data for testing - target_p come from cor.test
-z_test_data <- data.frame(
-  es_original = c(0.522607 , -0.4926866 , -0.1175698),
-  n_original = c(32, 32, 150),
-  target_p = c(0.002151, 0.004173, 0.1519)
-)
