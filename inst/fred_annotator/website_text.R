@@ -16,7 +16,7 @@ about_page <- glue::glue("
 
 **Acknowledgements:** We thank all researchers who have invested resources in conducting replication research, researchers who have submitted their replication studies, and researchers who used the Replication Recipe Post-Completion template to register their results. FORRT Replication Database is supported through the University of Bamberg's Interne Forschungsförderung, by the University of Münster, by the Nederlandse Organisatie voor Wetenschappelijk's (NWO) Open Science Fund, and by the Leuphana University Lüneburg.
 
-**Important note:** This is work in progress. Please beware that there might be bugs or errors in the dataset. If you spot any, please let us know (by email, or on <a href='https://github.com/forrtproject/FReD/issues' target='_blank'>GitHub</a>).
+**Important note:** This is work in progress. Please beware that there might be bugs or errors in the dataset. If you spot any, please let us know <a href='mailto:lukas.roeseler@uni-muenster.de' target='_blank'>by email</a>, or on <a href='https://github.com/forrtproject/FReD/issues' target='_blank'>GitHub</a>.
 
 _Thanks to our funders:_
 <img src='ub.png' height='100' /> <img src='um.png' height='50' /> <img src='nwo.png' height='100' />
