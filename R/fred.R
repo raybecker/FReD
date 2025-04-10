@@ -138,9 +138,9 @@ get_dataset_changelog <- function(changelog_file = "https://osf.io/fj3xc/downloa
 #' @return A data frame with the processed FReD dataset
 #' @export
 
-load_fred_data <- function(data = get_param("FRED_DATA_FILE")) {
+load_fred_data <- function(data = get_param("FRED_DATA_FILE"), verbose = TRUE) {
 
-  read_fred(data) %>%
+  read_fred(data, verbose = verbose) %>%
     clean_variables() %>%
     add_common_effect_sizes() %>%
     align_effect_direction() %>%
