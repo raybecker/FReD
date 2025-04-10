@@ -116,7 +116,7 @@ server <- function(input, output, session) {
     DT::datatable(
       df_temp_filtered,
       extensions = "Buttons",
-      selection = "none",
+      selection = "multiple",
       options = list(
         scrollX = TRUE,
         dom = "Bfrtip",
