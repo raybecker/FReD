@@ -1,7 +1,7 @@
 
 #' Returns an inbuilt data item
 #'
-#' This is used then the package is set to work offline, or when the data cannot be loaded.
+#' This is used when the package is set to work offline, or when the data cannot be loaded.
 #'
 #' @param item Which inbuilt item to return?
 #' @noRd
@@ -12,7 +12,7 @@ return_inbuilt <- function(item) {
   data <- readRDS(data)
   if (!get_param("FRED_OFFLINE")) {
     last_updated <- format(attr(data, "last_updated"), "%d-%m-%Y %I:%M%p")
-    message("Using inbuilt ", item, " last updated on ", last_updated, ". This is likely because of an issue with your internet connection, or with the online data source. If this is unexpected and persists, please report this issue on GitHub.")
+    message("Using inbuilt ", item, " last updated on ", last_updated, ". This is likely due to an issue with your internet connection, or with the online data source. If this is unexpected and persists, please report this issue on GitHub.")
   }
   data
 }
@@ -37,7 +37,7 @@ load_variable_descriptions <- function(sheet_name = "Key Variables", data = get_
 
 #' Bind Rows with Character Columns
 #'
-#' A wrapper for `dplyr::bind_rows` that ensures any columns that are character
+#' A wrapper for `dplyr::bind_rows` that ensures any columns that are of type character
 #' in one of the data frames are converted to character in all data frames before binding.
 #' This reduces the likelihood of errors, but does not give up on type-checking entirely.
 #'
@@ -74,7 +74,7 @@ bind_rows_with_characters <- function(..., .id = NULL) {
 #' This function loads the FReD dataset into R. It merges the data from the different sheets into one data frame.
 #'
 #' @param data Path to the FReD dataset (defaults to current FReD data on OSF), unless the package is in offline mode (`use_FReD_offline()`)
-#' @param retain_es_as_character Should effect sizes be retained as character? Defaults to TRUE, so that coded test statistics with df can be converted to common metric.
+#' @param retain_es_as_character Should effect sizes be retained as character? Defaults to TRUE, so that coded test statistics with df can be converted to a common metric.
 #' @param verbose Should detailed messages be printed that highlight data conversion issues? Defaults to TRUE. FALSE is quiet mode, and NULL prints a summary of problems.
 #' @return A data frame with the FReD dataset
 
