@@ -108,11 +108,14 @@ server <- function(input, output, session) {
   reactive_distinct_fred_entries <- reactive({
     df <- reactive_df() %>%
       arrange(desc(validated == 1)) %>%
+      filter(if (input$validated == "TRUE") validated == 1 else TRUE) %>%
       select(doi_original, ref_original)
+
     dplyr::bind_rows(
       df %>% dplyr::filter(!is.na(doi_original)) %>% dplyr::group_by(doi_original) %>% dplyr::slice(1) %>% dplyr::ungroup(),
       df %>% dplyr::filter(is.na(doi_original))
-    )
+    )   %>%
+      distinct()
   })
 
   output$button_area <- renderUI({
@@ -157,7 +160,20 @@ server <- function(input, output, session) {
       nav_select("navbar", "Study Selection")
     }
 
-    unique(dois)
+    out <- unique(dois)
+
+    if (length(out) == 0) {
+      showModal(modalDialog(
+        title = "No DOIs found",
+        "Please check the format of the input",
+        easyClose = TRUE
+      ))
+    } else {
+      showNotification(paste("Found and added", length(out), "DOIs."))
+    }
+
+    out
+
   }
 
 
@@ -295,9 +311,10 @@ server <- function(input, output, session) {
 
   })
 
+
   output$database_search <- renderDT({
-    datatable(reactive_distinct_fred_entries(),
-              selection = 'multiple', options = list(pageLength = 10))
+    reactive_distinct_fred_entries() %>%
+    datatable(selection = 'multiple', options = list(pageLength = 10))
   }, server = TRUE)
 
   observe({
@@ -309,8 +326,8 @@ server <- function(input, output, session) {
 
   # Observe changes in selected rows - with debounce to avoid loops
   debounced_rows_selected <- debounce(reactive(input$database_search_rows_selected), 250)
-  observeEvent(debounced_rows_selected(), ignoreNULL = FALSE, {
 
+  observeEvent(debounced_rows_selected(), ignoreNULL = FALSE, {
     current_rows <- input$database_search_rows_selected
 
     # Determine newly selected and deselected rows
@@ -320,36 +337,25 @@ server <- function(input, output, session) {
     # Handle deselection
     if (length(deselected_rows) > 0) {
       remove_dois <- reactive_distinct_fred_entries()$doi_original[deselected_rows]
-
-      # Find indices of rows with the same doi_original as deselected ones
       duplicate_rows <- which(reactive_distinct_fred_entries()$doi_original %in% remove_dois)
-
-      # Update the list of selected rows to remove all duplicates
       current_rows <- setdiff(current_rows, duplicate_rows)
       doi_vector$dois <- setdiff(doi_vector$dois, remove_dois)
     }
 
+    # Handle new selections
     if (length(newly_selected_rows) > 0) {
       add_dois <- reactive_distinct_fred_entries()$doi_original[newly_selected_rows]
-
-      # Find indices of rows with the same doi_original as deselected ones
-      duplicate_rows <- which(reactive_distinct_fred_entries()$doi_original %in% newly_selected_rows)
-
-      # Update the list of selected rows to remove all duplicates
+      duplicate_rows <- which(reactive_distinct_fred_entries()$doi_original %in% add_dois)
       current_rows <- union(current_rows, duplicate_rows)
       doi_vector$dois <- union(doi_vector$dois, add_dois)
     }
-
-
-    # Update the reactive values with the cleaned list of selected rows
     doi_vector$selected_rows <- current_rows
 
-
-    # Re-select rows in the DataTable to reflect any changes
+    # Re-select rows in the DT to reflect any changes
     proxy <- dataTableProxy('database_search')
     selectRows(proxy, current_rows)
-
   })
+
 
   # Need to be active in background to stay synced with DOI list
   outputOptions(output, "selected_references", suspendWhenHidden = FALSE)
@@ -390,6 +396,8 @@ server <- function(input, output, session) {
   output$outcomes_barplot <- plotly::renderPlotly({
 
     df <- selected_refs()
+
+    message("Selected refs: ", nrow(df))
 
     if (any(df$retracted_replication)) {
       message("any")
