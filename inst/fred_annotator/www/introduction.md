@@ -4,7 +4,7 @@ The FReD Reference Annotator can help you annotate any list of references with r
 
 ### Step 1: Select references
 
-You can paste a list of references into the text box, or upload a file with references. Currently, only DOIs will be extracted - and then used to search the FORRT Replication Database. You can also directly search the database on the "Study Selection" tab and therey add and remove studies from the list.
+You can paste a list of references into the text box, or upload a file with references. Currently, only DOIs will be extracted - and then used to search the FORRT Replication Database. You can also directly search the database on the "Study Selection" tab and thereby add and remove studies from the list. If you have a list of references without DOIs, Crossref offers a handy <a href="https://apps.crossref.org/SimpleTextQuery" target = "_blank"> online tool to add DOIs</a>.
 
 ### Step 1a: Decide whether to also check for retractions
 
