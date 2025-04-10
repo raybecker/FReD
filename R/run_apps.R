@@ -8,8 +8,9 @@
 #' @param in_background Should the app be run in the background (i.e. not block the R console)? Default to TRUE if RStudio is used.
 #' @param auto_close Should the app be automatically ended when the browser is closed (or refreshed)?
 #' @param port The port to run the app on (can usually be left at the default value)
+#' @param timeout The timeout for waiting for the app to become available if launched in background (in seconds)
 
-run_app <- function(offer_install = interactive(), app = "fred_explorer", in_background = NULL,  auto_close = interactive(), port = 3838) {
+run_app <- function(offer_install = interactive(), app = "fred_explorer", in_background = NULL,  auto_close = interactive(), port = 3838, timeout = 30) {
   assert_logical(in_background, null.ok = TRUE)
   assert_logical(auto_close, null.ok = TRUE)
   Sys.setenv("SHINY_FRED_AUTOCLOSE" = auto_close)
@@ -46,7 +47,7 @@ run_app <- function(offer_install = interactive(), app = "fred_explorer", in_bac
       Sys.sleep(.5)
     }
     sp$finish()
-    stop("App did not become ready within the timeout period. Please have a look at the background job output to see why and report any errors. If you are on a slow internet connection, consider using the dataset included with the package by running `use_FReD_offline()`")
+    stop("App did not become ready within the timeout period. Please have a look at the background job output to see why and report any errors. If you are on a slow internet connection, consider setting a longer timeout in the function call, or using the dataset included with the package by running `use_FReD_offline()`")
   }
 
   if (check_port(port)) {
@@ -104,7 +105,7 @@ run_app <- function(offer_install = interactive(), app = "fred_explorer", in_bac
     rstudioapi::executeCommand(commandId = "activateConsole")
 
     app_url <- glue::glue("http://127.0.0.1:{port}")
-    wait_for_app(app_url)
+    wait_for_app(app_url, timeout = timeout)
 
     browseURL(url = glue::glue("http://127.0.0.1:{port}"))
 
@@ -135,8 +136,8 @@ check_rstudio <- function() {
 #'   # To run the Replication Explorer app:
 #'   run_explorer()
 #' }
-run_explorer <- function(offer_install = interactive(), in_background = NULL, auto_close = interactive(), port = 3838) {
-  run_app(offer_install = offer_install, app = "fred_explorer", in_background = in_background, auto_close = auto_close, port = port)
+run_explorer <- function(offer_install = interactive(), in_background = NULL, auto_close = interactive(), port = 3838, timeout = 30) {
+  run_app(offer_install = offer_install, app = "fred_explorer", in_background = in_background, auto_close = auto_close, port = port, timeout = timeout)
 }
 
 
@@ -152,8 +153,8 @@ run_explorer <- function(offer_install = interactive(), in_background = NULL, au
 #'   # To run the Replication Annotator app:
 #'   run_annotator()
 #' }
-run_annotator <- function(offer_install = interactive(), in_background = NULL, auto_close = interactive(), port = 3839) {
-  run_app(offer_install = offer_install, app = "fred_annotator", in_background = in_background, auto_close = auto_close,  port = port)
+run_annotator <- function(offer_install = interactive(), in_background = NULL, auto_close = interactive(), port = 3839, timeout = 30) {
+  run_app(offer_install = offer_install, app = "fred_annotator", in_background = in_background, auto_close = auto_close,  port = port, timeout = timeout)
 }
 
 #' Get the date of last modification
