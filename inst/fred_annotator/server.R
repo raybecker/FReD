@@ -236,7 +236,8 @@ server <- function(input, output, session) {
 
   extract_dois_from_text <- function(text) {
 
-    dois <- regmatches(text, gregexpr("\\b(10\\.\\d{4,}(?:/[a-zA-Z0-9\\.\\-\\(\\)]+)*)\\b", text, perl = TRUE))
+    pattern <- "10(?:\\.[0-9]{4,})?\\/[^\\s]*[^\\s\\.,]" # based on pattern used by Zotero Chrome plugin
+    dois <- regmatches(text, gregexpr(pattern, text, perl = TRUE))
     dois <- unlist(dois)
 
     dois <- sub("\\s*([,;.])*$", "", dois)  # remove trailing punctuation
