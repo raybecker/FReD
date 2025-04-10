@@ -430,7 +430,7 @@ server <- function(input, output, session) {
       ggplot(aes(y = result, fill = result)) +
       geom_bar() +
       theme_minimal() +
-      labs(y = "", x = "Count", title = "Outcomes of replication attempts", caption = retraction_note) +
+      labs(y = "", x = "Count", title = "Outcomes of replication attempts", caption = retraction_note, fill = "") +
       scale_fill_manual(values = outcome_colors())
 
     plotly::ggplotly(p, tooltip = NULL) %>%
