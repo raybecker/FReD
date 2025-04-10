@@ -1,8 +1,9 @@
 #' Convert effect sizes to common metric (r)
 #'
 #' Takes vectors of effect sizes and their types and converts them to a common metric (r).
-#' It also converts test statistics, specifically *t* and *F* with 1 degree of in the numerator, to *r*.
-#' Other test statistics cannot be consistently converted, so are returned as `NA`.
+#' It also converts test statistics  to *r*, but only *t* and *F* valuea with 1 degree of 
+#' freedom in the numerator, such as F(1, 50).#' Other test statistics cannot be consistently
+#' converted, so are returned as `NA`.
 #'
 #' @param es_values Numeric vector of effect sizes
 #' @param es_types Character vector of effect size types (types/wordings that are not supported are flagged in warning)
@@ -16,6 +17,11 @@ convert_effect_sizes <- function(es_values, es_types, quiet = FALSE) {
 
   # TK: dataset has a lot of different ways to refer to the same effect size type
   # TK: should be cleaned up there eventually
+  # RB: I'm not sure I understand refering to the same effect size type is ambigous
+  # RB: These are the allowed types from the Data Validation tab in the annotators'
+  # RB: worksheet, b (unstd), beta (std), cohen's h, cramer's V, d	etasq, F, hedges' g,
+  # RB: OR, r, test statistic, and kendall's w.
+  # RB: Should this be closed or raise an issue in the repo, so we can delete this?
 
   # Replace any round apostrophes (’) with straight apostrophes (')
   es_types <- gsub("\u2019", "'", es_types)
@@ -405,8 +411,8 @@ add_replication_power <- function(fred_data, es_original = "es_original", N_repl
 #' coefficient and sample size, assuming the null hypothesis that the true
 #' population correlation is zero.
 #'
-#' @param r Correlation coefficient.
-#' @param N Sample size.
+#' @param Numeric. r Correlation coefficient.
+#' @param Numeric. N Sample size.
 #'
 #' @return Numeric p-value for the two-tailed test of the correlation.
 #' @noRd
