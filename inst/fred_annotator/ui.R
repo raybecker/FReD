@@ -84,7 +84,7 @@ report_content <- nav_panel(
     plotly::plotlyOutput("outcomes_barplot"),
     br(),
     plotly::plotlyOutput("replicability_plot", height = "600px"),
-
+    scatterplot_explanation
   ),
   div(
     style = "max-width: 450px; margin: auto; display: flex; gap: 10px; align-items: center; !important",
