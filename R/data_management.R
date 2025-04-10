@@ -75,9 +75,10 @@ bind_rows_with_characters <- function(..., .id = NULL) {
 #'
 #' @param data Path to the FReD dataset (defaults to current FReD data on OSF), unless the package is in offline mode (`use_FReD_offline()`)
 #' @param retain_es_as_character Should effect sizes be retained as character? Defaults to TRUE, so that coded test statistics with df can be converted to common metric.
+#' @param verbose Should detailed messages be printed that highlight data conversion issues? Defaults to TRUE. FALSE is quiet mode, and NULL prints a summary of problems.
 #' @return A data frame with the FReD dataset
 
-read_fred <- function(data = get_param("FRED_DATA_FILE"), retain_es_as_character = TRUE) {
+read_fred <- function(data = get_param("FRED_DATA_FILE"), retain_es_as_character = TRUE, verbose = TRUE) {
 
   if (get_param("FRED_OFFLINE")) return(return_inbuilt("data"))
 
@@ -105,39 +106,11 @@ read_fred <- function(data = get_param("FRED_DATA_FILE"), retain_es_as_character
       numeric_variables <- c(numeric_variables, "es_orig_RRR", "es_rep_RRR")
     }
 
-    # Function to coerce to numeric and track problematic values
-    coerce_to_numeric <- function(df, numeric_vars, id_var) {
-      problematic_entries <- list()
 
-      for (var in numeric_vars) {
-        # Identify problematic values
-        problematic_rows <- which(!is.na(df[[var]]) & is.na(suppressWarnings(as.numeric(df[[var]]))))
-
-        if (length(problematic_rows) > 0) {
-          problematic_entries[[var]] <- df[problematic_rows, id_var, drop = FALSE]
-        }
-
-        # Coerce to numeric
-        df[[var]] <- suppressWarnings(as.numeric(df[[var]]))
-      }
-
-      # If there are any problematic entries, generate a warning
-      if (length(problematic_entries) > 0) {
-        warning_message <- "The following fields contain values that could not be coerced to numeric:\n"
-        for (var in names(problematic_entries)) {
-          warning_message <- paste0(warning_message, "Variable '", var, "' has issues in IDs: ",
-                                    paste(problematic_entries[[var]][[id_var]], collapse = ", "), "\n")
-        }
-        warning(warning_message)
-      }
-
-      df
-
-    }
 
   # Assuming 'red' and 'forrt' have a unique ID column named "id"
-  red <- coerce_to_numeric(red, numeric_variables, id_var = "id")
-  forrt <- coerce_to_numeric(forrt, numeric_variables, id_var = "id")
+  red <- coerce_to_numeric(red, numeric_variables, id_var = "id", verbose = verbose)
+  forrt <- coerce_to_numeric(forrt, numeric_variables, id_var = "id", verbose = verbose)
 
   # merge the data, aligning column types where one is character (as empty colums are imported as numeric)
   return(bind_rows_with_characters(red, forrt, as))
@@ -146,6 +119,51 @@ read_fred <- function(data = get_param("FRED_DATA_FILE"), retain_es_as_character
       return(return_inbuilt("data"))
     })
 
+}
+
+#' Coerce specified variables to numeric and identify problematic values
+#'
+#' Attempts to convert specified columns in a data frame to numeric. If values cannot be coerced,
+#' the function optionally issues warnings or summaries listing problematic values or IDs.
+#'
+#' @param df A data frame containing the variables to be coerced.
+#' @param numeric_vars A character vector of variable names to be coerced to numeric.
+#' @param id_var A string specifying the name of the ID variable used to identify problematic entries.
+#' @param verbose Logical or NULL. If TRUE, warns with IDs for problematic values.
+#' If FALSE, runs silently. If NULL, prints a summary per variable.
+#'
+#' @return The input data frame with specified variables coerced to numeric (if possible).
+
+coerce_to_numeric <- function(df, numeric_vars, id_var, verbose = TRUE) {
+  problematic_entries <- list()
+
+  for (var in numeric_vars) {
+    problematic_rows <- which(!is.na(df[[var]]) & is.na(suppressWarnings(as.numeric(df[[var]]))))
+
+    if (length(problematic_rows) > 0) {
+      problematic_entries[[var]] <- df[problematic_rows, id_var, drop = FALSE]
+    }
+
+    df[[var]] <- suppressWarnings(as.numeric(df[[var]]))
+  }
+
+  if (length(problematic_entries) > 0) {
+    if (isTRUE(verbose)) {
+      warning_message <- "The following fields contain values that could not be coerced to numeric:\n"
+      for (var in names(problematic_entries)) {
+        warning_message <- paste0(warning_message, "Variable '", var, "' has issues in IDs: ",
+                                  paste(problematic_entries[[var]][[id_var]], collapse = ", "), "\n")
+      }
+      warning(warning_message)
+    } else if (is.null(verbose)) {
+      for (var in names(problematic_entries)) {
+        message(sprintf("Variable '%s': %d entries could not be converted to numeric.",
+                        var, nrow(problematic_entries[[var]])))
+      }
+    }
+  }
+
+  df
 }
 
 
@@ -203,7 +221,7 @@ load_retractionwatch <- function(data = get_param("RETRACTIONWATCH_DATA_FILE")) 
   utils::read.csv(data, stringsAsFactors = FALSE)
 }
 
-' Update inbuilt data
+#' Update inbuilt data
 #'
 #' If you set the package to work offline (`use_FReD_offline(TRUE)`) or if any
 #' downloads fail, FReD will use offline data stored in the package. Use this
