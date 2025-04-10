@@ -7,7 +7,7 @@ sidebar_contents <- sidebar(
   padding = 10,
   width = 300,
   textAreaInput("references", "Paste references with DOIs", placeholder = "Paste references here...", width = '95%', height = '200px'),
-  fileInput("upload", "Or upload reference list (PDF, citation or text file)", accept = c("application/pdf", " text/plain", ".bib", ".ris")),
+  fileInput("upload", HTML('Or upload reference list (PDF, citation or text file). Must contain DOIs; otherwise process it with <a href="https://apps.crossref.org/SimpleTextQuery">Crossref</a> first.'), accept = c("application/pdf", " text/plain", ".bib", ".ris")),
   uiOutput("button_area"),
   checkboxInput("validated", "Use validated database entries only", value = FALSE),
   actionButton("load_retractions", "Load Retraction Database", icon = icon("database")),
@@ -30,6 +30,9 @@ sidebar_contents <- sidebar(
                           "Homogeneity & Significance" = "homogeneity_significance",
                           "Small Telescopes" = "small_telescopes"),
               selected = "significance_r"),
+  div(
+    HTML("<strong>NB:</strong> The success criteria (e.g., <em>p</em>-values, CIs) are calculated from raw effect and sample sizes. They may differ from original reports that used adjusted models.")
+  ),
   conditionalPanel(
     condition = "output.showToggle",  # This JavaScript condition reacts to Shiny output
     tags$a(id = "toggle_link", "Show/Hide DOIs >", href = "#", class = "btn btn-link"),

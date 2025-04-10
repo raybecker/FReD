@@ -38,11 +38,17 @@ success_criteria_colors <- tibble::tribble(
 )
 
 success_criterion_note <- c(
-  significance_r = "Replication success was assessed based on the statistical significance of the replication effect (and whether its direction is consistent with the original effect). Replications that were significant and in the same direction as the original were considered as successes, while replications that were not significant or in the opposite direction were considered as failures.",
-  significance_agg = "Replication success was assessed based on the aggregation of effect sizes from the original and replication studies using a meta-analytic approach. Replications where the combined effect was significantly different from zero were considered as successes, while those where the combined effect was not significant were considered as failures.",
-  consistency_ci = "Replication success was assessed based on whether the original effect size fell within the confidence interval of the replication effect size. Replications where the original effect size was within the confidence interval were considered as successes, while those where it was outside were considered as failures.",
-  consistency_pi = "Replication success was assessed based on whether the replication effect size fell within the prediction interval derived from the original study and replication sample size. Replications within the prediction interval were considered as successes, while those outside the prediction interval were considered as failures.",
-  homogeneity = "Replication success was assessed based on the homogeneity of the effects from the original and replication studies using a heterogeneity test (Q-test). Replications where the effects were homogeneous were considered as successes, while those that showed heterogeneity were considered as failures.",
-  homogeneity_significance = "Replication success was assessed based on the combination of homogeneity and the significance of the effect sizes. Replications where the effects were homogeneous and jointly significantly different from zero were considered as successes, while those that were either not homogeneous or not significantly different from zero were considered as failures.",
-  small_telescopes = "Replication success was assessed based on whether the replication effect size was larger than the effect size that would have given the original study a power of 33%. Replications that met this criterion were considered as successes, while those that did not were considered as failures."
+  significance_r = "Success was based on whether the replication effect was statistically significant and in the same direction as the original. Note: *p*-values are calculated from raw effect sizes and sample sizes, and may differ from those reported in studies that adjusted for covariates or clustering.",
+
+  significance_agg = "Success was based on whether a meta-analytic combination of original and replication effects was statistically significant. Note: *p*-values are calculated from raw effect sizes and sample sizes, and may differ from those reported in studies that adjusted for covariates.",
+
+  consistency_ci = "Success was based on whether the original effect size fell within the confidence interval of the replication. Note: confidence intervals are based on raw effect sizes and sample sizes, and may differ from those reported in adjusted models.",
+
+  consistency_pi = "Success was based on whether the replication effect size fell within the prediction interval from the original study. Note: prediction intervals are based on raw effect sizes and sample sizes, and may differ from those reported in adjusted models.",
+
+  homogeneity = "Success was based on a test of heterogeneity (Q-test) between original and replication effects. Note: test statistics are based on raw effect sizes and sample sizes, and may differ from those reported in adjusted analyses in the original reports.",
+
+  homogeneity_significance = "Success was based on both effect homogeneity and statistical significance. Replications where the effects were homogeneous and jointly significantly different from zero were considered as successes, while those that were either not homogeneous or not significantly different from zero were considered as failures. Note: all values are based on raw effect sizes and sample sizes, and may differ from those reported in adjusted models.",
+
+  small_telescopes = "Success was based on whether the replication effect exceeded the threshold that would give 33% power in the original study. Note: power was calculated based on a simple test of a correlation, thus not accounting for any specific design features relevant to the study."
 )

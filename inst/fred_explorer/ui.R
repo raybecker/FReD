@@ -84,6 +84,9 @@ sidebar_contents <- sidebar(
                            "Homogeneity & Significance" = "homogeneity_significance",
                            "Small Telescopes" = "small_telescopes"),
                selected = "significance_r"),
+  div(
+    HTML("<strong>NB:</strong> The success criteria (e.g., <em>p</em>-values, CIs) are calculated from raw effect and sample sizes. These may differ from original reports that used adjusted models.")
+  )
 )
 
 # Define content for each panel
