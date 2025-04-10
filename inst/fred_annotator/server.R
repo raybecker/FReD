@@ -661,10 +661,14 @@ server <- function(input, output, session) {
       geom_abline(intercept = 0, slope = 1, color = "Grey60") +
       geom_point(aes(fill = result), size = pointsize, color = "Grey30", shape = 21, alpha = .8) +
       # geom_point(data = df_temp[s3, ], fill = "#0077d9", color = "#f2ef1b", shape = 4) +
-      geom_rug(data = df[df$significant_original == "Significant", ], color = "darkgreen", linewidth = 1, sides = "b", alpha = .6) +
-      geom_rug(data = df[df$significant_original == "Not significant", ], color = "darkred", linewidth = 1, sides = "b", alpha = .6) +
-      geom_rug(data = df[df$significant_replication == "Significant", ], color = "darkgreen", linewidth = 1, sides = "l", alpha = .6) +
-      geom_rug(data = df[df$significant_replication == "Not significant", ], color = "darkred", linewidth = 1, sides = "l", alpha = .6) +
+      geom_rug(data = df[df$significant_original == "Significant", ],
+               color = "#4DCCD0", linewidth = 1, sides = "b", alpha = .6) +
+      geom_rug(data = df[df$significant_original == "Not significant", ],
+               color = "#FA948C", linewidth = 1, sides = "b", alpha = .6) +
+      geom_rug(data = df[df$significant_replication == "Significant", ],
+               color = "#4DCCD0", linewidth = 1, sides = "l", alpha = .6) +
+      geom_rug(data = df[df$significant_replication == "Not significant", ],
+               color = "#FA948C", linewidth = 1, sides = "l", alpha = .6) +
       scale_x_continuous(name = "Original Effect Size", limits = c(0, 1), breaks = c(0, .25, .5, .75, 1)) +
       scale_y_continuous(name = "Replication Effect Size", limits = c(-.5, 1), breaks = c(-.5, -.25, 0, .25, .5, .75, 1)) +
       # ggtitle("") + #xlab("") + ylab("") +
