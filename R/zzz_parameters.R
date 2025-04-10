@@ -42,19 +42,34 @@ NULL
 # Function to get the current parameters
 # Will also download FRED_DATA_FILE from FRED_DATA_URL if it does not exist
 get_param <- function(param, auto_download = TRUE) {
-  if (param == "FRED_DATA_FILE" && !file.exists(Sys.getenv("FRED_DATA_FILE"))) {
-    if (auto_download) {
-      download.file(Sys.getenv("FRED_DATA_URL"), Sys.getenv("FRED_DATA_FILE"))
-    } else {
-      stop("FRED_DATA_FILE does not exist. Please set FRED_DATA_FILE to the path of the FReD dataset.")
+  if (param == "FRED_DATA_FILE") {
+    fred_file <- Sys.getenv("FRED_DATA_FILE")
+    if (fred_file == "" || !file.exists(fred_file)) {
+      if (auto_download) {
+        tmp <- tempfile(fileext = ".xlsx")
+        Sys.setenv("FRED_DATA_FILE" = tmp)
+        download.file(Sys.getenv("FRED_DATA_URL"), tmp)
+        fred_file <- tmp
+      } else {
+        stop("FRED_DATA_FILE does not exist. Please set FRED_DATA_FILE to the path of the FReD dataset.")
+      }
     }
+    return(fred_file)
   }
-  if (param == "RETRACTIONWATCH_DATA_FILE" && !file.exists(Sys.getenv("RETRACTIONWATCH_DATA_FILE"))) {
-    if (auto_download) {
-      download.file(Sys.getenv("RETRACTIONWATCH_URL"), Sys.getenv("RETRACTIONWATCH_DATA_FILE"))
-    } else {
-      stop("RETRACTIONWATCH_DATA_FILE does not exist. Please set RETRACTIONWATCH_DATA_FILE to the path of the RetractionWatch database, or pass the download URL to the function.")
+
+  if (param == "RETRACTIONWATCH_DATA_FILE") {
+    rw_file <- Sys.getenv("RETRACTIONWATCH_DATA_FILE")
+    if (rw_file == "" || !file.exists(rw_file)) {
+      if (auto_download) {
+        tmp <- tempfile(fileext = ".csv")
+        Sys.setenv("RETRACTIONWATCH_DATA_FILE" = tmp)
+        download.file(Sys.getenv("RETRACTIONWATCH_URL"), tmp)
+        rw_file <- tmp
+      } else {
+        stop("RETRACTIONWATCH_DATA_FILE does not exist. Please set RETRACTIONWATCH_DATA_FILE to the path of the RetractionWatch database.")
+      }
     }
+    return(rw_file)
   }
 
   res <- Sys.getenv(param)
