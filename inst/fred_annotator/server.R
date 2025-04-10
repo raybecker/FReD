@@ -39,7 +39,7 @@ server <- function(input, output, session) {
   }
 
   observeEvent({input$success_criterion; selected_refs()}, {
-    if (nrow(selected_refs()) > 1) {
+    if (nrow(selected_refs()) > 0) {
       updated_df <- selected_refs() %>%
         arrange(ref_original) %>%
         filter(if (input$validated == "TRUE") validated == 1 else TRUE) %>%
@@ -639,10 +639,11 @@ server <- function(input, output, session) {
       need(nrow(df) > 0, "", label = "No replications found")
     )
 
-    df$significant_original <- c("Not significant", "Significant")[(df$p_value_original < .05) + 1] %>% factor()
-    df$significant_replication <- c("Not significant", "Significant")[(df$p_value_replication < .05) + 1] %>% factor()
+    df$significant_original <- c("Not significant", "Significant")[(df$p_value_original < .05) + 1] %>%
+      factor(levels = c("Not significant", "Significant"))
+    df$significant_replication <- c("Not significant", "Significant")[(df$p_value_replication < .05) + 1] %>%
+      factor(levels = c("Not significant", "Significant"))
 
-    df$result <- df$result %>% factor()
 
     df$scatterplotdescription <- paste(stringr::str_wrap(df$description, 50), "\nr(original) = ",
                                             round(df$es_original, 3),
@@ -674,7 +675,7 @@ server <- function(input, output, session) {
       # ggtitle("") + #xlab("") + ylab("") +
       # scale_size_continuous(name="Power",range=c(.5,3.5)) +
       #scale_color_discrete(guide = "none") +
-      scale_fill_manual(values = outcome_colors()) +
+      scale_fill_manual(values = outcome_colors(), drop = FALSE) +
       theme_bw() +
       labs(fill = "Replication Outcome", color = "Significance")
       #theme(legend.position = "inside", plot.margin = unit(c(-2,-1.5,2,2), "lines"))
