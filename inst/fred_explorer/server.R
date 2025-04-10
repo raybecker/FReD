@@ -39,7 +39,7 @@ server <- function(input, output, session) {
     if (input$minpower == .05) {
       df_temp <- df_temp
     } else {
-      df_temp <- df_temp[df_temp$power >= input$minpower, ]
+      df_temp <- df_temp[df_temp$power_r >= input$minpower, ]
     }
 
     # validated
@@ -152,20 +152,23 @@ server <- function(input, output, session) {
     )
 
 
-
     pointsize <- ifelse(nrow(df_temp) < 10, 5, ifelse(nrow(df_temp) < 100, 4, 3))
 
     s3 <- input$table_rows_selected
 
-    df_temp$significant_original <- c("Not significant", "Significant")[(df_temp$p_value_original < .05) + 1] %>% factor()
-    df_temp$significant_replication <- c("Not significant", "Significant")[(df_temp$p_value_replication < .05) + 1] %>% factor()
+    df_temp$significant_original <- c("Not significant", "Significant")[(df_temp$p_value_original < .05) + 1] %>%
+      factor( levels = c("Not significant", "Significant"))
+    df_temp$significant_replication <- c("Not significant", "Significant")[(df_temp$p_value_replication < .05) + 1] %>%
+      factor(levels = c("Not significant", "Significant"))
+
+    df_temp$result <- factor(df_temp$result, levels = names(outcome_colors()))
 
     scatterplot <-
       ggplot(df_temp, aes(x = es_original, y = es_replication, text = scatterplotdescription)) +
       geom_hline(aes(yintercept = 0), linetype = 2) +
       geom_abline(intercept = 0, slope = 1, color = "Grey60") +
       geom_point(aes(fill = result), size = pointsize, color = "Grey30", shape = 21, alpha = .8) +
-      scale_fill_manual(values = outcome_colors()) +
+      scale_fill_manual(values = outcome_colors(), drop = FALSE) +
       # highlighted studies
       # geom_point(data = df_temp[s3, ], mapping = aes(size = power), fill= "Grey30",color="Grey30",shape=4) +
       geom_point(data = df_temp[s3, ], fill = "#0077d9", color = "#f2ef1b", shape = 4) +
