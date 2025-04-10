@@ -8,7 +8,7 @@ about_page <- glue::glue("
 
 **Data citation:** {create_citation()}
 
-**Data and Materials:** [https://osf.io/9r62x/](https://osf.io/9r62x/)
+**Data and Materials:** <a href='https://osf.io/9r62x/' target='_blank'>https://osf.io/9r62x/</a>
 
 **Contribute:** Please send an e-mail to lukas.roeseler(at)uni-muenster.de
 
@@ -16,7 +16,7 @@ about_page <- glue::glue("
 
 **Acknowledgements:** We thank all researchers who have invested resources in conducting replication research, researchers who have submitted their replication studies, and researchers who used the Replication Recipe Post-Completion template to register their results. FORRT Replication Database is supported through the University of Bamberg's Interne Forschungsförderung, by the University of Münster, by the Nederlandse Organisatie voor Wetenschappelijk's (NWO) Open Science Fund, and by the Leuphana University Lüneburg.
 
-**Important note:** This is work in progress. Please beware that there might be bugs or errors in the dataset. If you spot any, please let us know (by email, or on [GitHub](https://github.com/forrtproject/FReD/issues))
+**Important note:** This is work in progress. Please beware that there might be bugs or errors in the dataset. If you spot any, please let us know (by email, or on <a href='https://github.com/forrtproject/FReD/issues' target='_blank'>GitHub</a>)
 
 _Thanks to our funders:_
 <img src='ub.png' height='100' /> <img src='um.png' height='50' /> <img src='nwo.png' height='100' />
@@ -26,13 +26,14 @@ _Thanks to our funders:_
 
 
 
+
 info <- HTML(paste("<h3>Welcome to the FORRT Replication Database!"
                    , "<h4><br/><br/><b>What is FReD?</b><br/> <i>Science appears to be the human enterprise that is most systematic in its attempt to eliminate error in the search for knowledge </i>(Hoyningen-Huene, 2013, p. 89).
-                   </br></br>Still, if - or how well - most of our findings replicate, is unknown. The FORRT Replication Database is a crowdsourced effort to include unpublished and published replication results to estimate and track the replicability along various fields and provide researchers with a way to assess replicability of crucial studies in a quick and transparent way. Check out the <a href=https://osf.io/f3w26>Call for Results</a> if you would like to contribute."
-                   , "<br/><br/><b>What are your benefits of joining us?</b><br/> You are very welcome to contribute data from your replication studies! In return, (apart from being rewarded by the good feeling of helping research on replicability to improve) we will list you as a contributor of the FReD (CRediT: Resources). Please use the <a href=https://www.soscisurvey.de/replicate>submission portal</a> to submit replication results.
+                   </br></br>Still, if - or how well - most of our findings replicate, is unknown. The FORRT Replication Database is a crowdsourced effort to include unpublished and published replication results to estimate and track the replicability along various fields and provide researchers with a way to assess replicability of crucial studies in a quick and transparent way. Check out the <a href=https://osf.io/f3w26 target='_blank'>Call for Results</a> if you would like to contribute."
+                   , "<br/><br/><b>What are your benefits of joining us?</b><br/> You are very welcome to contribute data from your replication studies! In return, (apart from being rewarded by the good feeling of helping research on replicability to improve) we will list you as a contributor of the FReD (CRediT: Resources). Please use the <a href=https://www.soscisurvey.de/replicate target='_blank'>submission portal</a> to submit replication results.
                         <br/><br/>Unpublished datasets as well as data from classroom experiments are also highly appreciated. Get in touch if you have any questions about the submission portal."
                    , "<br/><br/><b>How to use this website</b><br/> Here in our ShinyApp, you can explore replicability for all or filtered entries. Click on the other tabs and filter your results on the left side.
-                        <br/><br/>In the <a href=https://osf.io/9r62x/>OSF project</a>, you can find further information and files on our project. There, you also can send us a contribution request to the project.
+                        <br/><br/>In the <a href=https://osf.io/9r62x/ target='_blank'>OSF project</a>, you can find further information and files on our project. There, you also can send us a contribution request to the project.
                         <br/><br/>For questions or comments, please check out the FAQs on this website, or send an e-mail to lukas.roeseler(at)uni-muenster.de"
                    , "<br/><br/>"
                    , sep = ""))
@@ -41,15 +42,15 @@ welcome_title <- HTML("Welcome to the FORRT Replication Database!")
 welcome_text <- HTML("<br /><p style=\'color:black;\'>The FReD is a collection of crowdsourced findings from replication studies (i.e., studies that investigated one or more previously tested hypotheses using new data). The aims of this project are:
 </br>(1) to document replication attempts across many areas of science and make replications findable and
 </br>(2) to provide meta-scientists with a database for research on replicability.
-</br></br>This is the FReD <b>Explorer</b>. You can browse, search, and summarize replication results of the coded FReD entries. You can go to the online version of the FReD <b>Annotator</b> <a href=https://forrt-replications.shinyapps.io/fred_annotator/>here</a>.
-</br></br>We advise researchers to carefully investigate replication findings before making judgments about the robustness of research findings. Note that to allow be able to present effect sizes from hundreds of different studies and designs in one common metric, several assumptions are made about the dataset some of which are wrong. How effect sizes are handled is described in depth in the <a href=https://doi.org/10.5334/jopd.101>FReD dataset publication</a>.
-                     </br></br>You can find more information on the overarching project at the <a href=https://forrt.org/replication-hub>FORRT Replication Hub</a>. If you would like to contribute replication findings, please check out our <a href=https://osf.io/f3w26>call for results</a> or send us an e-mail.</p><br/>")
+</br></br>This is the FReD <b>Explorer</b>. You can browse, search, and summarize replication results of the coded FReD entries. You can go to the online version of the FReD <b>Annotator</b> <a href=https://forrt-replications.shinyapps.io/fred_annotator/ target='_blank'>here</a>.
+</br></br>We advise researchers to carefully investigate replication findings before making judgments about the robustness of research findings. Note that to allow be able to present effect sizes from hundreds of different studies and designs in one common metric, several assumptions are made about the dataset some of which are wrong. How effect sizes are handled is described in depth in the <a href=https://doi.org/10.5334/jopd.101 target='_blank'>FReD dataset publication</a>.
+                     </br></br>You can find more information on the overarching project at the <a href=https://forrt.org/replication-hub target='_blank'>FORRT Replication Hub</a>. If you would like to contribute replication findings, please check out our <a href=https://osf.io/f3w26 target='_blank'>call for results</a> or send us an e-mail.</p><br/>")
 
 
 dataset_explanation <- shiny::HTML(paste("<h4><b>FReD Dataset</b>"
                                          , "<h5><br/>This is the entire FORRT Replication Database Dataset. It currently contains "
                                          , nrow(df)
-                                         , " findings. The most recent version can be downloaded via the <a href=https://osf.io/9r62x/>OSF project</a>."
+                                         , " findings. The most recent version can be downloaded via the <a href=https://osf.io/9r62x/ target='_blank'>OSF project</a>."
                                          , "<br/><br/>"
                                          , sep = ""))
 
@@ -105,7 +106,7 @@ barplot2_title <- HTML(paste("
                              , sep = ""))
 
 barplot2_explanation <- HTML(paste("
-                                 <h5><i>Note. </i><a href='https://doi.org/10.15626/MP.2018.843'>LeBel et al. (2019)</a> have suggested a more nuanced interpretation of replication results for cases where the original study found an effect. Whether or not the replication effect is significant, too, is indicated by signal/no-signal. Whether the replication effect is smaller, larger, or the same size is also indicated. We also included cases where the original study was not significant or no information about the original study's significance was available in grey."
+                                 <h5><i>Note. </i><a href='https://doi.org/10.15626/MP.2018.843 target='_blank'>LeBel et al. (2019)</a> have suggested a more nuanced interpretation of replication results for cases where the original study found an effect. Whether or not the replication effect is significant, too, is indicated by signal/no-signal. Whether the replication effect is smaller, larger, or the same size is also indicated. We also included cases where the original study was not significant or no information about the original study's significance was available in grey."
                                    , "<br/><br/>"
                                    , sep = ""))
 
@@ -115,7 +116,7 @@ zcurve_title <- HTML(paste("
                            , sep = ""))
 
 zcurve_explanation <- HTML(paste("
-                                 <h5><i>Note. </i>Z-curve (<a href='http://dx.doi.org/10.15626/MP.2021.2720'>Bartos & Schimmack, 2020</a>) can be used to estimate replicability of a set of studies. Note that it assumes that observations are independent, which is not the case here, and that it uses only significant results. We recommend not using z-curve on less than 200 tests.<br/>Observed discovery rate refers to the proportion of significant (p < .05) studies. Expected discovery rate is the proportion of studies that you would expect to be significant if you ran replications of <i>all</i> studies with the same sample size. Expected replicability rate is the proportion of studies that you would expect to be significant if you ran replications of <i>all significant</i> studies with the same sample size. You can compare the discovery and replicability rates with the actual replicability presented at the top of this page. We recommend running bootstraps to get confidence intervals for z-curve's estimates but refrain from doing so as it takes much time."
+                                 <h5><i>Note. </i>Z-curve (<a href='http://dx.doi.org/10.15626/MP.2021.2720' target='_blank'>Bartos & Schimmack, 2020</a>) can be used to estimate replicability of a set of studies. Note that it assumes that observations are independent, which is not the case here, and that it uses only significant results. We recommend not using z-curve on less than 200 tests.<br/>Observed discovery rate refers to the proportion of significant (p < .05) studies. Expected discovery rate is the proportion of studies that you would expect to be significant if you ran replications of <i>all</i> studies with the same sample size. Expected replicability rate is the proportion of studies that you would expect to be significant if you ran replications of <i>all significant</i> studies with the same sample size. You can compare the discovery and replicability rates with the actual replicability presented at the top of this page. We recommend running bootstraps to get confidence intervals for z-curve's estimates but refrain from doing so as it takes much time."
                                  , "<br/><br/>"
                                  , sep = ""))
 
@@ -156,7 +157,7 @@ checker_info <- HTML(paste("<h4><br/><br/><b>Replicability Checker</b><br/> "
                            , sep = ""))
 
 references_headline <- HTML(paste("<h4><br/><br/><b>References</b><br/> "
-                                  , "<br/><br/><h4>Currently, a large proportion of the replication studies stems from the CurateScience database. We added data from CORE, RPP, the OSF Registries, and individual submissions. A synthesis of ReD with FORRT's replications and reversals is coming soon. If you are aware of replications not listed here, please write us an e-mail or add them <a href = 'https://docs.google.com/spreadsheets/d/1x68oW2H_Xrdv44fIeycl4fegsmQgCa60GxeZZ_hAR90/edit?pli=1#gid=1463805480'>here.</a> "
+                                  , "<br/><br/><h4>Currently, a large proportion of the replication studies stems from the CurateScience database. We added data from CORE, RPP, the OSF Registries, and individual submissions. A synthesis of ReD with FORRT's replications and reversals is coming soon. If you are aware of replications not listed here, please write us an e-mail or add them <a href = 'https://docs.google.com/spreadsheets/d/1x68oW2H_Xrdv44fIeycl4fegsmQgCa60GxeZZ_hAR90/edit?pli=1#gid=1463805480' target='_blank'>here.</a> "
                                   , sep = ""))
 
 

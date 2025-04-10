@@ -12,7 +12,7 @@ A: No! Publishing replication studies can be met with quite some resistance, in 
 A: There needs to be a way to verify that an entered study has indeed been executed (e.g., a pre-print, an OSF project with study materials, data, and some sort of results report).
 
 #### Q: I know about replication studies that you have not added yet but I do not have time to add them myself. Is there a way to have you note these studies anyway?
-A: Yes, please add them via this [Google form](https://docs.google.com/forms/d/e/1FAIpQLSeMCwdtP0TPgL55stniuyyTxnNwyC34mO4VUuLcQwYrLI89sQ/viewform) and send us a brief e-mail!
+A: Yes, please add them via this <a href='https://docs.google.com/forms/d/e/1FAIpQLSeMCwdtP0TPgL55stniuyyTxnNwyC34mO4VUuLcQwYrLI89sQ/viewform' target='_blank'>Google form</a> and send us a brief e-mail!
 
 #### Q: What about large-scale replication projects such as Many Babies?
 A: These are absolutely on our radar and we will add them as soon as possible. Please note that we are currently working with strongly limited resources. Get in touch if you want to support the project!
