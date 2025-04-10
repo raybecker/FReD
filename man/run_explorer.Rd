@@ -8,7 +8,8 @@ run_explorer(
   offer_install = interactive(),
   in_background = NULL,
   auto_close = interactive(),
-  port = 3838
+  port = 3838,
+  timeout = 30
 )
 }
 \arguments{
@@ -19,6 +20,8 @@ run_explorer(
 \item{auto_close}{Should the app be automatically ended when the browser is closed (or refreshed)?}
 
 \item{port}{The port to run the app on (can usually be left at the default value)}
+
+\item{timeout}{The timeout for waiting for the app to become available if launched in background (in seconds)}
 }
 \value{
 Replication Explorer shiny app
