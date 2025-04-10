@@ -2,10 +2,7 @@
 % Please edit documentation in R/data_management.R
 \name{update_offline_data}
 \alias{update_offline_data}
-\title{If you set the package to work offline (\code{use_FReD_offline(TRUE)}) or if any
-downloads fail, FReD will use offline data stored in the package. Use this
-function if you want to update the data to the current state. (NB: you can also use this
-if you want to work persistently with your own version of the dataset).}
+\title{Update inbuilt data}
 \usage{
 update_offline_data(
   data_file = get_param("FRED_DATA_FILE"),
